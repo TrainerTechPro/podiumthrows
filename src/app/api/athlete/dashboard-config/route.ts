@@ -1,24 +1,14 @@
 import { NextResponse } from "next/server";
-import { z } from "zod";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import prisma from "@/lib/prisma";
+import { parseBody, AthleteDashboardConfigPatchSchema } from "@/lib/api-schemas";
 import {
   WIDGET_IDS,
   PRESETS,
   type WidgetId,
   type PresetId,
 } from "@/app/(dashboard)/athlete/dashboard/_widget-registry";
-
-const DashboardConfigSchema = z
-  .object({
-    preset: z.string().optional(),
-    widgets: z.array(z.string()).optional(),
-    order: z.array(z.string()).optional(),
-  })
-  .refine((d) => d.preset != null || (d.widgets != null && d.order != null), {
-    message: "Must provide either preset or (widgets + order)",
-  });
 
 export async function PATCH(request: Request) {
   try {
@@ -27,21 +17,9 @@ export async function PATCH(request: Request) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    let body: unknown;
-    try {
-      body = await request.json();
-    } catch {
-      return NextResponse.json({ success: false, error: "Invalid JSON body" }, { status: 400 });
-    }
-
-    const parsed = DashboardConfigSchema.safeParse(body);
-    if (!parsed.success) {
-      return NextResponse.json(
-        { success: false, error: parsed.error.issues.map((i) => i.message).join(", ") },
-        { status: 400 }
-      );
-    }
-    const { preset, widgets, order } = parsed.data;
+    const parsed = await parseBody(request, AthleteDashboardConfigPatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { preset, widgets, order } = parsed;
 
     // Preset path — widgets/order are ignored when preset is set.
     if (preset && preset in PRESETS && !widgets) {

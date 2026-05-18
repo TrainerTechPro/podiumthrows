@@ -51,7 +51,7 @@ export async function POST() {
     });
 
     if (thisWeekOverrides.length === 0) {
-      return NextResponse.json({ success: true, created: 0 });
+      return NextResponse.json({ success: true, data: { created: 0 } });
     }
 
     // Compute target dates (+7 days) and find which ones already exist
@@ -88,7 +88,7 @@ export async function POST() {
       });
     }
 
-    return NextResponse.json({ success: true, created: toCreate.length });
+    return NextResponse.json({ success: true, data: { created: toCreate.length } });
   } catch (err) {
     logger.error("POST /api/athlete/availability/overrides/copy-week", {
       context: "api",

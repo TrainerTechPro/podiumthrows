@@ -43,19 +43,23 @@ export async function POST(request: Request) {
       );
     }
 
-    // Check if this is a sync-mode update (no data sync needed)
+    // INTENTIONAL EXEMPTION from parseBody: this endpoint accepts a fully
+    // optional body. With no body it triggers a normal sync; with
+    // `{ updateSyncMode: "AUTO" | "ASSISTED" }` it switches the sync mode
+    // without firing a data sync. The auto-sync client (`_whoop-auto-sync.tsx`)
+    // POSTs with no JSON body and no Content-Type, so `parseBody` would 400
+    // it. The try/catch tolerates that case.
     let body: Record<string, unknown> = {};
     try {
       body = await request.json();
     } catch (err) {
-      // Empty body is fine — means a normal sync request
-      logger.debug("Empty body is fine — means a normal sync request", {
+      logger.debug("WHOOP sync: empty body — treating as a normal sync request", {
         context: "src/app/api/whoop/sync/route.ts",
         metadata: { reason: err instanceof Error ? err.message : "unknown" },
       });
     }
 
-    if (body.updateSyncMode) {
+    if (body.updateSyncMode != null) {
       const mode = body.updateSyncMode;
       if (mode !== "AUTO" && mode !== "ASSISTED") {
         return NextResponse.json({ success: false, error: "Invalid sync mode" }, { status: 400 });

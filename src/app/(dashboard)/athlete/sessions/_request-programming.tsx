@@ -42,7 +42,7 @@ export function RequestProgramming({
       const data = await res.json().catch(() => null);
 
       if (res.ok && data?.success) {
-        setCooldownUntil(data.cooldownUntil);
+        setCooldownUntil(data.data?.cooldownUntil ?? null);
         toast.success(
           "Request sent!",
           `${coachName} has been notified with your training context.`

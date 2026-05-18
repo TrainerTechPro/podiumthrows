@@ -11,7 +11,10 @@ const resend = new Resend(process.env.RESEND_API_KEY);
 const FROM_EMAIL = process.env.RESEND_FROM || "Podium Throws <onboarding@resend.dev>";
 
 const EVENT_LABELS: Record<string, string> = {
-  SP: "Shot Put", DT: "Discus", HT: "Hammer", JT: "Javelin",
+  SP: "Shot Put",
+  DT: "Discus",
+  HT: "Hammer",
+  JT: "Javelin",
 };
 
 const DEFICIT_LABELS: Record<string, string> = {
@@ -57,7 +60,9 @@ function buildDeficitEmail(
   const eventLabel = event ? EVENT_LABELS[event] || event : "";
   const genderLabel = gender === "M" ? "Men's" : gender === "F" ? "Women's" : "";
   const band = (result?.distanceBand as string) || "";
-  const context = [eventLabel, genderLabel, band ? `${band}m band` : ""].filter(Boolean).join(" · ");
+  const context = [eventLabel, genderLabel, band ? `${band}m band` : ""]
+    .filter(Boolean)
+    .join(" · ");
 
   const heavyRatio = result?.heavyRatio as number | null;
   const squatBwRatio = result?.squatBwRatio as number | null;
@@ -97,26 +102,38 @@ function buildDeficitEmail(
     <!-- Metrics -->
     <div style="border-top:1px solid #2a2720; border-bottom:1px solid #2a2720; padding:16px 0; margin-bottom:16px;">
       <table style="width:100%;"><tr>
-        ${heavyRatio !== null ? `
+        ${
+          heavyRatio !== null
+            ? `
         <td style="vertical-align:top;">
           <p style="color:#6b655a; font-size:11px; text-transform:uppercase; letter-spacing:1px; margin:0 0 4px;">Heavy Impl. Ratio</p>
           <p style="color:${color}; font-size:24px; font-weight:700; margin:0;">${(heavyRatio * 100).toFixed(1)}%</p>
-        </td>` : ""}
-        ${squatBwRatio !== null ? `
+        </td>`
+            : ""
+        }
+        ${
+          squatBwRatio !== null
+            ? `
         <td style="vertical-align:top;">
           <p style="color:#6b655a; font-size:11px; text-transform:uppercase; letter-spacing:1px; margin:0 0 4px;">Squat-to-BW</p>
           <p style="color:${color}; font-size:24px; font-weight:700; margin:0;">${squatBwRatio.toFixed(2)}x</p>
-        </td>` : ""}
+        </td>`
+            : ""
+        }
       </tr></table>
     </div>
 
-    ${overPowered ? `
+    ${
+      overPowered
+        ? `
     <div style="background:rgba(239,68,68,0.08); border:1px solid rgba(239,68,68,0.15); border-radius:8px; padding:12px 16px; margin-bottom:16px;">
       <p style="color:#ef4444; font-size:11px; text-transform:uppercase; letter-spacing:1px; font-weight:600; margin:0 0 4px;">Overpowered Flag</p>
       <p style="color:#a09a90; font-size:14px; line-height:1.5; margin:0;">
         Strength exceeds target while implement marks are below. Shift volume from general preparation to specific developmental exercises.
       </p>
-    </div>` : ""}
+    </div>`
+        : ""
+    }
 
     <!-- Recommendation -->
     <div style="background:rgba(245,158,11,0.06); border:1px solid rgba(245,158,11,0.12); border-radius:8px; padding:12px 16px;">
@@ -152,7 +169,8 @@ export async function POST(request: Request) {
   try {
     const parsed = await parseBody(request, LeadCaptureSchema);
     if (parsed instanceof NextResponse) return parsed;
-    const { email, name, source, event, gender, deficitResult, utmSource, utmMedium, utmCampaign } = parsed;
+    const { email, name, source, event, gender, deficitResult, utmSource, utmMedium, utmCampaign } =
+      parsed;
 
     const lead = await prisma.lead.create({
       data: {
@@ -161,9 +179,7 @@ export async function POST(request: Request) {
         source: source || "deficit-finder",
         event: event || null,
         gender: gender || null,
-        deficitResult: deficitResult
-          ? (deficitResult as Prisma.InputJsonValue)
-          : Prisma.JsonNull,
+        deficitResult: deficitResult ? (deficitResult as Prisma.InputJsonValue) : Prisma.JsonNull,
         utmSource: utmSource || null,
         utmMedium: utmMedium || null,
         utmCampaign: utmCampaign || null,
@@ -175,23 +191,28 @@ export async function POST(request: Request) {
       const primary = (deficitResult?.primary as string) || "none";
       const deficitLabel = DEFICIT_LABELS[primary] || "Analysis";
 
-      await resend.emails.send({
-        from: FROM_EMAIL,
-        to: lead.email,
-        subject: `Your Deficit Analysis: ${deficitLabel}`,
-        html: buildDeficitEmail(lead.id, lead.name, event ?? null, gender ?? null, deficitResult ?? null),
-      }).catch((err) => {
-        // Log but don't fail the request — the lead is already saved
-        logger.error("Resend email error", { context: "api", error: err });
-      });
+      await resend.emails
+        .send({
+          from: FROM_EMAIL,
+          to: lead.email,
+          subject: `Your Deficit Analysis: ${deficitLabel}`,
+          html: buildDeficitEmail(
+            lead.id,
+            lead.name,
+            event ?? null,
+            gender ?? null,
+            deficitResult ?? null
+          ),
+        })
+        .catch((err) => {
+          // Log but don't fail the request — the lead is already saved
+          logger.error("Resend email error", { context: "api", error: err });
+        });
     }
 
-    return NextResponse.json({ success: true, id: lead.id }, { status: 201 });
+    return NextResponse.json({ success: true, data: { id: lead.id } }, { status: 201 });
   } catch (error) {
     logger.error("Lead capture error", { context: "api", error });
-    return NextResponse.json(
-      { success: false, error: "Failed to save lead" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Failed to save lead" }, { status: 500 });
   }
 }

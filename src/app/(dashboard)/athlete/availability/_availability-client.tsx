@@ -540,7 +540,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
       if (!res.ok) {
         error("Copy failed", (json as { error?: string }).error ?? "Please try again.");
       } else {
-        const created = (json as { created?: number }).created ?? 0;
+        const created = (json as { data?: { created?: number } }).data?.created ?? 0;
         if (created === 0) {
           success("Already up to date", "Next week already has those overrides.");
         } else {
@@ -571,7 +571,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
       if (!res.ok) {
         error("Could not generate link", (json as { error?: string }).error ?? "Please try again.");
       } else {
-        const shareUrl = (json as { shareUrl?: string }).shareUrl ?? "";
+        const shareUrl = (json as { data?: { shareUrl?: string } }).data?.shareUrl ?? "";
         await navigator.clipboard.writeText(shareUrl);
         success("Share link copied", "Anyone with this link can view your availability.");
       }

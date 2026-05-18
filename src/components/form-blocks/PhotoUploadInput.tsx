@@ -53,11 +53,11 @@ export function PhotoUploadInput({
 
           xhr.onload = () => {
             try {
-              const data = JSON.parse(xhr.responseText);
-              if (xhr.status >= 200 && xhr.status < 300 && data.success) {
-                resolve(data.url);
+              const payload = JSON.parse(xhr.responseText);
+              if (xhr.status >= 200 && xhr.status < 300 && payload.success) {
+                resolve(payload.data.url);
               } else {
-                reject(new Error(data.error || "Upload failed"));
+                reject(new Error(payload.error || "Upload failed"));
               }
             } catch {
               reject(new Error("Upload failed"));
@@ -102,9 +102,7 @@ export function PhotoUploadInput({
 
   return (
     <div className="space-y-2">
-      {block.prompt && (
-        <p className="text-xs text-muted">{block.prompt}</p>
-      )}
+      {block.prompt && <p className="text-xs text-muted">{block.prompt}</p>}
 
       {url ? (
         <div className="border-2 border-[var(--card-border)] rounded-xl p-4 text-center space-y-3">
@@ -152,7 +150,9 @@ export function PhotoUploadInput({
           {uploadState === "uploading" ? (
             <div className="space-y-3">
               <div className="w-10 h-10 mx-auto border-2 border-primary-300 border-t-primary-500 rounded-full animate-spin" />
-              <p className="text-sm font-medium text-[var(--foreground)]">Uploading... {progress}%</p>
+              <p className="text-sm font-medium text-[var(--foreground)]">
+                Uploading... {progress}%
+              </p>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                 <div
                   className="h-full bg-primary-500 rounded-full transition-all duration-300"
@@ -162,7 +162,15 @@ export function PhotoUploadInput({
             </div>
           ) : (
             <div className="space-y-2">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-muted">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="mx-auto text-muted"
+              >
                 <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
                 <circle cx="8.5" cy="8.5" r="1.5" />
                 <polyline points="21 15 16 10 5 21" />
@@ -170,9 +178,7 @@ export function PhotoUploadInput({
               <p className="text-sm font-medium text-[var(--foreground)]">
                 {dragOver ? "Drop image here" : "Click or drag to upload photo"}
               </p>
-              <p className="text-[10px] text-muted">
-                JPEG, PNG, WebP, GIF · Max {maxSizeMb}MB
-              </p>
+              <p className="text-[10px] text-muted">JPEG, PNG, WebP, GIF · Max {maxSizeMb}MB</p>
             </div>
           )}
         </div>

@@ -2,13 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, LiftingProgramPatchSchema } from "@/lib/api-schemas";
 
 /* ─── GET — full program with phases, exercises, and workout logs ──────── */
 
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(_request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
@@ -44,13 +42,10 @@ export async function GET(
     });
 
     if (!program) {
-      return NextResponse.json(
-        { success: false, error: "Program not found." },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "Program not found." }, { status: 404 });
     }
 
-    return NextResponse.json(program);
+    return NextResponse.json({ success: true, data: program });
   } catch (err) {
     logger.error("GET /api/lifting/programs/[id]", {
       context: "api",
@@ -65,10 +60,7 @@ export async function GET(
 
 /* ─── PATCH — update program status, name, dates ──────────────────────── */
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await getSession();
     if (!session || session.role !== "COACH") {
@@ -91,55 +83,35 @@ export async function PATCH(
       select: { id: true },
     });
     if (!existing) {
-      return NextResponse.json(
-        { success: false, error: "Program not found." },
-        { status: 404 }
-      );
+      return NextResponse.json({ success: false, error: "Program not found." }, { status: 404 });
     }
 
-    const body = await request.json().catch(() => ({}));
-    const { name, status, startDate, completedDate } = body as Record<
-      string,
-      unknown
-    >;
+    const parsed = await parseBody(request, LiftingProgramPatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
 
-    // Build update data — only allow specific fields
+    // Build update data from validated fields, trimming + null-coercing strings.
     const data: Record<string, unknown> = {};
-
-    if (name !== undefined) {
-      if (typeof name !== "string" || name.trim().length === 0) {
+    if (parsed.name != null) {
+      const trimmed = parsed.name.trim();
+      if (trimmed.length === 0) {
         return NextResponse.json(
           { success: false, error: "Program name cannot be empty." },
           { status: 400 }
         );
       }
-      data.name = name.trim();
+      data.name = trimmed;
     }
-
-    if (status !== undefined) {
-      if (
-        typeof status !== "string" ||
-        !["ACTIVE", "PAUSED", "COMPLETED", "ARCHIVED"].includes(status)
-      ) {
-        return NextResponse.json(
-          { success: false, error: "Invalid status. Must be ACTIVE, PAUSED, COMPLETED, or ARCHIVED." },
-          { status: 400 }
-        );
-      }
-      data.status = status;
-    }
-
-    if (startDate !== undefined) {
+    if (parsed.status != null) data.status = parsed.status;
+    if (parsed.startDate !== undefined) {
       data.startDate =
-        typeof startDate === "string" && startDate.trim().length > 0
-          ? startDate.trim()
+        parsed.startDate != null && parsed.startDate.trim().length > 0
+          ? parsed.startDate.trim()
           : null;
     }
-
-    if (completedDate !== undefined) {
+    if (parsed.completedDate !== undefined) {
       data.completedDate =
-        typeof completedDate === "string" && completedDate.trim().length > 0
-          ? completedDate.trim()
+        parsed.completedDate != null && parsed.completedDate.trim().length > 0
+          ? parsed.completedDate.trim()
           : null;
     }
 
@@ -161,7 +133,7 @@ export async function PATCH(
       },
     });
 
-    return NextResponse.json(updated);
+    return NextResponse.json({ success: true, data: updated });
   } catch (err) {
     logger.error("PATCH /api/lifting/programs/[id]", {
       context: "api",

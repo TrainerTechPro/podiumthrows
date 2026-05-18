@@ -65,12 +65,15 @@ export async function POST(
       },
     });
 
-    return NextResponse.json({ success: true, wellnessCheckin: payload });
+    return NextResponse.json({ success: true, data: { wellnessCheckin: payload } });
   } catch (err) {
     logger.error("POST /api/athlete/session-recap/[sessionId]/wellness", {
       context: "api",
       error: err,
     });
-    return NextResponse.json({ success: false, error: "Failed to save wellness check-in." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to save wellness check-in." },
+      { status: 500 }
+    );
   }
 }

@@ -67,5 +67,5 @@ export async function POST(req: NextRequest) {
     results.isAdmin = isAdmin;
   }
 
-  return NextResponse.json({ success: true, email, results });
+  return NextResponse.json({ success: true, data: { email, results } });
 }

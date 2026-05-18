@@ -223,3 +223,121 @@ describe("envelope migration schemas — happy paths", () => {
     expect(SelfProgramUpdateSchema.safeParse("nope").success).toBe(false);
   });
 });
+
+/**
+ * Final API contract purity pass — schemas added when the last batch of
+ * `request.json()` routes was migrated to `parseBody(req, Schema)`.
+ */
+
+import {
+  AdminUpgradeSchema,
+  AthleteDashboardConfigPatchSchema,
+  CoachEventGroupAddMembersSchema,
+  CoachEventGroupUpdateSchema,
+  LiftingProgramPatchSchema,
+  LiftingWorkoutPatchSchema,
+  SessionRecapWellnessSchema,
+  ThrowsTestingRecordCreateSchema,
+  VideoAnalysisPatchSchema,
+  VideoAnnotationsBulkUpdateSchema,
+  WearableSyncBodySchema,
+} from "@/lib/api-schemas";
+
+describe("final purity pass schemas — happy + edge", () => {
+  it("WearableSyncBodySchema accepts undefined/null body (normal sync)", () => {
+    expect(WearableSyncBodySchema.safeParse(undefined).success).toBe(true);
+    expect(WearableSyncBodySchema.safeParse(null).success).toBe(true);
+    expect(WearableSyncBodySchema.safeParse({}).success).toBe(true);
+  });
+
+  it("WearableSyncBodySchema accepts updateSyncMode enum + rejects others", () => {
+    expect(WearableSyncBodySchema.safeParse({ updateSyncMode: "AUTO" }).success).toBe(true);
+    expect(WearableSyncBodySchema.safeParse({ updateSyncMode: "ASSISTED" }).success).toBe(true);
+    expect(WearableSyncBodySchema.safeParse({ updateSyncMode: "OFF" }).success).toBe(false);
+  });
+
+  it("AthleteDashboardConfigPatchSchema requires preset OR (widgets+order)", () => {
+    expect(AthleteDashboardConfigPatchSchema.safeParse({ preset: "minimal" }).success).toBe(true);
+    expect(
+      AthleteDashboardConfigPatchSchema.safeParse({ widgets: ["a"], order: ["a"] }).success
+    ).toBe(true);
+    expect(AthleteDashboardConfigPatchSchema.safeParse({}).success).toBe(false);
+    expect(AthleteDashboardConfigPatchSchema.safeParse({ widgets: ["a"] }).success).toBe(false);
+  });
+
+  it("CoachEventGroupAddMembersSchema rejects empty array", () => {
+    expect(CoachEventGroupAddMembersSchema.safeParse({ athleteIds: [] }).success).toBe(false);
+    expect(CoachEventGroupAddMembersSchema.safeParse({ athleteIds: ["a"] }).success).toBe(true);
+  });
+
+  it("CoachEventGroupUpdateSchema enforces event enum + tolerates nullable fields", () => {
+    expect(
+      CoachEventGroupUpdateSchema.safeParse({ events: ["SHOT_PUT"], name: null }).success
+    ).toBe(true);
+    expect(CoachEventGroupUpdateSchema.safeParse({ events: ["X"] }).success).toBe(false);
+    expect(CoachEventGroupUpdateSchema.safeParse({ events: [] }).success).toBe(false);
+  });
+
+  it("LiftingProgramPatchSchema rejects empty patch", () => {
+    expect(LiftingProgramPatchSchema.safeParse({}).success).toBe(false);
+    expect(LiftingProgramPatchSchema.safeParse({ status: "ACTIVE" }).success).toBe(true);
+    expect(LiftingProgramPatchSchema.safeParse({ status: "WHAT" }).success).toBe(false);
+  });
+
+  it("LiftingWorkoutPatchSchema accepts status + null fields + optional exerciseLogs", () => {
+    expect(LiftingWorkoutPatchSchema.safeParse({}).success).toBe(true);
+    expect(
+      LiftingWorkoutPatchSchema.safeParse({
+        status: "COMPLETED",
+        actualRpe: null,
+        exerciseLogs: [],
+      }).success
+    ).toBe(true);
+    expect(LiftingWorkoutPatchSchema.safeParse({ status: "DONE" }).success).toBe(false);
+  });
+
+  it("ThrowsTestingRecordCreateSchema requires testDate + defaults testType", () => {
+    const ok = ThrowsTestingRecordCreateSchema.parse({ testDate: "2026-05-18" });
+    expect(ok.testType).toBe("FULL_BATTERY");
+    expect(ThrowsTestingRecordCreateSchema.safeParse({}).success).toBe(false);
+  });
+
+  it("AdminUpgradeSchema requires valid email", () => {
+    expect(AdminUpgradeSchema.safeParse({ email: "x@y.com", plan: "PRO" }).success).toBe(true);
+    expect(AdminUpgradeSchema.safeParse({ email: "not-an-email" }).success).toBe(false);
+    expect(AdminUpgradeSchema.safeParse({ email: "x@y.com", plan: "ALPHA" }).success).toBe(false);
+  });
+
+  it("SessionRecapWellnessSchema accepts only 1/2/3 for each field", () => {
+    expect(SessionRecapWellnessSchema.safeParse({ legs: 1, energy: 2, focus: 3 }).success).toBe(
+      true
+    );
+    expect(SessionRecapWellnessSchema.safeParse({ legs: 0, energy: 2, focus: 3 }).success).toBe(
+      false
+    );
+    expect(SessionRecapWellnessSchema.safeParse({ legs: 1, energy: 2 }).success).toBe(false);
+  });
+
+  it("VideoAnalysisPatchSchema is .strict — rejects unknown keys", () => {
+    expect(VideoAnalysisPatchSchema.safeParse({ title: "ok" }).success).toBe(true);
+    expect(VideoAnalysisPatchSchema.safeParse({ title: "ok", garbage: 1 }).success).toBe(false);
+  });
+
+  it("VideoAnnotationsBulkUpdateSchema requires id + valid type + points", () => {
+    expect(
+      VideoAnnotationsBulkUpdateSchema.safeParse({
+        annotations: [{ id: "a1", timestamp: 0, type: "line", points: [{ x: 0, y: 0 }] }],
+      }).success
+    ).toBe(true);
+    expect(
+      VideoAnnotationsBulkUpdateSchema.safeParse({
+        annotations: [{ id: "a1", timestamp: -1, type: "line", points: [] }],
+      }).success
+    ).toBe(false);
+    expect(
+      VideoAnnotationsBulkUpdateSchema.safeParse({
+        annotations: [{ id: "a1", timestamp: 0, type: "spline", points: [] }],
+      }).success
+    ).toBe(false);
+  });
+});

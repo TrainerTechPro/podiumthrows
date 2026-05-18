@@ -9,19 +9,21 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getCurrentUser } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
-import {
-  computeDistanceBand,
-  calculateDeficits,
-} from "@/lib/throws/podium-profile";
+import { computeDistanceBand, calculateDeficits } from "@/lib/throws/podium-profile";
 import type { EventCode, GenderCode } from "@/lib/throws/constants";
 import { CODE_EVENT_MAP } from "@/lib/throws/constants";
 import type { StrengthBenchmarks } from "@/lib/throws/podium-profile";
 import { logger } from "@/lib/logger";
+import { parseBody, ThrowsTestingRecordCreateSchema } from "@/lib/api-schemas";
 
 // Convert profile codes ("HT"/"F") → KPI standard names ("HAMMER"/"FEMALE")
 const GENDER_FULL: Record<string, string> = { M: "MALE", F: "FEMALE" };
-function kpiEvent(e: string) { return CODE_EVENT_MAP[e as EventCode] ?? e; }
-function kpiGender(g: string) { return GENDER_FULL[g] ?? g; }
+function kpiEvent(e: string) {
+  return CODE_EVENT_MAP[e as EventCode] ?? e;
+}
+function kpiGender(g: string) {
+  return GENDER_FULL[g] ?? g;
+}
 
 // ── GET ────────────────────────────────────────────────────────────────────
 
@@ -32,19 +34,19 @@ export async function GET(
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
     const { athleteId } = await params;
 
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden" },
-        { status: 403 }
-      );
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        athleteId
+      ))
+    ) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     const records = await prisma.throwsTestingRecord.findMany({
@@ -55,7 +57,10 @@ export async function GET(
 
     return NextResponse.json({ success: true, data: records });
   } catch (error) {
-    logger.error("Get testing records error", { context: "throws/podium-roster/testing", error: error });
+    logger.error("Get testing records error", {
+      context: "throws/podium-roster/testing",
+      error: error,
+    });
     return NextResponse.json(
       { success: false, error: "Failed to fetch testing records" },
       { status: 500 }
@@ -72,25 +77,22 @@ export async function POST(
   try {
     const currentUser = await getCurrentUser();
     if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: "Not authenticated" },
-        { status: 401 }
-      );
+      return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
     if (currentUser.role !== "COACH") {
-      return NextResponse.json(
-        { success: false, error: "Coaches only" },
-        { status: 403 }
-      );
+      return NextResponse.json({ success: false, error: "Coaches only" }, { status: 403 });
     }
 
     const { athleteId } = await params;
 
-    if (!(await canAccessAthlete(currentUser.userId, currentUser.role as "COACH" | "ATHLETE", athleteId))) {
-      return NextResponse.json(
-        { success: false, error: "Forbidden" },
-        { status: 403 }
-      );
+    if (
+      !(await canAccessAthlete(
+        currentUser.userId,
+        currentUser.role as "COACH" | "ATHLETE",
+        athleteId
+      ))
+    ) {
+      return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
     }
 
     const profile = await prisma.throwsProfile.findFirst({
@@ -103,7 +105,8 @@ export async function POST(
       );
     }
 
-    const body = await request.json();
+    const parsed = await parseBody(request, ThrowsTestingRecordCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       testDate,
       testType = "FULL_BATTERY",
@@ -120,14 +123,7 @@ export async function POST(
       rdlKg,
       bodyWeightKg,
       notes,
-    } = body;
-
-    if (!testDate) {
-      return NextResponse.json(
-        { success: false, error: "testDate is required" },
-        { status: 400 }
-      );
-    }
+    } = parsed;
 
     // ── Resolve PB (use test mark if better than stored PB) ────────────
     const resolvedCompMark =
@@ -238,7 +234,8 @@ export async function POST(
     const finalPb =
       (profileUpdate.competitionPb as number | null | undefined) ?? profile.competitionPb;
     const finalBand =
-      (profileUpdate.currentDistanceBand as string | null | undefined) ?? profile.currentDistanceBand;
+      (profileUpdate.currentDistanceBand as string | null | undefined) ??
+      profile.currentDistanceBand;
 
     if (finalPb && finalBand) {
       const kpiStandard = await prisma.throwsKpiStandard.findUnique({
@@ -257,7 +254,8 @@ export async function POST(
         const lightPr =
           (profileUpdate.lightImplementPr as number | null | undefined) ?? profile.lightImplementPr;
         const rawBenchmarks =
-          (profileUpdate.strengthBenchmarks as string | null | undefined) ?? profile.strengthBenchmarks;
+          (profileUpdate.strengthBenchmarks as string | null | undefined) ??
+          profile.strengthBenchmarks;
         const strengthBenchmarks: StrengthBenchmarks | null = rawBenchmarks
           ? JSON.parse(rawBenchmarks as string)
           : null;
@@ -299,12 +297,8 @@ export async function POST(
           ...(bodyWeightKg != null ? { bodyWeightKg } : {}),
           ...(notes != null ? { notes } : {}),
           distanceBandAtTest: resolvedBand,
-          ...(deficitPrimaryAtTest != null
-            ? { deficitPrimaryAtTest }
-            : {}),
-          ...(deficitSecondaryAtTest != null
-            ? { deficitSecondaryAtTest }
-            : {}),
+          ...(deficitPrimaryAtTest != null ? { deficitPrimaryAtTest } : {}),
+          ...(deficitSecondaryAtTest != null ? { deficitSecondaryAtTest } : {}),
           ...(overPoweredAtTest != null ? { overPoweredAtTest } : {}),
         },
       });
@@ -321,7 +315,10 @@ export async function POST(
 
     return NextResponse.json({ success: true, data: record }, { status: 201 });
   } catch (error) {
-    logger.error("Create testing record error", { context: "throws/podium-roster/testing", error: error });
+    logger.error("Create testing record error", {
+      context: "throws/podium-roster/testing",
+      error: error,
+    });
     return NextResponse.json(
       { success: false, error: "Failed to create testing record" },
       { status: 500 }

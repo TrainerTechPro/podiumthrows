@@ -139,5 +139,5 @@ export async function POST() {
 
   const cooldownUntil = new Date(Date.now() + COOLDOWN_MS).toISOString();
 
-  return NextResponse.json({ success: true, cooldownUntil });
+  return NextResponse.json({ success: true, data: { cooldownUntil } });
 }

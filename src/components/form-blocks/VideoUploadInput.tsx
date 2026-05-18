@@ -29,8 +29,13 @@ export function VideoUploadInput({
       const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
       const validExts = ["mp4", "mov", "webm", "avi", "mkv", "m4v", "3gp"];
       const validMimes = [
-        "video/mp4", "video/quicktime", "video/webm",
-        "video/x-msvideo", "video/x-matroska", "video/x-m4v", "video/3gpp",
+        "video/mp4",
+        "video/quicktime",
+        "video/webm",
+        "video/x-msvideo",
+        "video/x-matroska",
+        "video/x-m4v",
+        "video/3gpp",
         "video/hevc",
       ];
 
@@ -69,11 +74,11 @@ export function VideoUploadInput({
 
           xhr.onload = () => {
             try {
-              const data = JSON.parse(xhr.responseText);
-              if (xhr.status >= 200 && xhr.status < 300 && data.success) {
-                resolve(data.url);
+              const payload = JSON.parse(xhr.responseText);
+              if (xhr.status >= 200 && xhr.status < 300 && payload.success) {
+                resolve(payload.data.url);
               } else {
-                reject(new Error(data.error || "Upload failed"));
+                reject(new Error(payload.error || "Upload failed"));
               }
             } catch {
               reject(new Error("Upload failed"));
@@ -118,18 +123,11 @@ export function VideoUploadInput({
 
   return (
     <div className="space-y-2">
-      {block.prompt && (
-        <p className="text-xs text-muted">{block.prompt}</p>
-      )}
+      {block.prompt && <p className="text-xs text-muted">{block.prompt}</p>}
 
       {url ? (
         <div className="border-2 border-[var(--card-border)] rounded-xl p-4 text-center space-y-3">
-          <video
-            src={url}
-            controls
-            playsInline
-            className="mx-auto max-h-48 rounded-lg"
-          />
+          <video src={url} controls playsInline className="mx-auto max-h-48 rounded-lg" />
           <div className="flex justify-center gap-3">
             <button
               type="button"
@@ -167,7 +165,9 @@ export function VideoUploadInput({
           {uploadState === "uploading" ? (
             <div className="space-y-3">
               <div className="w-10 h-10 mx-auto border-2 border-primary-300 border-t-primary-500 rounded-full animate-spin" />
-              <p className="text-sm font-medium text-[var(--foreground)]">Uploading... {progress}%</p>
+              <p className="text-sm font-medium text-[var(--foreground)]">
+                Uploading... {progress}%
+              </p>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                 <div
                   className="h-full bg-primary-500 rounded-full transition-all duration-300"
@@ -177,14 +177,23 @@ export function VideoUploadInput({
             </div>
           ) : (
             <div className="space-y-2">
-              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="mx-auto text-muted">
+              <svg
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                className="mx-auto text-muted"
+              >
                 <polygon points="5 3 19 12 5 21 5 3" />
               </svg>
               <p className="text-sm font-medium text-[var(--foreground)]">
                 {dragOver ? "Drop video here" : "Click or drag to upload video"}
               </p>
               <p className="text-[10px] text-muted">
-                MP4, MOV, WebM · Max {maxSizeMb >= 1000 ? `${(maxSizeMb / 1000).toFixed(0)}GB` : `${maxSizeMb}MB`}
+                MP4, MOV, WebM · Max{" "}
+                {maxSizeMb >= 1000 ? `${(maxSizeMb / 1000).toFixed(0)}GB` : `${maxSizeMb}MB`}
               </p>
             </div>
           )}

@@ -1916,3 +1916,148 @@ export const MarkThreadReadSchema = z.object({
   targetField: z.string().min(1, "targetField is required."),
   targetId: z.string().min(1, "targetId is required."),
 });
+
+// ─── Wearables: Oura / WHOOP sync ───────────────────────────────────────
+// Body is optional for normal sync; clients can pass { updateSyncMode } to
+// change the sync mode without triggering a data sync. parseBody requires a
+// JSON body, so the route also tolerates an empty body — see route comments.
+export const WearableSyncBodySchema = z
+  .object({
+    updateSyncMode: z.enum(["AUTO", "ASSISTED"]).nullable().optional(),
+  })
+  .nullable()
+  .optional();
+
+// ─── Video Analysis ─────────────────────────────────────────────────────
+export const VideoAnalysisPatchSchema = z
+  .object({
+    title: z.string().min(1).max(200).nullable().optional(),
+    description: z.string().max(2000).nullable().optional(),
+    annotations: z.array(z.record(z.string(), z.unknown())).nullable().optional(),
+    keyPositions: z.array(z.record(z.string(), z.unknown())).nullable().optional(),
+    status: z.enum(["PENDING", "IN_PROGRESS", "COMPLETED"]).nullable().optional(),
+    duration: z.number().positive().nullable().optional(),
+    fps: z.number().positive().nullable().optional(),
+  })
+  .strict();
+
+// ─── Athlete dashboard config (widget order / preset) ───────────────────
+export const AthleteDashboardConfigPatchSchema = z
+  .object({
+    preset: z.string().nullable().optional(),
+    widgets: z.array(z.string()).nullable().optional(),
+    order: z.array(z.string()).nullable().optional(),
+  })
+  .refine((d) => d.preset != null || (d.widgets != null && d.order != null), {
+    message: "Must provide either preset or (widgets + order)",
+  });
+
+// ─── Coach event groups ─────────────────────────────────────────────────
+const EventTypeEnum = z.enum(["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"]);
+
+export const CoachEventGroupUpdateSchema = z.object({
+  name: z.string().min(1, "Group name cannot be empty").nullable().optional(),
+  events: z.array(EventTypeEnum).min(1, "At least one event is required").nullable().optional(),
+  color: z.string().nullable().optional(),
+  description: z.string().nullable().optional(),
+  order: z.number().int().nullable().optional(),
+});
+
+export const CoachEventGroupAddMembersSchema = z.object({
+  athleteIds: z.array(z.string().min(1)).min(1, "athleteIds must be a non-empty array"),
+});
+
+// ─── Lifting (programs + workouts) ──────────────────────────────────────
+export const LiftingProgramPatchSchema = z
+  .object({
+    name: z.string().nullable().optional(),
+    status: z.enum(["ACTIVE", "PAUSED", "COMPLETED", "ARCHIVED"]).nullable().optional(),
+    startDate: z.string().nullable().optional(),
+    completedDate: z.string().nullable().optional(),
+  })
+  .refine((d) => Object.values(d).some((v) => v !== undefined), {
+    message: "No valid fields to update.",
+  });
+
+const LiftingExerciseLogSchema = z.object({
+  id: z.string().nullable().optional(),
+  programExerciseId: z.string().nullable().optional(),
+  exerciseName: z.string().nullable().optional(),
+  order: z.number().int().nullable().optional(),
+  sets: z.number().nullable().optional(),
+  reps: z.number().nullable().optional(),
+  load: z.number().nullable().optional(),
+  loadUnit: z.string().nullable().optional(),
+  duration: z.number().nullable().optional(),
+  isSkipped: z.boolean().nullable().optional(),
+  isAdded: z.boolean().nullable().optional(),
+  isModified: z.boolean().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+export const LiftingWorkoutPatchSchema = z.object({
+  status: z.enum(["IN_PROGRESS", "COMPLETED", "SKIPPED"]).nullable().optional(),
+  actualRpe: z.number().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  durationMinutes: z.number().nullable().optional(),
+  exerciseLogs: z.array(LiftingExerciseLogSchema).nullable().optional(),
+});
+
+// ─── Throws testing record (Podium Roster) ──────────────────────────────
+export const ThrowsTestingRecordCreateSchema = z.object({
+  testDate: z.string().min(1, "testDate is required"),
+  testType: z.string().optional().default("FULL_BATTERY"),
+  competitionMark: z.number().nullable().optional(),
+  heavyImplMark: z.number().nullable().optional(),
+  heavyImplKg: z.number().nullable().optional(),
+  lightImplMark: z.number().nullable().optional(),
+  lightImplKg: z.number().nullable().optional(),
+  squatKg: z.number().nullable().optional(),
+  benchKg: z.number().nullable().optional(),
+  snatchKg: z.number().nullable().optional(),
+  cleanKg: z.number().nullable().optional(),
+  ohpKg: z.number().nullable().optional(),
+  rdlKg: z.number().nullable().optional(),
+  bodyWeightKg: z.number().nullable().optional(),
+  notes: z.string().nullable().optional(),
+});
+
+// ─── Admin: upgrade user plan / isAdmin ─────────────────────────────────
+export const AdminUpgradeSchema = z.object({
+  email: z.string().email("Valid email required"),
+  plan: z.enum(["FREE", "PRO", "ELITE"]).nullable().optional(),
+  isAdmin: z.boolean().nullable().optional(),
+});
+
+// ─── Wellness check-in (session recap) ──────────────────────────────────
+const WellnessTernary = z
+  .number()
+  .int()
+  .refine((n) => n === 1 || n === 2 || n === 3, {
+    message: "must be 1, 2, or 3",
+  });
+
+export const SessionRecapWellnessSchema = z.object({
+  legs: WellnessTernary,
+  energy: WellnessTernary,
+  focus: WellnessTernary,
+});
+
+// ─── Video annotations (coach video editor) ─────────────────────────────
+const VIDEO_ANNOTATION_TYPES = ["line", "arrow", "circle", "angle", "freehand", "text"] as const;
+
+const VideoAnnotationSchema = z.object({
+  id: z.string().min(1, "Each annotation must have a string id"),
+  timestamp: z.number().min(0, "Each annotation must have a non-negative timestamp"),
+  duration: z.number().nullable().optional(),
+  type: z.enum(VIDEO_ANNOTATION_TYPES),
+  points: z.array(z.object({ x: z.number(), y: z.number() })),
+  color: z.string().nullable().optional(),
+  strokeWidth: z.number().nullable().optional(),
+  text: z.string().nullable().optional(),
+  fontSize: z.number().nullable().optional(),
+});
+
+export const VideoAnnotationsBulkUpdateSchema = z.object({
+  annotations: z.array(VideoAnnotationSchema),
+});

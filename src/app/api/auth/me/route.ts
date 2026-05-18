@@ -77,11 +77,12 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Not authenticated" }, { status: 401 });
     }
 
-    // This endpoint dispatches on body shape (password change vs profile
-    // update), so we read the JSON once and run the matching parseBody-style
-    // safeParse for the chosen branch. Both branches return the canonical
+    // INTENTIONAL EXEMPTION from parseBody: PATCH /api/auth/me dispatches on
+    // body shape — `currentPassword`/`newPassword` triggers the password-
+    // change branch, anything else is a coach-profile update. Both branches
+    // run the matching Zod schema's safeParse and return the canonical
     // `{ success: false, error: "Validation failed", fieldErrors }` shape
-    // that `parseBody` itself emits.
+    // that `parseBody` itself emits — the validation surface is identical.
     let body: Record<string, unknown>;
     try {
       body = await request.json();
