@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { DashboardLayout, type DashboardUser } from "@/components";
+import { getCoachNavSections } from "@/components/ui/Sidebar";
 import { fetchCoachByUserId } from "@/lib/data/coach";
 import { getUnreadCount } from "@/lib/notifications";
 import { SidelineFAB } from "@/components/coach/SidelineFAB";
@@ -44,14 +45,20 @@ export default async function CoachLayout({ children }: { children: React.ReactN
 
   const unitPrefs = parseUnitPrefs(coachPrefs?.displayUnits);
 
-  // MVP cut (2026-05-15): sideline is flag-gated. The FAB only renders when
-  // the flag is on so it never points at a route the middleware would
-  // immediately redirect away from.
-  const sidelineEnabled = await isFeatureEnabledAnyTier("coachSideline");
+  // MVP cut (2026-05-15): sideline + video-analysis are flag-gated. Resolve
+  // both server-side so the sidebar entry and the SidelineFAB never point at
+  // routes the middleware would immediately redirect away from. See
+  // tasks/navigation-contract-2026-05-18.md.
+  const [sidelineEnabled, videoAnalysisEnabled] = await Promise.all([
+    isFeatureEnabledAnyTier("coachSideline"),
+    isFeatureEnabledAnyTier("videoAnalysis"),
+  ]);
+
+  const navSections = getCoachNavSections({ videoAnalysisEnabled });
 
   return (
     <UnitPrefsProvider initial={unitPrefs}>
-      <DashboardLayout user={user} notificationCount={notificationCount}>
+      <DashboardLayout user={user} notificationCount={notificationCount} navSections={navSections}>
         {children}
         {sidelineEnabled && <SidelineFAB />}
       </DashboardLayout>
