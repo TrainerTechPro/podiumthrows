@@ -2,6 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import {
+  parseBody,
+  CoachFrameAnnotationSchema,
+  CoachFrameAnnotationsBatchSchema,
+} from "@/lib/api-schemas";
 
 /* ─── GET — Retrieve frame annotations for a video ───────────────────────── */
 
@@ -40,8 +45,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       orderBy: { timestamp: "asc" },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ frameAnnotations });
+    return NextResponse.json({ success: true, data: { frameAnnotations } });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -69,26 +73,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const { timestamp, source, payload } = body as {
-      timestamp?: number;
-      source?: string;
-      payload?: unknown;
-    };
-
-    if (typeof timestamp !== "number" || timestamp < 0) {
-      return NextResponse.json(
-        { success: false, error: "timestamp must be a non-negative number" },
-        { status: 400 }
-      );
-    }
-
-    if (!payload || typeof payload !== "object") {
-      return NextResponse.json(
-        { success: false, error: "payload must be a JSON object" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(req, CoachFrameAnnotationSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { timestamp, source, payload } = parsed;
 
     const src = source ?? "mediapipe";
 
@@ -112,8 +99,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ frameAnnotation }, { status: 201 });
+    return NextResponse.json({ success: true, data: { frameAnnotation } }, { status: 201 });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -141,37 +127,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const { frameAnnotations } = body as {
-      frameAnnotations?: Array<{
-        timestamp: number;
-        source?: string;
-        payload: unknown;
-      }>;
-    };
-
-    if (!Array.isArray(frameAnnotations) || frameAnnotations.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "frameAnnotations must be a non-empty array" },
-        { status: 400 }
-      );
-    }
-
-    // Validate all entries
-    for (const fa of frameAnnotations) {
-      if (typeof fa.timestamp !== "number" || fa.timestamp < 0) {
-        return NextResponse.json(
-          { success: false, error: "Each entry must have a non-negative timestamp" },
-          { status: 400 }
-        );
-      }
-      if (!fa.payload || typeof fa.payload !== "object") {
-        return NextResponse.json(
-          { success: false, error: "Each entry must have a payload object" },
-          { status: 400 }
-        );
-      }
-    }
+    const parsed = await parseBody(req, CoachFrameAnnotationsBatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { frameAnnotations } = parsed;
 
     // Batch upsert via transaction
     const results = await prisma.$transaction(
@@ -198,10 +156,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       })
     );
 
-    return NextResponse.json({
-      success: true,
-      count: results.length,
-    });
+    return NextResponse.json({ success: true, data: { count: results.length } });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });

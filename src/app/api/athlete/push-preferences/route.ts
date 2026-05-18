@@ -14,6 +14,7 @@ import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { updatePushPreferences, type PushPreferences } from "@/lib/push/preferences";
 import { logger } from "@/lib/logger";
+import { parseBody, AthletePushPreferencesPatchSchema } from "@/lib/api-schemas";
 
 export async function PATCH(req: NextRequest) {
   try {
@@ -30,26 +31,17 @@ export async function PATCH(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
-    // Accept any subset of PushPreferences keys; ignore unknown keys.
-    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-    const VALID_KEYS: Array<keyof PushPreferences> = [
-      "coachFeedback",
-      "teammatePRs",
-      "streakReminder",
-      "weeklyGoalReminder",
-      "practiceReminder",
-    ];
-    const updates: Partial<PushPreferences> = {};
-    for (const key of VALID_KEYS) {
-      if (typeof body[key] === "boolean") {
-        (updates as Record<string, boolean>)[key] = body[key] as boolean;
-      }
-    }
+    const parsed = await parseBody(req, AthletePushPreferencesPatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
 
+    const updates: Partial<PushPreferences> = parsed;
     const updated = await updatePushPreferences(athlete.id, updates);
     return NextResponse.json({ success: true, data: updated });
   } catch (err) {
     logger.error("PATCH /api/athlete/push-preferences", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to save preferences." }, { status: 500 });
+    return NextResponse.json(
+      { success: false, error: "Failed to save preferences." },
+      { status: 500 }
+    );
   }
 }

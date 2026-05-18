@@ -7,23 +7,14 @@ import {
   getPublicUrl,
 } from "@/lib/storage";
 import { logger } from "@/lib/logger";
+import { parseBody, CoachVideoUploadThumbnailUrlSchema } from "@/lib/api-schemas";
 
 export async function POST(req: NextRequest) {
   try {
     const { coach } = await requireCoachApi();
-    const body = await req.json();
-
-    const { fileName, contentType } = body as {
-      fileName?: string;
-      contentType?: string;
-    };
-
-    if (!fileName || !contentType) {
-      return NextResponse.json(
-        { success: false, error: "fileName and contentType are required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(req, CoachVideoUploadThumbnailUrlSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { fileName, contentType } = parsed;
 
     if (contentType !== "image/jpeg") {
       return NextResponse.json(
@@ -36,16 +27,20 @@ export async function POST(req: NextRequest) {
 
     if (isR2Configured()) {
       const { uploadUrl, publicUrl } = await getPresignedUploadUrl(key, contentType);
-      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-      return NextResponse.json({ mode: "r2", uploadUrl, key, publicUrl });
+      return NextResponse.json({
+        success: true,
+        data: { mode: "r2" as const, uploadUrl, key, publicUrl },
+      });
     } else {
       const publicUrl = getPublicUrl(key);
-      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json({
-        mode: "local",
-        uploadUrl: "/api/coach/videos/upload-thumbnail-local",
-        key,
-        publicUrl,
+        success: true,
+        data: {
+          mode: "local" as const,
+          uploadUrl: "/api/coach/videos/upload-thumbnail-local",
+          key,
+          publicUrl,
+        },
       });
     }
   } catch (err) {

@@ -87,9 +87,15 @@ export async function POST(req: NextRequest) {
       select: { id: true, overallScore: true, date: true },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json(
-      { id: checkIn.id, overallScore: checkIn.overallScore, date: checkIn.date.toISOString() },
+      {
+        success: true,
+        data: {
+          id: checkIn.id,
+          overallScore: checkIn.overallScore,
+          date: checkIn.date.toISOString(),
+        },
+      },
       { status: 201 }
     );
   } catch (err) {

@@ -135,7 +135,15 @@ export function EnablePushNotifications({
         setBusy(false);
         return;
       }
-      const { publicKey } = (await vapidRes.json()) as { publicKey: string };
+      const vapidPayload = (await vapidRes.json()) as
+        | { success: true; data: { publicKey: string } }
+        | { success: false; error: string };
+      if (!vapidPayload.success) {
+        toast.error(vapidPayload.error || "Push notifications are not available right now.");
+        setBusy(false);
+        return;
+      }
+      const { publicKey } = vapidPayload.data;
 
       // 4. Subscribe
       const subscription = await registration.pushManager.subscribe({

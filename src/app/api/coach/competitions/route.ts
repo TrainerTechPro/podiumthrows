@@ -6,6 +6,11 @@ import { COMPETITION_WEIGHTS } from "@/lib/throws";
 import { recordThrow } from "@/lib/throws/pr";
 import { emitPR } from "@/lib/team-activity";
 import { EventType } from "@prisma/client";
+import {
+  parseBody,
+  CoachCompetitionCreateSchema,
+  CoachCompetitionResultsSchema,
+} from "@/lib/api-schemas";
 
 /* ─── GET — list all meets for coach's roster ─────────────────────────────── */
 
@@ -114,7 +119,8 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     const { coach } = await requireCoachApi();
-    const body = await req.json();
+    const parsed = await parseBody(req, CoachCompetitionCreateSchema);
+    if (parsed instanceof NextResponse) return parsed;
     const {
       name,
       date,
@@ -126,25 +132,7 @@ export async function POST(req: NextRequest) {
       placeFinish,
       windMps,
       weather,
-    } = body as {
-      name: string;
-      date: string;
-      priority?: string;
-      entries: { athleteId: string; event: string }[];
-      venueType?: "INDOOR" | "OUTDOOR" | null;
-      format?: "THREE_PLUS_THREE" | "FOUR_STRAIGHT" | null;
-      implementWeightKg?: number | null;
-      placeFinish?: number | null;
-      windMps?: number | null;
-      weather?: string | null;
-    };
-
-    if (!name?.trim() || !date?.trim() || !entries?.length) {
-      return NextResponse.json(
-        { success: false, error: "name, date, and entries[] are required" },
-        { status: 400 }
-      );
-    }
+    } = parsed;
 
     // Verify all athletes belong to this coach
     const athleteIds = [...new Set(entries.map((e) => e.athleteId))];
@@ -170,7 +158,7 @@ export async function POST(req: NextRequest) {
             name: name.trim(),
             date: date.trim(),
             event: entry.event as EventType,
-            priority: priority || "B",
+            priority: priority ?? "B",
             venueType: venueType ?? null,
             format: format ?? "THREE_PLUS_THREE",
             implementWeightKg: implementWeightKg ?? null,
@@ -200,14 +188,9 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     const { coach } = await requireCoachApi();
-    const body = await req.json();
-    const { results } = body as {
-      results: { id: string; result: number | null; notes?: string | null }[];
-    };
-
-    if (!results?.length) {
-      return NextResponse.json({ success: false, error: "results[] is required" }, { status: 400 });
-    }
+    const parsed = await parseBody(req, CoachCompetitionResultsSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { results } = parsed;
 
     // Fetch all competition entries to verify ownership + get event/athlete info
     const ids = results.map((r) => r.id);
@@ -305,8 +288,7 @@ export async function PATCH(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      updated: results.length,
-      prs,
+      data: { updated: results.length, prs },
     });
   } catch (err) {
     if (err instanceof AuthError) {

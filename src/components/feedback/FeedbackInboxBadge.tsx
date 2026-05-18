@@ -23,8 +23,10 @@ export function FeedbackInboxBadge() {
         cache: "no-store",
       });
       if (!res.ok) return;
-      const data = (await res.json()) as { unread: number };
-      setUnread(data.unread ?? 0);
+      const payload = (await res.json()) as
+        | { success: true; data: { unread: number } }
+        | { success: false; error: string };
+      setUnread(payload.success ? (payload.data.unread ?? 0) : 0);
     } catch (err) {
       // Silent — feature is non-critical
       logger.debug("Silent — feature is non-critical", {

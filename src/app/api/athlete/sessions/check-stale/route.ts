@@ -72,8 +72,7 @@ export async function POST() {
       .map(([id, last]) => ({ id, lastThrowAt: last }));
 
     if (staleCandidates.length === 0) {
-      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-      return NextResponse.json({ staleSession: null });
+      return NextResponse.json({ success: true, data: { staleSession: null } });
     }
 
     // Verify the session is still open (not COMPLETED/SKIPPED)
@@ -87,8 +86,7 @@ export async function POST() {
     });
 
     if (openSessions.length === 0) {
-      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-      return NextResponse.json({ staleSession: null });
+      return NextResponse.json({ success: true, data: { staleSession: null } });
     }
 
     // Prefer the one with the most recent lastThrowAt (the session the
@@ -99,16 +97,17 @@ export async function POST() {
       .sort((a, b) => b.lastThrowAt.getTime() - a.lastThrowAt.getTime())[0];
 
     if (!chosen) {
-      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-      return NextResponse.json({ staleSession: null });
+      return NextResponse.json({ success: true, data: { staleSession: null } });
     }
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
-      staleSession: {
-        id: chosen.id,
-        lastThrowAt: chosen.lastThrowAt.toISOString(),
-        staleMinutes: Math.round((now - chosen.lastThrowAt.getTime()) / 60_000),
+      success: true,
+      data: {
+        staleSession: {
+          id: chosen.id,
+          lastThrowAt: chosen.lastThrowAt.toISOString(),
+          staleMinutes: Math.round((now - chosen.lastThrowAt.getTime()) / 60_000),
+        },
       },
     });
   } catch (err) {

@@ -19,13 +19,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
-
-const ALLOWED_EMOJIS = ["fire", "lift", "hundred"] as const;
-type Emoji = (typeof ALLOWED_EMOJIS)[number];
-
-function isValidEmoji(value: unknown): value is Emoji {
-  return typeof value === "string" && (ALLOWED_EMOJIS as readonly string[]).includes(value);
-}
+import { parseBody, TeamActivityReactionSchema } from "@/lib/api-schemas";
 
 async function canReact(userId: string, role: string, activityId: string): Promise<boolean> {
   const activity = await prisma.teamActivity.findUnique({
@@ -61,13 +55,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!isValidEmoji(body.emoji)) {
-      return NextResponse.json(
-        { success: false, error: `emoji must be one of ${ALLOWED_EMOJIS.join(", ")}` },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(req, TeamActivityReactionSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { emoji } = parsed;
 
     if (!(await canReact(session.userId, session.role, id))) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
@@ -79,7 +69,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         activityId_userId_emoji: {
           activityId: id,
           userId: session.userId,
-          emoji: body.emoji,
+          emoji,
         },
       },
       select: { id: true },
@@ -89,19 +79,23 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       await prisma.teamActivityReaction.delete({
         where: { id: existing.id },
       });
-      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-      return NextResponse.json({ state: "removed", emoji: body.emoji });
+      return NextResponse.json({
+        success: true,
+        data: { state: "removed" as const, emoji },
+      });
     }
 
     await prisma.teamActivityReaction.create({
       data: {
         activityId: id,
         userId: session.userId,
-        emoji: body.emoji,
+        emoji,
       },
     });
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ state: "added", emoji: body.emoji });
+    return NextResponse.json({
+      success: true,
+      data: { state: "added" as const, emoji },
+    });
   } catch (err) {
     logger.error("POST /api/athlete/team-activity/[id]/reactions", {
       context: "api",
@@ -122,13 +116,9 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
 
-    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
-    if (!isValidEmoji(body.emoji)) {
-      return NextResponse.json(
-        { success: false, error: `emoji must be one of ${ALLOWED_EMOJIS.join(", ")}` },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(req, TeamActivityReactionSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { emoji } = parsed;
 
     if (!(await canReact(session.userId, session.role, id))) {
       return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
@@ -138,12 +128,14 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       where: {
         activityId: id,
         userId: session.userId,
-        emoji: body.emoji,
+        emoji,
       },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ state: "removed", emoji: body.emoji });
+    return NextResponse.json({
+      success: true,
+      data: { state: "removed" as const, emoji },
+    });
   } catch (err) {
     logger.error("DELETE /api/athlete/team-activity/[id]/reactions", {
       context: "api",

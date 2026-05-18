@@ -253,12 +253,17 @@ export function VideoGrid({ initialVideos }: { initialVideos: VideoCardData[] })
   const pollStatuses = useCallback(async () => {
     if (processingIds.length === 0) return;
 
+    type StatusEnvelope =
+      | { success: true; data: StatusPollResult }
+      | { success: false; error: string };
+
     const results = await Promise.allSettled(
-      processingIds.map((id) =>
-        fetch(`/api/coach/videos/${id}/status`).then((r) =>
-          r.ok ? (r.json() as Promise<StatusPollResult>) : null
-        )
-      )
+      processingIds.map(async (id) => {
+        const r = await fetch(`/api/coach/videos/${id}/status`);
+        if (!r.ok) return null;
+        const payload = (await r.json()) as StatusEnvelope;
+        return payload.success ? payload.data : null;
+      })
     );
 
     setVideos((prev) =>

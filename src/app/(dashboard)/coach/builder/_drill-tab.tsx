@@ -88,11 +88,11 @@ export function DrillTab() {
       });
 
       const data = await res.json();
-      if (res.ok && (data.drill || data.success)) {
+      if (res.ok && data?.success) {
         toast.success("Drill saved to library");
         router.push("/coach/library?view=drills");
       } else {
-        toast.error(data.error || "Failed to save drill");
+        toast.error(data?.error || "Failed to save drill");
       }
     } catch (err) {
       logger.error("[builder/drill] submit error", { error: err });

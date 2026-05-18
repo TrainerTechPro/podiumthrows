@@ -528,7 +528,7 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
         // Refresh full list
         const listRes = await fetch("/api/coach/goals");
         const listData = await listRes.json();
-        if (listRes.ok) setGoals(listData.goals ?? []);
+        if (listRes.ok && listData?.success) setGoals(listData.data?.goals ?? []);
         setShowAddModal(false);
       } catch (err) {
         logger.error("create coach goal failed", {
@@ -549,14 +549,14 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
         body: JSON.stringify({ currentValue }),
       });
       const data = await res.json();
-      if (res.ok) {
+      if (res.ok && data?.success) {
         setGoals((prev) =>
           prev.map((g) =>
             g.id === id
               ? {
                   ...g,
-                  currentValue: data.goal.currentValue,
-                  status: data.goal.status,
+                  currentValue: data.data.goal.currentValue,
+                  status: data.data.goal.status,
                   progressPct: Math.min(
                     100,
                     Math.max(

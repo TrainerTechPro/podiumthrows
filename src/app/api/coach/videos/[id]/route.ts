@@ -3,9 +3,7 @@ import { requireCoachApi, AuthError, getVideoById } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { deleteFile } from "@/lib/storage";
 import { logger } from "@/lib/logger";
-
-const VALID_EVENTS = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
-const VALID_CATEGORIES = ["training", "competition", "drill", "analysis"];
+import { parseBody, CoachVideoUpdateSchema } from "@/lib/api-schemas";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -17,8 +15,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ video });
+    return NextResponse.json({ success: true, data: { video } });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -44,47 +41,26 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const { title, description, event, category, tags } = body as {
-      title?: string;
-      description?: string;
-      event?: string | null;
-      category?: string | null;
-      tags?: string[];
-    };
+    const parsed = await parseBody(req, CoachVideoUpdateSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { title, description, event, category, tags } = parsed;
 
     const data: Record<string, unknown> = {};
 
     if (title !== undefined) {
-      if (!title.trim()) {
-        return NextResponse.json(
-          { success: false, error: "title cannot be empty" },
-          { status: 400 }
-        );
-      }
       data.title = title.trim();
     }
     if (description !== undefined) data.description = description?.trim() || null;
-    if (event !== undefined) {
-      if (event && !VALID_EVENTS.includes(event)) {
-        return NextResponse.json({ success: false, error: "Invalid event" }, { status: 400 });
-      }
-      data.event = event || null;
-    }
-    if (category !== undefined) {
-      if (category && !VALID_CATEGORIES.includes(category)) {
-        return NextResponse.json({ success: false, error: "Invalid category" }, { status: 400 });
-      }
-      data.category = category || null;
-    }
-    if (tags !== undefined) data.tags = tags;
+    if (event !== undefined) data.event = event ?? null;
+    if (category !== undefined) data.category = category ?? null;
+    if (tags !== undefined) data.tags = tags ?? [];
 
     await prisma.videoUpload.update({
       where: { id: id },
       data,
     });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { id } });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
@@ -121,7 +97,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
 
     await prisma.videoUpload.delete({ where: { id: id } });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json({ success: true, data: { id } });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });

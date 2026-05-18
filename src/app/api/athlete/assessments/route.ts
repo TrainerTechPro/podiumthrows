@@ -54,31 +54,33 @@ export async function GET() {
       }),
     ]);
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
-      testingRecords: testingRecords.map((r) => ({
-        id: r.id,
-        testDate: r.testDate,
-        testType: r.testType,
-        competitionMark: r.competitionMark,
-        heavyImplMark: r.heavyImplMark,
-        heavyImplKg: r.heavyImplKg,
-        lightImplMark: r.lightImplMark,
-        lightImplKg: r.lightImplKg,
-        squatKg: r.squatKg,
-        benchKg: r.benchKg,
-        snatchKg: r.snatchKg,
-        cleanKg: r.cleanKg,
-        bodyWeightKg: r.bodyWeightKg,
-        distanceBandAtTest: r.distanceBandAtTest,
-        notes: r.notes,
-      })),
-      assessments: assessments.map((a) => ({
-        id: a.id,
-        athleteType: a.athleteType,
-        completedAt: a.completedAt.toISOString(),
-        notes: a.notes,
-      })),
+      success: true,
+      data: {
+        testingRecords: testingRecords.map((r) => ({
+          id: r.id,
+          testDate: r.testDate,
+          testType: r.testType,
+          competitionMark: r.competitionMark,
+          heavyImplMark: r.heavyImplMark,
+          heavyImplKg: r.heavyImplKg,
+          lightImplMark: r.lightImplMark,
+          lightImplKg: r.lightImplKg,
+          squatKg: r.squatKg,
+          benchKg: r.benchKg,
+          snatchKg: r.snatchKg,
+          cleanKg: r.cleanKg,
+          bodyWeightKg: r.bodyWeightKg,
+          distanceBandAtTest: r.distanceBandAtTest,
+          notes: r.notes,
+        })),
+        assessments: assessments.map((a) => ({
+          id: a.id,
+          athleteType: a.athleteType,
+          completedAt: a.completedAt.toISOString(),
+          notes: a.notes,
+        })),
+      },
     });
   } catch (err) {
     logger.error("GET /api/athlete/assessments", { context: "api", error: err });

@@ -75,22 +75,24 @@ export async function GET() {
     const shouldRemindNow =
       isStreakActive && hoursSinceLastThrow >= MIN_HOURS_SINCE_LAST_THROW && withinQuietHours;
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
-      currentStreak: athlete.currentStreak,
-      longestStreak: athlete.longestStreak,
-      lastActivityDate: athlete.lastActivityDate?.toISOString() ?? null,
-      lastThrowAt: lastThrowAt?.toISOString() ?? null,
-      isStreakActive,
-      hoursSinceLastThrow: Number.isFinite(hoursSinceLastThrow)
-        ? Math.round(hoursSinceLastThrow * 10) / 10
-        : null,
-      shouldRemindNow,
-      freezesAvailable: athlete.freezesAvailable,
-      freezesResetAt: athlete.freezesResetAt.toISOString(),
-      lastFreezeUsedAt: athlete.lastFreezeUsedAt?.toISOString() ?? null,
-      streakBrokenAt: athlete.streakBrokenAt?.toISOString() ?? null,
-      lastBrokenStreakDays: athlete.lastBrokenStreakDays,
+      success: true,
+      data: {
+        currentStreak: athlete.currentStreak,
+        longestStreak: athlete.longestStreak,
+        lastActivityDate: athlete.lastActivityDate?.toISOString() ?? null,
+        lastThrowAt: lastThrowAt?.toISOString() ?? null,
+        isStreakActive,
+        hoursSinceLastThrow: Number.isFinite(hoursSinceLastThrow)
+          ? Math.round(hoursSinceLastThrow * 10) / 10
+          : null,
+        shouldRemindNow,
+        freezesAvailable: athlete.freezesAvailable,
+        freezesResetAt: athlete.freezesResetAt.toISOString(),
+        lastFreezeUsedAt: athlete.lastFreezeUsedAt?.toISOString() ?? null,
+        streakBrokenAt: athlete.streakBrokenAt?.toISOString() ?? null,
+        lastBrokenStreakDays: athlete.lastBrokenStreakDays,
+      },
     });
   } catch (err) {
     logger.error("GET /api/athlete/streak-status", {

@@ -20,8 +20,7 @@ export async function GET(req: NextRequest) {
 
     const recommendations = await getExerciseRecommendations(event, coach.id);
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ recommendations });
+    return NextResponse.json({ success: true, data: { recommendations } });
   } catch {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }

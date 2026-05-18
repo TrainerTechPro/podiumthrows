@@ -1,11 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
-
-/* ─── Allowed athlete types ─────────────────────────────────────────────── */
-
-const VALID_TYPES = ["EXPLOSIVE", "SPEED_STRENGTH", "STRENGTH_SPEED", "STRENGTH"] as const;
-type ValidType = (typeof VALID_TYPES)[number];
+import { parseBody, CoachAssessmentCreateSchema } from "@/lib/api-schemas";
 
 /* ─── GET: Fetch assessments for an athlete ─────────────────────────────── */
 
@@ -49,15 +45,17 @@ export async function GET(req: NextRequest) {
     },
   });
 
-  // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
   return NextResponse.json({
-    assessments: assessments.map((a) => ({
-      id: a.id,
-      athleteType: a.athleteType,
-      results: a.results,
-      notes: a.notes,
-      completedAt: a.completedAt.toISOString(),
-    })),
+    success: true,
+    data: {
+      assessments: assessments.map((a) => ({
+        id: a.id,
+        athleteType: a.athleteType,
+        results: a.results,
+        notes: a.notes,
+        completedAt: a.completedAt.toISOString(),
+      })),
+    },
   });
 }
 
@@ -77,25 +75,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: false, error: "Coach profile not found" }, { status: 404 });
   }
 
-  const body = await req.json();
-  const { athleteId, athleteType, results, notes } = body;
-
-  // Validate required fields
-  if (!athleteId || typeof athleteId !== "string") {
-    return NextResponse.json({ success: false, error: "athleteId is required" }, { status: 400 });
-  }
-  if (!athleteType || !VALID_TYPES.includes(athleteType as ValidType)) {
-    return NextResponse.json(
-      { success: false, error: `athleteType must be one of: ${VALID_TYPES.join(", ")}` },
-      { status: 400 }
-    );
-  }
-  if (!results || typeof results !== "object") {
-    return NextResponse.json(
-      { success: false, error: "results object is required" },
-      { status: 400 }
-    );
-  }
+  const parsed = await parseBody(req, CoachAssessmentCreateSchema);
+  if (parsed instanceof NextResponse) return parsed;
+  const { athleteId, athleteType, results, notes } = parsed;
 
   // Verify athlete belongs to this coach
   const athlete = await prisma.athleteProfile.findFirst({
@@ -110,9 +92,13 @@ export async function POST(req: NextRequest) {
   const assessment = await prisma.bondarchukAssessment.create({
     data: {
       athleteId,
-      athleteType: athleteType as ValidType,
-      results,
-      notes: notes || null,
+      athleteType,
+      // Cast: schema validates shape; Prisma's InputJsonValue type doesn't accept
+      // Record<string, unknown> directly even though all values serialise fine.
+      results: results as Parameters<
+        typeof prisma.bondarchukAssessment.create
+      >[0]["data"]["results"],
+      notes: notes ?? null,
     },
     select: {
       id: true,
@@ -123,15 +109,17 @@ export async function POST(req: NextRequest) {
     },
   });
 
-  // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
   return NextResponse.json(
     {
-      assessment: {
-        id: assessment.id,
-        athleteType: assessment.athleteType,
-        results: assessment.results,
-        notes: assessment.notes,
-        completedAt: assessment.completedAt.toISOString(),
+      success: true,
+      data: {
+        assessment: {
+          id: assessment.id,
+          athleteType: assessment.athleteType,
+          results: assessment.results,
+          notes: assessment.notes,
+          completedAt: assessment.completedAt.toISOString(),
+        },
       },
     },
     { status: 201 }

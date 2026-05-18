@@ -33,15 +33,16 @@ export function StaleSessionChecker() {
         });
         if (!res.ok || cancelled) return;
 
-        const data = (await res.json()) as {
-          staleSession: { id: string } | null;
-        };
-        if (cancelled || !data.staleSession) return;
+        const payload = (await res.json()) as
+          | { success: true; data: { staleSession: { id: string } | null } }
+          | { success: false; error: string };
+        if (cancelled || !payload.success || !payload.data.staleSession) return;
+        const staleSession = payload.data.staleSession;
 
         // Mark the session complete before redirecting. If the complete call
         // fails we stay put — redirecting to the recap with an IN_PROGRESS
         // session would render the wrong view and confuse the athlete.
-        const completeRes = await fetch(`/api/athlete/sessions/${data.staleSession.id}/complete`, {
+        const completeRes = await fetch(`/api/athlete/sessions/${staleSession.id}/complete`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json", ...csrfHeaders() },
           body: JSON.stringify({}),
@@ -54,7 +55,7 @@ export function StaleSessionChecker() {
         });
         if (cancelled || !completeRes?.ok) return;
 
-        router.push(`/athlete/session/${data.staleSession.id}?view=recap`);
+        router.push(`/athlete/session/${staleSession.id}?view=recap`);
       } catch (err) {
         // Non-fatal — feature is optional, but still log for diagnostics.
         logger.warn("stale session check failed", {

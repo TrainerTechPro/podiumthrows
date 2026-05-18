@@ -3,6 +3,7 @@ import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { notifyAthleteVideoShared } from "@/lib/notifications";
+import { parseBody, CoachVideoShareSchema } from "@/lib/api-schemas";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -19,15 +20,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ success: false, error: "Video not found" }, { status: 404 });
     }
 
-    const body = await req.json();
-    const { athleteIds } = body as { athleteIds?: string[] };
-
-    if (!Array.isArray(athleteIds) || athleteIds.length === 0) {
-      return NextResponse.json(
-        { success: false, error: "athleteIds must be a non-empty array" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(req, CoachVideoShareSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { athleteIds } = parsed;
 
     // Verify all athletes belong to this coach
     const athletes = await prisma.athleteProfile.findMany({
@@ -70,11 +65,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       });
     }
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
     return NextResponse.json({
-      shared: validIds.length,
-      total: existingSet.size,
-      newlyNotified: newlyAdded.length,
+      success: true,
+      data: {
+        shared: validIds.length,
+        total: existingSet.size,
+        newlyNotified: newlyAdded.length,
+      },
     });
   } catch (err) {
     if (err instanceof AuthError) {

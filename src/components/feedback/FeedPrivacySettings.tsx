@@ -77,14 +77,16 @@ export function FeedPrivacySettings() {
           cache: "no-store",
         });
         if (!res.ok) return;
-        const data = (await res.json()) as {
-          preferences: { feedPrivacy?: Partial<FeedPrivacy> };
-        };
+        const payload = (await res.json()) as
+          | { success: true; data: { preferences: { feedPrivacy?: Partial<FeedPrivacy> } } }
+          | { success: false; error: string };
+        if (!payload.success) return;
+        const fp = payload.data.preferences.feedPrivacy;
         setPrefs({
-          sharePRs: data.preferences.feedPrivacy?.sharePRs ?? true,
-          shareSessions: data.preferences.feedPrivacy?.shareSessions ?? true,
-          shareStreaks: data.preferences.feedPrivacy?.shareStreaks ?? true,
-          shareGoals: data.preferences.feedPrivacy?.shareGoals ?? true,
+          sharePRs: fp?.sharePRs ?? true,
+          shareSessions: fp?.shareSessions ?? true,
+          shareStreaks: fp?.shareStreaks ?? true,
+          shareGoals: fp?.shareGoals ?? true,
         });
       } finally {
         setLoaded(true);
@@ -123,18 +125,14 @@ export function FeedPrivacySettings() {
   return (
     <div className="card p-5">
       <div className="flex items-center gap-2 mb-1">
-        <Users
-          className="h-4 w-4 text-primary-500"
-          strokeWidth={1.75}
-          aria-hidden="true"
-        />
+        <Users className="h-4 w-4 text-primary-500" strokeWidth={1.75} aria-hidden="true" />
         <h2 className="text-sm font-semibold uppercase tracking-wider text-muted">
           Team Feed Privacy
         </h2>
       </div>
       <p className="text-xs text-muted mb-4">
-        Pick what gets shared with your teammates. Turning a toggle off
-        hides future events — past posts aren&apos;t deleted.
+        Pick what gets shared with your teammates. Turning a toggle off hides future events — past
+        posts aren&apos;t deleted.
       </p>
 
       <div className="space-y-2">
@@ -158,9 +156,7 @@ export function FeedPrivacySettings() {
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--foreground)]">
-                  {label}
-                </p>
+                <p className="text-sm font-medium text-[var(--foreground)]">{label}</p>
                 <p className="text-xs text-muted">{description}</p>
               </div>
               <button

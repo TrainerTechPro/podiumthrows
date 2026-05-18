@@ -70,8 +70,10 @@ export async function POST(
 
     if (existingSession?.assignments[0]) {
       // Already created — just return the existing assignment
-      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-      return NextResponse.json({ assignmentId: existingSession.assignments[0].id });
+      return NextResponse.json({
+        success: true,
+        data: { assignmentId: existingSession.assignments[0].id },
+      });
     }
 
     // Parse prescriptions
@@ -219,8 +221,7 @@ export async function POST(
       return assignment;
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ assignmentId: result.id }, { status: 201 });
+    return NextResponse.json({ success: true, data: { assignmentId: result.id } }, { status: 201 });
   } catch (error) {
     logger.error("Failed to start live workout from self-program", {
       context: "api",

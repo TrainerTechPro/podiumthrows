@@ -488,7 +488,9 @@ export function SelfProgramWizard({
 
       if (res.ok) {
         const data = await res.json();
-        if (data.id && !draftId) setDraftId(data.id);
+        // POST returns { success: true, data: { id } }; PUT has no id payload.
+        const newId = data?.success ? data.data?.id : data?.id;
+        if (newId && !draftId) setDraftId(newId);
       }
     } catch (err) {
       // Draft save failures are non-critical — silently continue
@@ -575,7 +577,7 @@ export function SelfProgramWizard({
           return;
         }
         const created = await createRes.json();
-        configId = created.id;
+        configId = created?.success ? created.data?.id : created?.id;
         setDraftId(configId);
         // Mark as finalized
         await fetch(`/api/athlete/self-program/${configId}`, {

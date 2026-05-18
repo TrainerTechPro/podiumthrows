@@ -9,24 +9,14 @@ import {
   MAX_VIDEO_SIZE_MB,
 } from "@/lib/storage";
 import { logger } from "@/lib/logger";
+import { parseBody, CoachVideoUploadUrlSchema } from "@/lib/api-schemas";
 
 export async function POST(req: NextRequest) {
   try {
     const { coach } = await requireCoachApi();
-    const body = await req.json();
-
-    const { fileName, contentType, fileSizeMb } = body as {
-      fileName?: string;
-      contentType?: string;
-      fileSizeMb?: number;
-    };
-
-    if (!fileName || !contentType) {
-      return NextResponse.json(
-        { success: false, error: "fileName and contentType are required" },
-        { status: 400 }
-      );
-    }
+    const parsed = await parseBody(req, CoachVideoUploadUrlSchema);
+    if (parsed instanceof NextResponse) return parsed;
+    const { fileName, contentType, fileSizeMb } = parsed;
 
     // Validate file type — be lenient with MIME (some mobile browsers send odd types)
     const ext = fileName.split(".").pop()?.toLowerCase() ?? "";
@@ -52,23 +42,27 @@ export async function POST(req: NextRequest) {
       // R2 mode: return presigned URL for direct upload
       const { uploadUrl, publicUrl } = await getPresignedUploadUrl(key, contentType);
 
-      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json({
-        mode: "r2",
-        uploadUrl,
-        key,
-        publicUrl,
+        success: true,
+        data: {
+          mode: "r2" as const,
+          uploadUrl,
+          key,
+          publicUrl,
+        },
       });
     } else {
       // Local mode: client will POST multipart to upload-local
       const publicUrl = getPublicUrl(key);
 
-      // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
       return NextResponse.json({
-        mode: "local",
-        uploadUrl: "/api/coach/videos/upload-local",
-        key,
-        publicUrl,
+        success: true,
+        data: {
+          mode: "local" as const,
+          uploadUrl: "/api/coach/videos/upload-local",
+          key,
+          publicUrl,
+        },
       });
     }
   } catch (err) {

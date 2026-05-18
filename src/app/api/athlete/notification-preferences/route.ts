@@ -18,6 +18,7 @@ import { Prisma } from "@prisma/client";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
+import { parseBody, NotificationPreferencesPatchSchema } from "@/lib/api-schemas";
 
 export type StreakReminderPrefs = {
   enabled: boolean;
@@ -114,8 +115,7 @@ export async function GET() {
     }
 
     const prefs = parsePrefs(athlete.notificationPreferences);
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ preferences: prefs });
+    return NextResponse.json({ success: true, data: { preferences: prefs } });
   } catch (err) {
     logger.error("GET /api/athlete/notification-preferences", {
       context: "api",
@@ -145,56 +145,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
     }
 
-    const body = (await req.json().catch(() => ({}))) as Record<string, unknown>;
+    const parsed = await parseBody(req, NotificationPreferencesPatchSchema);
+    if (parsed instanceof NextResponse) return parsed;
 
-    const incomingStreak =
-      body.streakReminder && typeof body.streakReminder === "object"
-        ? (body.streakReminder as Record<string, unknown>)
-        : null;
-
-    const incomingFeed =
-      body.feedPrivacy && typeof body.feedPrivacy === "object"
-        ? (body.feedPrivacy as Record<string, unknown>)
-        : null;
-
-    const incomingHaptics =
-      body.haptics && typeof body.haptics === "object"
-        ? (body.haptics as Record<string, unknown>)
-        : null;
-
-    // Partial merge: for each key, take the incoming value if it's a
-    // boolean, otherwise keep the current value. Unknown keys on the
-    // input are ignored.
+    // Partial merge: take incoming boolean values, otherwise keep current.
     const current = parsePrefs(athlete.notificationPreferences);
-
-    const pickBool = (
-      incoming: Record<string, unknown> | null,
-      key: string,
-      fallback: boolean
-    ): boolean => {
-      if (incoming && typeof incoming[key] === "boolean") {
-        return incoming[key] as boolean;
-      }
-      return fallback;
-    };
 
     const merged: NotificationPreferences = {
       streakReminder: {
-        enabled: pickBool(incomingStreak, "enabled", current.streakReminder.enabled),
-        promptDismissed: pickBool(
-          incomingStreak,
-          "promptDismissed",
-          current.streakReminder.promptDismissed
-        ),
+        enabled: parsed.streakReminder?.enabled ?? current.streakReminder.enabled,
+        promptDismissed:
+          parsed.streakReminder?.promptDismissed ?? current.streakReminder.promptDismissed,
       },
       feedPrivacy: {
-        sharePRs: pickBool(incomingFeed, "sharePRs", current.feedPrivacy.sharePRs),
-        shareSessions: pickBool(incomingFeed, "shareSessions", current.feedPrivacy.shareSessions),
-        shareStreaks: pickBool(incomingFeed, "shareStreaks", current.feedPrivacy.shareStreaks),
-        shareGoals: pickBool(incomingFeed, "shareGoals", current.feedPrivacy.shareGoals),
+        sharePRs: parsed.feedPrivacy?.sharePRs ?? current.feedPrivacy.sharePRs,
+        shareSessions: parsed.feedPrivacy?.shareSessions ?? current.feedPrivacy.shareSessions,
+        shareStreaks: parsed.feedPrivacy?.shareStreaks ?? current.feedPrivacy.shareStreaks,
+        shareGoals: parsed.feedPrivacy?.shareGoals ?? current.feedPrivacy.shareGoals,
       },
       haptics: {
-        enabled: pickBool(incomingHaptics, "enabled", current.haptics.enabled),
+        enabled: parsed.haptics?.enabled ?? current.haptics.enabled,
       },
     };
 
@@ -205,8 +175,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    // eslint-disable-next-line no-restricted-syntax -- TODO(HIGH-03-follow-up): migrate to { success: true, data } envelope
-    return NextResponse.json({ preferences: merged });
+    return NextResponse.json({ success: true, data: { preferences: merged } });
   } catch (err) {
     logger.error("POST /api/athlete/notification-preferences", {
       context: "api",
