@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useRef, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { focusFirstError } from "@/lib/forms/focus-first-error";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+
+type LoginField = "email" | "password";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,14 +18,19 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [invalidField, setInvalidField] = useState<LoginField | null>(null);
   const [loading, setLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    setInvalidField(null);
 
     if (!email || !password) {
       setError("Please fill in all fields.");
+      setInvalidField(!email ? "email" : "password");
+      queueMicrotask(() => focusFirstError(formRef.current));
       return;
     }
 
@@ -98,7 +106,7 @@ export default function LoginPage() {
         {error}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4" aria-busy={loading}>
+      <form ref={formRef} onSubmit={handleSubmit} className="space-y-4" aria-busy={loading}>
         <div>
           <label htmlFor="email" className="label">
             Email
@@ -111,6 +119,7 @@ export default function LoginPage() {
             className="input"
             placeholder="coach@example.com"
             autoComplete="email"
+            aria-invalid={invalidField === "email"}
             autoFocus
             required
           />
@@ -126,6 +135,7 @@ export default function LoginPage() {
             onChange={(e) => setPassword(e.target.value)}
             placeholder="Enter your password"
             autoComplete="current-password"
+            aria-invalid={invalidField === "password"}
             required
           />
         </div>
@@ -163,7 +173,7 @@ export default function LoginPage() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              Signing in...
+              Signing in…
             </span>
           ) : (
             "Sign In"

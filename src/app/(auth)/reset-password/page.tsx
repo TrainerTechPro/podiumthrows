@@ -1,10 +1,13 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useRef, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { focusFirstError } from "@/lib/forms/focus-first-error";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+
+type ResetField = "password" | "confirmPassword";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -14,7 +17,9 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [invalidField, setInvalidField] = useState<ResetField | null>(null);
   const [loading, setLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   if (!token) {
     return (
@@ -48,14 +53,19 @@ export default function ResetPasswordPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    setInvalidField(null);
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
+      setInvalidField("password");
+      queueMicrotask(() => focusFirstError(formRef.current));
       return;
     }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
+      setInvalidField("confirmPassword");
+      queueMicrotask(() => focusFirstError(formRef.current));
       return;
     }
 
@@ -100,7 +110,7 @@ export default function ResetPasswordPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="password" className="label">
             New Password
@@ -112,6 +122,7 @@ export default function ResetPasswordPage() {
             placeholder="Minimum 8 characters"
             autoComplete="new-password"
             minLength={8}
+            aria-invalid={invalidField === "password"}
             autoFocus
             required
           />
@@ -127,6 +138,7 @@ export default function ResetPasswordPage() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Re-enter your password"
             autoComplete="new-password"
+            aria-invalid={invalidField === "confirmPassword"}
             required
           />
         </div>
@@ -154,7 +166,7 @@ export default function ResetPasswordPage() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              Resetting...
+              Updating password…
             </span>
           ) : (
             "Reset Password"

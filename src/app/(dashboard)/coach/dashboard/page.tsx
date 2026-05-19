@@ -356,7 +356,7 @@ function ReadinessSparkline({
         style={{ color: "var(--color-text-secondary)" }}
         aria-hidden="true"
       >
-        No data
+        —
       </div>
     );
   }
