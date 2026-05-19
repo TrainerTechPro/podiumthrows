@@ -559,207 +559,227 @@ export default function CoachSettingsPage() {
           ))}
         </div>
 
-        {/* Profile Tab */}
+        {/* Profile Tab — one panel, two divided sections (Profile + Password).
+            Units stays its own panel because it's a different concept (display
+            preferences, not account identity). */}
         {activeTab === "profile" && (
-          <div className="animate-spring-up">
-            <form onSubmit={handleSaveProfile} className="card mb-6">
-              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Profile</h2>
-              <div className="space-y-4">
-                {/* Profile Picture */}
-                <div className="flex items-center gap-6 pb-4 border-b border-[var(--card-border)]">
-                  <div className="relative group">
-                    {profile.avatarUrl ? (
-                      <Image
-                        src={profile.avatarUrl}
-                        alt="Profile"
-                        width={72}
-                        height={72}
-                        unoptimized
-                        className="w-18 h-18 rounded-full object-cover border-2 border-[var(--card-border)]"
-                        style={{ width: 72, height: 72 }}
+          <div className="animate-spring-up space-y-6">
+            <div className="rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)] divide-y divide-[var(--card-border)]">
+              {/* ── Profile ─────────────────────────────────────────────── */}
+              <section className="p-5 sm:p-7">
+                <header className="mb-5">
+                  <h2 className="text-section font-heading font-semibold text-[var(--foreground)]">
+                    Profile
+                  </h2>
+                  <p className="text-sm text-muted mt-0.5">
+                    Visible to your athletes and on shared reports.
+                  </p>
+                </header>
+                <form onSubmit={handleSaveProfile} className="space-y-5">
+                  <div className="flex items-center gap-5">
+                    <div className="relative group shrink-0">
+                      {profile.avatarUrl ? (
+                        <Image
+                          src={profile.avatarUrl}
+                          alt="Profile"
+                          width={72}
+                          height={72}
+                          unoptimized
+                          className="rounded-full object-cover border-2 border-[var(--card-border)]"
+                          style={{ width: 72, height: 72 }}
+                        />
+                      ) : (
+                        <div className="w-[72px] h-[72px] rounded-full bg-[rgba(212,168,67,0.12)] flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-xl border-2 border-[var(--card-border)]">
+                          {profile.firstName?.[0] || "C"}
+                          {profile.lastName?.[0] || ""}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowPhotoEditor(true)}
+                        className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+                        aria-label="Edit profile photo"
+                      >
+                        <Camera
+                          className="h-5 w-5 text-white"
+                          aria-hidden="true"
+                          strokeWidth={1.75}
+                        />
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPhotoEditor(true)}
+                      className="btn-secondary text-sm min-h-[44px]"
+                    >
+                      {profile.avatarUrl ? "Edit photo" : "Add photo"}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="firstName" className="label">
+                        First name
+                      </label>
+                      <input
+                        id="firstName"
+                        type="text"
+                        value={profile.firstName}
+                        onChange={(e) => setProfile((p) => ({ ...p, firstName: e.target.value }))}
+                        className="input"
                       />
+                    </div>
+                    <div>
+                      <label htmlFor="lastName" className="label">
+                        Last name
+                      </label>
+                      <input
+                        id="lastName"
+                        type="text"
+                        value={profile.lastName}
+                        onChange={(e) => setProfile((p) => ({ ...p, lastName: e.target.value }))}
+                        className="input"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="label">
+                      Email
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      value={profile.email}
+                      disabled
+                      aria-describedby="email-hint"
+                      className="input bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 cursor-not-allowed"
+                    />
+                    <p id="email-hint" className="text-xs text-muted mt-1">
+                      Email is locked — contact support to change it.
+                    </p>
+                  </div>
+                  <div>
+                    <label htmlFor="bio" className="label">
+                      Bio
+                    </label>
+                    <textarea
+                      id="bio"
+                      value={profile.bio}
+                      onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))}
+                      placeholder="Brief coaching background and philosophy"
+                      rows={3}
+                      className="input resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="organization" className="label">
+                      Organization
+                    </label>
+                    <input
+                      id="organization"
+                      type="text"
+                      value={profile.organization}
+                      onChange={(e) => setProfile((p) => ({ ...p, organization: e.target.value }))}
+                      placeholder="e.g. University of Oregon, USATF"
+                      className="input"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    {saved ? (
+                      <span className="text-sm text-success-600 font-medium flex items-center gap-1.5">
+                        <Check className="h-4 w-4" aria-hidden="true" strokeWidth={1.75} />
+                        Saved
+                      </span>
                     ) : (
-                      <div className="w-[72px] h-[72px] rounded-full bg-[rgba(212,168,67,0.12)] flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-xl border-2 border-[var(--card-border)]">
-                        {profile.firstName?.[0] || "C"}
-                        {profile.lastName?.[0] || ""}
-                      </div>
+                      <span />
                     )}
-                    <button
-                      type="button"
-                      onClick={() => setShowPhotoEditor(true)}
-                      className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Edit profile photo"
-                    >
-                      <Camera
-                        className="h-5 w-5 text-white"
-                        aria-hidden="true"
-                        strokeWidth={1.75}
-                      />
+                    <button type="submit" disabled={saving} className="btn-primary min-h-[44px]">
+                      {saving ? "Saving changes…" : "Save changes"}
                     </button>
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setShowPhotoEditor(true)}
-                      className="btn-secondary text-sm"
-                    >
-                      {profile.avatarUrl ? "Edit Photo" : "Add Photo"}
-                    </button>
-                    <p className="text-xs text-muted">Crop, zoom &amp; rotate</p>
-                  </div>
-                </div>
+                </form>
+              </section>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="firstName" className="label">
-                      First Name
-                    </label>
-                    <input
-                      id="firstName"
-                      type="text"
-                      value={profile.firstName}
-                      onChange={(e) => setProfile((p) => ({ ...p, firstName: e.target.value }))}
-                      className="input"
-                    />
+              {/* ── Password ────────────────────────────────────────────── */}
+              <section className="p-5 sm:p-7">
+                <header className="mb-5">
+                  <h2 className="text-section font-heading font-semibold text-[var(--foreground)]">
+                    Change password
+                  </h2>
+                  <p className="text-sm text-muted mt-0.5">
+                    Use at least 8 characters. You&apos;ll stay signed in on this device.
+                  </p>
+                </header>
+                {pwMessage && (
+                  <div
+                    className={`mb-4 p-3 rounded-lg text-sm border ${
+                      pwMessage.type === "error"
+                        ? "bg-status-danger-bg text-status-danger-fg border-status-danger-fg/20"
+                        : "bg-status-success-bg text-status-success-fg border-status-success-fg/20"
+                    }`}
+                    role="alert"
+                  >
+                    {pwMessage.text}
                   </div>
-                  <div>
-                    <label htmlFor="lastName" className="label">
-                      Last Name
-                    </label>
-                    <input
-                      id="lastName"
-                      type="text"
-                      value={profile.lastName}
-                      onChange={(e) => setProfile((p) => ({ ...p, lastName: e.target.value }))}
-                      className="input"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="email" className="label">
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={profile.email}
-                    disabled
-                    className="input bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 cursor-not-allowed"
-                  />
-                  <p className="text-xs text-muted mt-1">Email cannot be changed</p>
-                </div>
-                <div>
-                  <label htmlFor="bio" className="label">
-                    Bio
-                  </label>
-                  <textarea
-                    id="bio"
-                    value={profile.bio}
-                    onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))}
-                    placeholder="Brief coaching background and philosophy"
-                    rows={3}
-                    className="input resize-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="organization" className="label">
-                    Organization
-                  </label>
-                  <input
-                    id="organization"
-                    type="text"
-                    value={profile.organization}
-                    onChange={(e) => setProfile((p) => ({ ...p, organization: e.target.value }))}
-                    placeholder="e.g. University of Oregon, USATF"
-                    className="input"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--card-border)]">
-                {saved && (
-                  <span className="text-sm text-success-600 font-medium flex items-center gap-1">
-                    <Check className="h-4 w-4" aria-hidden="true" strokeWidth={1.75} />
-                    Saved
-                  </span>
                 )}
-                {!saved && <div />}
-                <button type="submit" disabled={saving} className="btn-primary">
-                  {saving ? "Saving…" : "Save Changes"}
-                </button>
-              </div>
-            </form>
+                <form onSubmit={handleChangePassword} className="space-y-5">
+                  <div>
+                    <label htmlFor="currentPassword" className="label">
+                      Current password
+                    </label>
+                    <PasswordInput
+                      id="currentPassword"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) =>
+                        setPasswordForm((p) => ({ ...p, currentPassword: e.target.value }))
+                      }
+                      autoComplete="current-password"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="newPassword" className="label">
+                      New password
+                    </label>
+                    <PasswordInput
+                      id="newPassword"
+                      value={passwordForm.newPassword}
+                      onChange={(e) =>
+                        setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))
+                      }
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="confirmPassword" className="label">
+                      Confirm new password
+                    </label>
+                    <PasswordInput
+                      id="confirmPassword"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) =>
+                        setPasswordForm((p) => ({ ...p, confirmPassword: e.target.value }))
+                      }
+                      autoComplete="new-password"
+                    />
+                  </div>
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="submit"
+                      disabled={
+                        pwSaving || !passwordForm.currentPassword || !passwordForm.newPassword
+                      }
+                      className="btn-primary min-h-[44px]"
+                    >
+                      {pwSaving ? "Updating password…" : "Update password"}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            </div>
 
-            {/* Units Section — per-data-type metric/imperial display prefs */}
+            {/* Display preferences are a separate concept from account identity,
+                so they get their own quiet panel. */}
             <CoachUnitsPanel />
-
-            {/* Password Section */}
-            <form onSubmit={handleChangePassword} className="card">
-              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
-                Change Password
-              </h2>
-              {pwMessage && (
-                <div
-                  className={`mb-4 p-3 rounded-lg text-sm border ${
-                    pwMessage.type === "error"
-                      ? "bg-status-danger-bg text-status-danger-fg border-status-danger-fg/20"
-                      : "bg-status-success-bg text-status-success-fg border-status-success-fg/20"
-                  }`}
-                  role="alert"
-                >
-                  {pwMessage.text}
-                </div>
-              )}
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="currentPassword" className="label">
-                    Current Password
-                  </label>
-                  <PasswordInput
-                    id="currentPassword"
-                    value={passwordForm.currentPassword}
-                    onChange={(e) =>
-                      setPasswordForm((p) => ({ ...p, currentPassword: e.target.value }))
-                    }
-                    autoComplete="current-password"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="newPassword" className="label">
-                    New Password
-                  </label>
-                  <PasswordInput
-                    id="newPassword"
-                    value={passwordForm.newPassword}
-                    onChange={(e) =>
-                      setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))
-                    }
-                    autoComplete="new-password"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="confirmPassword" className="label">
-                    Confirm New Password
-                  </label>
-                  <PasswordInput
-                    id="confirmPassword"
-                    value={passwordForm.confirmPassword}
-                    onChange={(e) =>
-                      setPasswordForm((p) => ({ ...p, confirmPassword: e.target.value }))
-                    }
-                    autoComplete="new-password"
-                  />
-                </div>
-              </div>
-              <div className="mt-6 pt-4 border-t border-[var(--card-border)] flex justify-end">
-                <button
-                  type="submit"
-                  disabled={pwSaving || !passwordForm.currentPassword || !passwordForm.newPassword}
-                  className="btn-primary"
-                >
-                  {pwSaving ? "Updating…" : "Update Password"}
-                </button>
-              </div>
-            </form>
           </div>
         )}
 
