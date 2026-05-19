@@ -1111,7 +1111,7 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
           yMax={10}
           color="#f59e0b"
           showArea
-          formatY={(v) => `${v}/10`}
+          formatYSuffix="/10"
           emptyMessage="No check-ins in the last 30 days"
         />
       </div>
