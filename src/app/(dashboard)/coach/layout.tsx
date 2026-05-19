@@ -4,7 +4,6 @@ import prisma from "@/lib/prisma";
 import { DashboardLayout, type DashboardUser } from "@/components";
 import { fetchCoachByUserId } from "@/lib/data/coach";
 import { getUnreadCount } from "@/lib/notifications";
-import { WhatsNewModal } from "@/components/feedback/WhatsNewModal";
 import { SidelineFAB } from "@/components/coach/SidelineFAB";
 import { isFeatureEnabledAnyTier } from "@/lib/flags";
 import { UnitPrefsProvider } from "@/lib/units/provider";
@@ -54,7 +53,6 @@ export default async function CoachLayout({ children }: { children: React.ReactN
     <UnitPrefsProvider initial={unitPrefs}>
       <DashboardLayout user={user} notificationCount={notificationCount}>
         {children}
-        <WhatsNewModal />
         {sidelineEnabled && <SidelineFAB />}
       </DashboardLayout>
     </UnitPrefsProvider>

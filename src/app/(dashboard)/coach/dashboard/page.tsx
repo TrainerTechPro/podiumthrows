@@ -40,7 +40,6 @@ import {
 import { OnboardingChecklist } from "./_onboarding-checklist";
 import { CheckoutTrigger } from "./_checkout-trigger";
 import { UpgradeBanner } from "./_upgrade-banner";
-import { FirstVisitHints } from "./_first-visit-hints";
 import { ModeSelector } from "./_mode-selector";
 import type { DashboardMode, DashboardDepth } from "./_mode-selector";
 import { ActionCards } from "./_action-cards";
@@ -390,7 +389,16 @@ function ReadinessSparkline({
 }
 
 function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
-  if (entries.length === 0) return null;
+  if (entries.length === 0) {
+    return (
+      <section aria-labelledby="readiness-heading">
+        <SectionHeader title="Team readiness" context="last 28 days" />
+        <p className="text-sm text-[var(--color-text-secondary)] py-2">
+          No check-ins yet — readiness sparks land here once your athletes start logging.
+        </p>
+      </section>
+    );
+  }
 
   return (
     <section aria-labelledby="readiness-heading">
@@ -857,36 +865,43 @@ export default async function CoachDashboardPage() {
       {/* ── Triage: injuries ─────────────────────────────────────────── */}
       <InjuryAlert injured={injuredAthletes} />
 
-      {/* ── This week: the weekly loop decision surface ─────────────── */}
-      <ThisWeek summary={thisWeek} />
+      {/* ── Above the fold ──────────────────────────────────────────────
+          Order matches the goal: action queue → roster readiness risk →
+          today's sessions → recent PRs → upcoming competition. Each
+          section uses one SectionHeader pattern. ───────────────────── */}
 
-      {/* ── Coaching actions ─────────────────────────────────────────── */}
+      {/* 1. Action queue — "who needs me today?" */}
       <ActionCards actions={coachingActions} depth={depth} />
 
-      {/* ── Competition countdown (competition mode only) ───────────── */}
-      {mode === "competition" && competitions.length > 0 && (
-        <CompetitionCountdown competitions={competitions} />
-      )}
+      {/* 2. Roster readiness risk — sparkline list of lowest scores first */}
+      <ReadinessWidget entries={readiness} />
 
-      {/* ── Activity + readiness (two-col on desktop) ────────────────── */}
-      <div className="grid gap-10 lg:grid-cols-5">
-        <section aria-labelledby="activity-heading" className="lg:col-span-3">
-          <SectionHeader
-            title="Recent activity"
-            action={{ label: "All athletes", href: "/coach/athletes" }}
-          />
-          <ActivityFeed items={activity} />
-        </section>
+      {/* 3. Today + this week — sessions/practices grid */}
+      <ThisWeek summary={thisWeek} />
 
-        <div className="lg:col-span-2">
-          <ReadinessWidget entries={readiness} />
-        </div>
-      </div>
-
-      {/* ── Results: PRs + load ──────────────────────────────────────── */}
+      {/* 4. Recent PRs */}
       <section aria-labelledby="prs-heading">
         <SectionHeader title="Recent team PRs" />
         <PRBoard prs={teamPRs} />
+      </section>
+
+      {/* 5. Upcoming competition — always render in competition mode,
+            otherwise only when something is on the calendar. */}
+      {(mode === "competition" || competitions.length > 0) && (
+        <CompetitionCountdown competitions={competitions} />
+      )}
+
+      {/* ── Slower lens ────────────────────────────────────────────────
+          Activity stream + training load + analytics live below the
+          fold; coaches who want context scroll, coaches who want a
+          decision get one in the first viewport. ───────────────────── */}
+
+      <section aria-labelledby="activity-heading">
+        <SectionHeader
+          title="Recent activity"
+          action={{ label: "All athletes", href: "/coach/athletes" }}
+        />
+        <ActivityFeed items={activity} />
       </section>
 
       <section aria-labelledby="load-heading">
@@ -894,7 +909,6 @@ export default async function CoachDashboardPage() {
         <LoadOverview entries={teamLoad} depth={depth} />
       </section>
 
-      {/* ── Mode-specific context ───────────────────────────────────── */}
       {mode === "training" && depth === "advanced" && adaptationRows.length > 0 && (
         <section aria-labelledby="adaptation-heading">
           <SectionHeader title="Adaptation status" context="advanced" />
@@ -908,7 +922,6 @@ export default async function CoachDashboardPage() {
         </section>
       )}
 
-      {/* ── Analytics (slow lens) ────────────────────────────────────── */}
       <section aria-labelledby="analytics-heading">
         <SectionHeader title="Analytics" context={`last ${analyticsPeriod} days`} />
         <AnalyticsSection
@@ -921,8 +934,6 @@ export default async function CoachDashboardPage() {
           seasonGains={seasonGains}
         />
       </section>
-
-      <FirstVisitHints />
     </div>
   );
 }

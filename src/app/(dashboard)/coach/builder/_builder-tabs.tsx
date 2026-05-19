@@ -51,7 +51,8 @@ export function BuilderTabsClient(props: BuilderTabsProps) {
           Builder
         </h1>
         <p className="text-sm text-muted mt-0.5">
-          Build sessions, plans, and drills. Save to library or assign to the calendar.
+          Create — draft a session, plan, or drill. Save it to Library for reuse, or drop it on the
+          Calendar to assign.
         </p>
       </div>
 

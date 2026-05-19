@@ -20,6 +20,8 @@ import {
   getAthleteThrowHistory,
   getAthleteReadinessTrend,
   getAthleteGoals,
+  getAthleteNextSession,
+  getAthleteLatestNote,
   getLatestBondarchukAssessment,
   type AthleteACWR,
   type ThrowLogItem,
@@ -27,11 +29,14 @@ import {
   type ThrowsAssignmentItem,
   type ReadinessTrendPoint,
   type GoalItem,
+  type NextSession,
+  type LatestNote,
 } from "@/lib/data/coach";
 import type { AthletePREvent } from "@/lib/data/personal-records";
 import { getAthleteAttendanceStats } from "@/lib/data/practices";
 import { AssessmentStatusBadge } from "@/components/bondarchuk/AssessmentStatusBadge";
 import { SectionNav } from "./_section-nav";
+import { FirstScreen } from "./_first-screen";
 import { DistanceTrend } from "./_distance-trend";
 import { CoachActionBar } from "./_action-bar";
 import { AthleteAvatarControl } from "./_avatar-control";
@@ -1106,7 +1111,7 @@ function ReadinessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
           yMax={10}
           color="#f59e0b"
           showArea
-          formatY={(v) => `${v}/10`}
+          formatYSuffix="/10"
           emptyMessage="No check-ins in the last 30 days"
         />
       </div>
@@ -1655,6 +1660,8 @@ export default async function AthleteProfilePage({
     getAthleteThrowsAssignments(athlete.id, 25),
     getAthleteThrowHistory(athlete.id, undefined, 500), // chart data — wider window
     getAthleteAttendanceStats(athlete.id, 30),
+    getAthleteNextSession(athlete.id),
+    getAthleteLatestNote(athlete.id, coach.id),
   ]);
 
   const acwr =
@@ -1688,6 +1695,9 @@ export default async function AthleteProfilePage({
     results[9].status === "fulfilled"
       ? (results[9].value as AttendanceStats)
       : { total: 0, present: 0, late: 0, absent: 0, excused: 0, rate: 0, currentStreak: 0 };
+  const nextSession =
+    results[10].status === "fulfilled" ? (results[10].value as NextSession) : null;
+  const latestNote = results[11].status === "fulfilled" ? (results[11].value as LatestNote) : null;
 
   const bondarchukType = latestAssessment?.athleteType ?? null;
   const lastAssessmentDate = latestAssessment?.completedAt ?? null;
@@ -1713,12 +1723,24 @@ export default async function AthleteProfilePage({
   return (
     <div className="max-w-6xl mx-auto space-y-6 lg:pr-28 pb-24 md:pb-0">
       <ScrollProgressBar />
-      {/* Decision Hero */}
+      {/* Decision Hero — readiness · ACWR · injury · name */}
       <DecisionHero
         athlete={athlete}
         bondarchukType={bondarchukType}
         acwr={acwr}
         latestReadiness={latestReadiness}
+      />
+
+      {/* First-screen card — what's queued, PR trend, recent throws, last
+          note. Together with DecisionHero + CoachActionBar this fits one
+          desktop viewport so the coach can decide next action without
+          scrolling through detail. */}
+      <FirstScreen
+        athleteId={athlete.id}
+        nextSession={nextSession}
+        recentThrows={throws}
+        recentPRs={recentPRs}
+        latestNote={latestNote}
       />
 
       {/* Coach quick actions */}
@@ -1799,13 +1821,16 @@ export default async function AthleteProfilePage({
         <GoalsTab goals={goals} />
       </section>
 
-      <div className="border-t border-[var(--card-border)] pt-8 mt-8">
+      <section
+        id="insights"
+        className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8"
+      >
         <CoachInsightsSection
           athleteId={athlete.id}
           athleteName={athleteName}
           initialInsights={insights}
         />
-      </div>
+      </section>
     </div>
   );
 }

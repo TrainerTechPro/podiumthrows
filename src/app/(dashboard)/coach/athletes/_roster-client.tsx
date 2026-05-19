@@ -4,6 +4,7 @@ import { useState, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { SlidersHorizontal, X } from "lucide-react";
 import { AthletesTable } from "./_table";
+import { RosterSidelineCards } from "./_sideline-cards";
 import type { AthleteRosterItem } from "@/lib/data/coach";
 
 /* ─── Constants ──────────────────────────────────────────────────────────── */
@@ -279,7 +280,15 @@ export function RosterClient({ data }: { data: AthleteRosterItem[] }) {
         </div>
       </div>
 
-      <AthletesTable data={filtered} />
+      {/* Desktop ≥ lg: dense data table with all 7 columns.
+          Mobile <  lg: sideline glance cards. Same data, different
+          information geometry — see CLAUDE.md §Dual Product Identity. */}
+      <div className="hidden lg:block">
+        <AthletesTable data={filtered} />
+      </div>
+      <div className="lg:hidden">
+        <RosterSidelineCards data={filtered} />
+      </div>
     </div>
   );
 }

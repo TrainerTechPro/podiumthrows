@@ -44,6 +44,13 @@ export interface LineChartProps {
   gridLines?: number;
   className?: string;
   formatY?: (v: number) => string;
+  /**
+   * Server-component-safe alternative to formatY. When set, ticks render as
+   * `${Math.round(v)}${formatYSuffix}` — covers the common "/10", "m", "%"
+   * cases without forcing the parent to be a client component just to pass
+   * a closure. Ignored when formatY is also provided.
+   */
+  formatYSuffix?: string;
   /** Called per x-label. Return "" to hide. */
   formatX?: (label: string, index: number, total: number) => string;
   emptyMessage?: string;
@@ -83,10 +90,7 @@ function buildLinePath(pts: { x: number; y: number }[]): string {
   return `M ${pts.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" L ")}`;
 }
 
-function buildAreaPath(
-  pts: { x: number; y: number }[],
-  chartBottom: number
-): string {
+function buildAreaPath(pts: { x: number; y: number }[], chartBottom: number): string {
   if (pts.length === 0) return "";
   const bottom = PAD.top + chartBottom;
   return (
@@ -109,13 +113,21 @@ export function LineChart({
   showDots = true,
   gridLines = 4,
   className,
-  formatY = (v) => String(Math.round(v)),
+  formatY: formatYProp,
+  formatYSuffix,
   formatX = (label) => label,
   emptyMessage = "No data yet",
   renderDot,
   onPointHover,
   onPointLeave,
 }: LineChartProps) {
+  // Resolve formatY: explicit callback > suffix shorthand > integer fallback.
+  // The suffix path is what lets server components use this without "use client".
+  const formatY: (v: number) => string = formatYProp
+    ? formatYProp
+    : formatYSuffix !== undefined
+      ? (v: number) => `${Math.round(v)}${formatYSuffix}`
+      : (v: number) => String(Math.round(v));
   const chartW = VIEWBOX_W - PAD.left - PAD.right;
   const chartH = height - PAD.top - PAD.bottom;
 
@@ -124,8 +136,7 @@ export function LineChart({
     const allSeries: LineChartSeries[] = series ?? (data ? [{ data, color }] : []);
     const allData = allSeries.flatMap((s) => s.data);
 
-    if (allData.length === 0)
-      return { allData, renderedSeries: [], xLabels: [], yTicks: [] };
+    if (allData.length === 0) return { allData, renderedSeries: [], xLabels: [], yTicks: [] };
 
     const values = allData.map((d) => d.value);
     const yMin = yMinProp ?? Math.max(0, Math.floor(Math.min(...values) - 0.5));
@@ -139,9 +150,7 @@ export function LineChart({
     // X labels from the first series
     const xLabels =
       allSeries[0]?.data.map((d, i) => ({
-        x:
-          PAD.left +
-          (i / Math.max(allSeries[0].data.length - 1, 1)) * chartW,
+        x: PAD.left + (i / Math.max(allSeries[0].data.length - 1, 1)) * chartW,
         label: d.label,
         idx: i,
         total: allSeries[0].data.length,
@@ -158,10 +167,7 @@ export function LineChart({
   if (allData.length === 0) {
     return (
       <div
-        className={cn(
-          "flex items-center justify-center text-sm text-muted",
-          className
-        )}
+        className={cn("flex items-center justify-center text-sm text-muted", className)}
         style={{ height }}
       >
         {emptyMessage}
@@ -211,13 +217,10 @@ export function LineChart({
         {/* Series: area then line then dots */}
         {renderedSeries.map((s, si) => {
           const linePath = buildLinePath(s.points);
-          const areaPath =
-            showArea && si === 0 ? buildAreaPath(s.points, chartH) : "";
+          const areaPath = showArea && si === 0 ? buildAreaPath(s.points, chartH) : "";
           return (
             <g key={si}>
-              {areaPath && (
-                <path d={areaPath} fill={s.color} fillOpacity="0.1" stroke="none" />
-              )}
+              {areaPath && <path d={areaPath} fill={s.color} fillOpacity="0.1" stroke="none" />}
               {linePath && (
                 <path
                   d={linePath}
