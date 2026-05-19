@@ -135,8 +135,8 @@ export function BottomTabBar() {
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 rounded-lg",
               tab.primary && "-mt-3",
               active
-                ? "text-primary-500 dark:text-primary-400"
-                : "text-surface-500 dark:text-surface-400 hover:text-surface-700 dark:hover:text-surface-200"
+                ? "text-[var(--foreground)]"
+                : "text-[var(--color-text-secondary)] hover:text-[var(--foreground)]"
             )}
           >
             {tab.primary ? (
@@ -156,7 +156,10 @@ export function BottomTabBar() {
                 size={22}
                 strokeWidth={active ? 2.25 : 1.75}
                 aria-hidden="true"
-                className="transition-all duration-150"
+                className={cn(
+                  "transition-colors duration-150",
+                  active && "text-primary-600 dark:text-primary-400"
+                )}
               />
             )}
             <span

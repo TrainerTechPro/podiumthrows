@@ -47,6 +47,17 @@
  */
 
 @layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  a,
+  button,
+  [role="button"] {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   :root {
     /* ── Layer 1: PRIMITIVES ──────────────────────────────────────────── */
 

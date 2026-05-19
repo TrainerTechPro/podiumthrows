@@ -769,23 +769,23 @@ export function LogSessionForm({
   return (
     <div className="max-w-lg mx-auto pb-28">
       {/* Header */}
-      <header className="flex items-center justify-between gap-3 mb-3">
+      <header className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-2 mb-3 sm:grid-cols-[1fr_auto_1fr]">
         <button
           type="button"
           onClick={() => router.push(sessionsPath)}
-          className="inline-flex items-center gap-1.5 text-sm text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors min-h-[44px] -ml-1.5 px-1.5"
+          className="inline-flex min-h-[44px] items-center gap-1.5 justify-self-start -ml-1.5 px-1.5 text-sm text-[var(--color-text-secondary)] transition-colors hover:text-[var(--color-text-primary)]"
         >
           <ArrowLeft size={18} strokeWidth={1.75} aria-hidden="true" />
           Cancel
         </button>
-        <h1 className="font-heading text-base font-semibold text-[var(--color-text-primary)]">
+        <h1 className="justify-self-end font-heading text-base font-semibold text-[var(--color-text-primary)] sm:justify-self-center">
           {isEditing ? "Edit session" : "Quick log"}
         </h1>
         <input
           type="date"
           value={date}
           onChange={(e) => setDate(e.target.value)}
-          className="input w-[128px] text-xs"
+          className="input col-span-2 w-full min-w-0 text-sm tabular-nums sm:col-span-1 sm:w-[10rem] sm:justify-self-end"
           aria-label="Session date"
         />
       </header>
