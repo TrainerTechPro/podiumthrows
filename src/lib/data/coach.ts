@@ -85,6 +85,18 @@ export type ThrowsAssignmentItem = {
  */
 export type ClaimStatus = "PROXY" | "INVITED" | "CLAIMED";
 
+/**
+ * Single most-urgent signal that pulls a coach's attention to this athlete.
+ * Computed server-side so the roster table and sideline cards agree on the
+ * priority. Coaches care about exactly one reason per row — don't list five.
+ */
+export type AttentionReason =
+  | "INJURED" // active injury flag on most recent check-in
+  | "LOW_READINESS" // score < 5 on most recent check-in (within 7d)
+  | "NO_CHECKIN" // no readiness check-in in the last 7d
+  | "STALE_PLAN" // no completed session in the last 14d
+  | "NEEDS_REVIEW"; // completed a session this week with no coach note
+
 export type AthleteRosterItem = {
   id: string;
   firstName: string;
@@ -107,6 +119,14 @@ export type AthleteRosterItem = {
     energyMood: number;
   } | null;
   lastSessionDate: string | null;
+  /** Next scheduled training session — null when no upcoming session exists. */
+  nextSession: { scheduledDate: string; title: string | null } | null;
+  /** Personal bests logged in the last 30 days (across all events). */
+  prsLast30d: number;
+  /** ISO date of the most recent personal best, ever. */
+  lastPRDate: string | null;
+  /** Single most-urgent reason this athlete needs coach attention. */
+  attentionReason: AttentionReason | null;
   claimedAt: string | null;
   claimStatus: ClaimStatus;
   /** ID of the live PENDING invitation (for Resend/Revoke actions); null for PROXY or CLAIMED. */
@@ -653,6 +673,10 @@ export async function getAthleteRoster(
   }
 
   const now = new Date();
+  const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+  const fourteenDaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
   const athletes = await prisma.athleteProfile.findMany({
     where,
     select: {
@@ -679,6 +703,8 @@ export async function getAthleteRoster(
           energyMood: true,
         },
       },
+      // Two trainingSessions selects: one for the last completed, one for the
+      // next upcoming. Prisma will fold these into the same JOIN under select.
       trainingSessions: {
         where: { status: "COMPLETED" },
         orderBy: { completedDate: "desc" },
@@ -697,6 +723,87 @@ export async function getAthleteRoster(
     orderBy: [{ lastName: "asc" }, { firstName: "asc" }],
   });
 
+  const athleteIds = athletes.map((a) => a.id);
+  if (athleteIds.length === 0) return [];
+
+  // Batch three side queries so the roster scales linearly with athlete count
+  // instead of N+1. Each query stays cheap because it's indexed on athleteId.
+  const [upcomingSessions, recentPRGroups, lastPRPerAthlete, recentCompletedSessions, recentNotes] =
+    await Promise.all([
+      // Next scheduled session per athlete — `take: 1` per athleteId would
+      // require N queries, so fetch all upcoming and pick the earliest per
+      // athlete in app code.
+      prisma.trainingSession.findMany({
+        where: {
+          athleteId: { in: athleteIds },
+          scheduledDate: { gte: now },
+          status: { notIn: ["COMPLETED", "SKIPPED"] },
+        },
+        orderBy: { scheduledDate: "asc" },
+        select: {
+          athleteId: true,
+          scheduledDate: true,
+          plan: { select: { name: true } },
+        },
+      }),
+      prisma.throwLog.groupBy({
+        by: ["athleteId"],
+        where: {
+          athleteId: { in: athleteIds },
+          isPersonalBest: true,
+          date: { gte: thirtyDaysAgo },
+        },
+        _count: { _all: true },
+      }),
+      // max(date) per athlete for "most recent PR ever" — separate from the
+      // 30-day count above because we want to indicate trend even when the
+      // last PR is older.
+      prisma.throwLog.groupBy({
+        by: ["athleteId"],
+        where: { athleteId: { in: athleteIds }, isPersonalBest: true },
+        _max: { date: true },
+      }),
+      // Athletes who completed a session in the last 7d → input to
+      // NEEDS_REVIEW attention reason (paired with coach-note absence).
+      prisma.trainingSession.findMany({
+        where: {
+          athleteId: { in: athleteIds },
+          status: "COMPLETED",
+          completedDate: { gte: sevenDaysAgo },
+        },
+        distinct: ["athleteId"],
+        select: { athleteId: true },
+      }),
+      // Coach notes added in the last 7d, keyed by athleteProfileId.
+      prisma.coachNote.findMany({
+        where: {
+          athleteProfileId: { in: athleteIds },
+          createdAt: { gte: sevenDaysAgo },
+        },
+        distinct: ["athleteProfileId"],
+        select: { athleteProfileId: true },
+      }),
+    ]);
+
+  // Pivot side queries by athleteId so the .map below stays readable.
+  const nextSessionByAthlete = new Map<string, { scheduledDate: Date; title: string | null }>();
+  for (const s of upcomingSessions) {
+    if (!nextSessionByAthlete.has(s.athleteId)) {
+      nextSessionByAthlete.set(s.athleteId, {
+        scheduledDate: s.scheduledDate,
+        title: s.plan?.name ?? null,
+      });
+    }
+  }
+  const prsLast30dByAthlete = new Map(recentPRGroups.map((g) => [g.athleteId, g._count._all]));
+  const lastPRByAthlete = new Map(
+    lastPRPerAthlete
+      .filter((g): g is typeof g & { _max: { date: Date } } => g._max.date !== null)
+      .map((g) => [g.athleteId, g._max.date])
+  );
+  const completedThisWeek = new Set(recentCompletedSessions.map((s) => s.athleteId));
+  const reviewedThisWeek = new Set(recentNotes.map((n) => n.athleteProfileId));
+
   return athletes.map((a) => {
     const claimedAt = a.user.claimedAt?.toISOString() ?? null;
     const pendingInvitation = a.invitations[0] ?? null;
@@ -705,6 +812,37 @@ export async function getAthleteRoster(
       : pendingInvitation
         ? "INVITED"
         : "PROXY";
+
+    const latestReadiness = a.readinessCheckIns[0] ?? null;
+    const latestReadinessDate = latestReadiness?.date ?? null;
+    const lastSession = a.trainingSessions[0]?.completedDate ?? null;
+    const nextSession = nextSessionByAthlete.get(a.id) ?? null;
+
+    // Attention priority order — first match wins. The roster sorts by this
+    // implicit severity ladder (INJURED highest), so the cell only ever
+    // shows the one signal the coach should act on now.
+    let attentionReason: AttentionReason | null = null;
+    if (latestReadiness?.injuryStatus === "ACTIVE") {
+      attentionReason = "INJURED";
+    } else if (
+      latestReadiness &&
+      latestReadiness.overallScore < 5 &&
+      latestReadiness.date.getTime() >= sevenDaysAgo.getTime()
+    ) {
+      attentionReason = "LOW_READINESS";
+    } else if (
+      claimStatus === "CLAIMED" &&
+      (!latestReadinessDate || latestReadinessDate.getTime() < sevenDaysAgo.getTime())
+    ) {
+      attentionReason = "NO_CHECKIN";
+    } else if (
+      claimStatus === "CLAIMED" &&
+      (!lastSession || lastSession.getTime() < fourteenDaysAgo.getTime())
+    ) {
+      attentionReason = "STALE_PLAN";
+    } else if (completedThisWeek.has(a.id) && !reviewedThisWeek.has(a.id)) {
+      attentionReason = "NEEDS_REVIEW";
+    }
 
     return {
       id: a.id,
@@ -716,18 +854,24 @@ export async function getAthleteRoster(
       gender: a.gender as string | null,
       classStanding: a.classStanding,
       availabilityCount: a._count.availability,
-      latestReadiness: a.readinessCheckIns[0]
+      latestReadiness: latestReadiness
         ? {
-            score: a.readinessCheckIns[0].overallScore,
-            injuryStatus: a.readinessCheckIns[0].injuryStatus as string,
-            date: a.readinessCheckIns[0].date.toISOString(),
-            sleepQuality: a.readinessCheckIns[0].sleepQuality,
-            soreness: a.readinessCheckIns[0].soreness,
-            stressLevel: a.readinessCheckIns[0].stressLevel,
-            energyMood: a.readinessCheckIns[0].energyMood,
+            score: latestReadiness.overallScore,
+            injuryStatus: latestReadiness.injuryStatus as string,
+            date: latestReadiness.date.toISOString(),
+            sleepQuality: latestReadiness.sleepQuality,
+            soreness: latestReadiness.soreness,
+            stressLevel: latestReadiness.stressLevel,
+            energyMood: latestReadiness.energyMood,
           }
         : null,
-      lastSessionDate: a.trainingSessions[0]?.completedDate?.toISOString() ?? null,
+      lastSessionDate: lastSession?.toISOString() ?? null,
+      nextSession: nextSession
+        ? { scheduledDate: nextSession.scheduledDate.toISOString(), title: nextSession.title }
+        : null,
+      prsLast30d: prsLast30dByAthlete.get(a.id) ?? 0,
+      lastPRDate: lastPRByAthlete.get(a.id)?.toISOString() ?? null,
+      attentionReason,
       claimedAt,
       claimStatus,
       pendingInvitationId: pendingInvitation?.id ?? null,

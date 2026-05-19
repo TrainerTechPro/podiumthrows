@@ -6,6 +6,7 @@ import { BulkInviteBar } from "./_bulk-invite-bar";
 import { CsvImportButton } from "./_csv-import-button";
 import { TeamFilter } from "./_team-filter";
 import { RosterClient } from "./_roster-client";
+import { RosterEmptyState } from "./_empty-state";
 import { ThrowsView } from "./_views/throws-view";
 import { MovedBanner } from "./_views/moved-banner";
 import {
@@ -145,11 +146,20 @@ export default async function AthletesPage({
     filteredRoster = roster.filter((a) => completed.has(a.id) && !reviewed.has(a.id));
   }
 
-  // Sort: lowest readiness first (needs attention), no check-in last
+  // Sort by attentionReason severity so the coach scans top-to-bottom and
+  // sees who needs them today first. Lexicographic name sort within bucket
+  // keeps roster order stable when nothing is flagged.
+  const ATTENTION_RANK: Record<string, number> = {
+    INJURED: 0,
+    LOW_READINESS: 1,
+    NO_CHECKIN: 2,
+    STALE_PLAN: 3,
+    NEEDS_REVIEW: 4,
+  };
   const sorted = [...filteredRoster].sort((a, b) => {
-    const aScore = a.latestReadiness?.score ?? 999;
-    const bScore = b.latestReadiness?.score ?? 999;
-    if (aScore !== bScore) return aScore - bScore;
+    const aRank = a.attentionReason ? ATTENTION_RANK[a.attentionReason] : 99;
+    const bRank = b.attentionReason ? ATTENTION_RANK[b.attentionReason] : 99;
+    if (aRank !== bRank) return aRank - bRank;
     return `${a.lastName}${a.firstName}`.localeCompare(`${b.lastName}${b.firstName}`);
   });
 
@@ -377,9 +387,13 @@ export default async function AthletesPage({
               </p>
             </div>
           )}
-          <Suspense fallback={null}>
-            <RosterClient data={sorted} />
-          </Suspense>
+          {roster.length === 0 && !rosterLoadFailed ? (
+            <RosterEmptyState />
+          ) : (
+            <Suspense fallback={null}>
+              <RosterClient data={sorted} />
+            </Suspense>
+          )}
         </>
       )}
 

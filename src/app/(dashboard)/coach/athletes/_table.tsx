@@ -2,11 +2,11 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronRight, Timer } from "lucide-react";
+import { ChevronRight, Timer, TrendingUp, Trophy } from "lucide-react";
 import { Avatar, Badge, DataTable, type Column } from "@/components";
 import { useToast } from "@/components/ui/Toast";
 import { csrfHeaders } from "@/lib/csrf-client";
-import type { AthleteRosterItem, ClaimStatus } from "@/lib/data/coach";
+import type { AthleteRosterItem, ClaimStatus, AttentionReason } from "@/lib/data/coach";
 import { CoachTestCaptureSheet } from "@/components/performance-tests/CoachTestCaptureSheet";
 
 /* ─── Helpers ────────────────────────────────────────────────────────────── */
@@ -25,6 +25,37 @@ function formatRelativeDate(iso: string | null): string {
   if (days === 0) return "Today";
   if (days === 1) return "Yesterday";
   return `${days}d ago`;
+}
+
+function formatRelativeFuture(iso: string | null): string {
+  if (!iso) return "—";
+  const target = new Date(iso).getTime();
+  const diffDays = Math.round((target - Date.now()) / (1000 * 60 * 60 * 24));
+  if (diffDays <= 0) return "Today";
+  if (diffDays === 1) return "Tomorrow";
+  if (diffDays < 7) return `In ${diffDays}d`;
+  return new Date(iso).toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+/* ─── Attention indicator — shared between table cell and mobile card ────── */
+
+export const ATTENTION_META: Record<
+  AttentionReason,
+  { label: string; tone: "danger" | "warning" | "neutral" }
+> = {
+  INJURED: { label: "Injured", tone: "danger" },
+  LOW_READINESS: { label: "Low readiness", tone: "danger" },
+  NO_CHECKIN: { label: "No check-in 7d+", tone: "warning" },
+  STALE_PLAN: { label: "No session 14d+", tone: "warning" },
+  NEEDS_REVIEW: { label: "Needs review", tone: "warning" },
+};
+
+function AttentionCell({ row }: { row: AthleteRosterItem }) {
+  if (!row.attentionReason) {
+    return <span className="text-muted text-sm">—</span>;
+  }
+  const meta = ATTENTION_META[row.attentionReason];
+  return <Badge variant={meta.tone}>{meta.label}</Badge>;
 }
 
 /* ─── Status pill ─────────────────────────────────────────────────────────── */
@@ -121,15 +152,6 @@ function ReadinessCell({ row }: { row: AthleteRosterItem }) {
 
   const dotColor = r.score >= 8 ? "bg-emerald-500" : r.score >= 5 ? "bg-amber-500" : "bg-red-500";
 
-  const statusBadge =
-    r.injuryStatus === "ACTIVE" ? (
-      <Badge variant="danger">Injured</Badge>
-    ) : r.injuryStatus === "MONITORING" ? (
-      <Badge variant="warning">Watch</Badge>
-    ) : r.score < 5 ? (
-      <Badge variant="danger">Low</Badge>
-    ) : null;
-
   return (
     <div className="flex items-center gap-2">
       <span className={`w-2 h-2 rounded-full ${dotColor} shrink-0`} />
@@ -144,16 +166,43 @@ function ReadinessCell({ row }: { row: AthleteRosterItem }) {
         Sleep {r.sleepQuality} of 10, soreness {r.soreness} of 10, stress {r.stressLevel} of 10,
         energy {r.energyMood} of 10.
       </span>
-      {statusBadge}
     </div>
   );
 }
 
-function StreakCell({ row }: { row: AthleteRosterItem }) {
-  if (row.currentStreak === 0) return <span className="text-muted text-sm">—</span>;
+function NextSessionCell({ row }: { row: AthleteRosterItem }) {
+  if (!row.nextSession) {
+    return <span className="text-muted text-sm">—</span>;
+  }
   return (
-    <span className="text-sm font-semibold tabular-nums text-amber-600 dark:text-amber-400">
-      {row.currentStreak}d
+    <div className="min-w-0">
+      <p className="text-sm font-medium text-[var(--foreground)] tabular-nums">
+        {formatRelativeFuture(row.nextSession.scheduledDate)}
+      </p>
+      {row.nextSession.title && (
+        <p className="text-xs text-muted truncate">{row.nextSession.title}</p>
+      )}
+    </div>
+  );
+}
+
+function PRTrendCell({ row }: { row: AthleteRosterItem }) {
+  if (row.prsLast30d === 0 && !row.lastPRDate) {
+    return <span className="text-muted text-sm">—</span>;
+  }
+  if (row.prsLast30d > 0) {
+    return (
+      <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary-600 dark:text-primary-300">
+        <TrendingUp size={14} strokeWidth={1.75} aria-hidden="true" />
+        <span className="tabular-nums">{row.prsLast30d}</span>
+        <span className="text-xs font-normal text-muted">in 30d</span>
+      </span>
+    );
+  }
+  return (
+    <span className="inline-flex items-center gap-1.5 text-sm text-muted">
+      <Trophy size={14} strokeWidth={1.75} aria-hidden="true" />
+      <span>last PR {formatRelativeDate(row.lastPRDate)}</span>
     </span>
   );
 }
@@ -224,11 +273,19 @@ function LastSessionOrInviteCell({
 /* ─── Table ──────────────────────────────────────────────────────────────── */
 
 function getRowClassName(row: AthleteRosterItem): string | undefined {
-  const r = row.latestReadiness;
-  if (r?.injuryStatus === "ACTIVE") return "border-l-4 border-l-red-500";
-  if (r && r.score < 5) return "border-l-4 border-l-amber-500";
-  if (!r) return "border-l-4 border-l-surface-400 dark:border-l-surface-500";
-  return undefined;
+  // Border accent matches attentionReason severity so the eye scans top-to-bottom
+  // for the same signal the Attention column carries — DRY across visual channels.
+  switch (row.attentionReason) {
+    case "INJURED":
+    case "LOW_READINESS":
+      return "border-l-4 border-l-red-500";
+    case "NO_CHECKIN":
+    case "STALE_PLAN":
+    case "NEEDS_REVIEW":
+      return "border-l-4 border-l-amber-500";
+    default:
+      return undefined;
+  }
 }
 
 export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
@@ -290,6 +347,10 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
     }
   }
 
+  // Column order matches the goal: athlete, event, readiness, last session,
+  // next session, PR trend, attention needed, action. The mobile sideline
+  // cards (rendered separately) cover the same ground with a different
+  // information geometry — see _sideline-cards.tsx.
   const columns: Column<AthleteRosterItem>[] = [
     {
       key: "firstName",
@@ -299,9 +360,8 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
     },
     {
       key: "events",
-      header: "Events",
+      header: "Event",
       cell: (row) => <EventsCell row={row} />,
-      hideOnMobile: true,
     },
     {
       key: "latestReadiness",
@@ -309,15 +369,8 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
       cell: (row) => <ReadinessCell row={row} />,
     },
     {
-      key: "currentStreak",
-      header: "Streak",
-      cell: (row) => <StreakCell row={row} />,
-      sortable: true,
-      hideOnMobile: true,
-    },
-    {
       key: "lastSessionDate",
-      header: "Last Session",
+      header: "Last session",
       cell: (row) => (
         <LastSessionOrInviteCell
           row={row}
@@ -327,7 +380,22 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
           copiedId={copiedId}
         />
       ),
-      hideOnMobile: true,
+    },
+    {
+      key: "nextSession",
+      header: "Next session",
+      cell: (row) => <NextSessionCell row={row} />,
+    },
+    {
+      key: "prsLast30d",
+      header: "PR trend",
+      cell: (row) => <PRTrendCell row={row} />,
+      sortable: true,
+    },
+    {
+      key: "attentionReason",
+      header: "Attention",
+      cell: (row) => <AttentionCell row={row} />,
     },
     {
       key: "logTest",
@@ -369,8 +437,8 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
         pageSize={25}
         rowClassName={getRowClassName}
         onRowClick={(row) => router.push(`/coach/athletes/${row.id}`)}
-        emptyTitle="No athletes on your roster"
-        emptyDescription="Send an invite to get your first athlete set up. They'll appear here once they accept."
+        emptyTitle="No athletes match these filters"
+        emptyDescription="Adjust the event, gender, class, or availability filters to broaden your roster."
       />
       <CoachTestCaptureSheet
         open={logTestFor != null}
