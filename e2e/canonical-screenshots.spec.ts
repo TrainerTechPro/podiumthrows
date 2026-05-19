@@ -37,6 +37,9 @@ type Surface = { role: "coach" | "athlete"; path: string; slug: string };
 // assertion below only checks that each URL renders 200 for the role.
 const SURFACES: Surface[] = [
   { role: "athlete", path: "/athlete/dashboard", slug: "athlete-dashboard" },
+  // /athlete/sessions is the canonical Training surface — added 2026-05-18
+  // for the athlete daily-loop goal. Status-aware header + today's session.
+  { role: "athlete", path: "/athlete/sessions", slug: "athlete-sessions" },
   { role: "athlete", path: "/athlete/log-session", slug: "athlete-log-session" },
   // MVP cut (2026-05-15): /athlete/self-program is flag-gated post-MVP — the
   // middleware redirects to /athlete/dashboard while `selfProgram` is off.
@@ -51,6 +54,11 @@ const SURFACES: Surface[] = [
 ];
 
 const VIEWPORTS = [
+  // iPhone SE — the tightest viewport the athlete app must work on. Added
+  // 2026-05-18 per goal acceptance: "first screen answers what do I do now?"
+  // must hold at this width.
+  { name: "mobile-375-se", width: 375, height: 667 },
+  // iPhone 14/15 Pro — the modern phone target.
   { name: "mobile-390", width: 390, height: 844 },
   { name: "desktop-1440", width: 1440, height: 900 },
 ];
