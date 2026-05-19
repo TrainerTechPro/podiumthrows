@@ -65,7 +65,8 @@ export function CalendarTabsClient(props: CalendarTabsProps) {
           Calendar
         </h1>
         <p className="text-sm text-muted mt-0.5">
-          Programming, attendance, and availability across your roster.
+          Scheduling — assign sessions, run practices, see who&apos;s available. Draft new work in
+          Builder; reuse saved work from Library.
         </p>
       </div>
 

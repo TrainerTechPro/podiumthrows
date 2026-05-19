@@ -65,7 +65,8 @@ export function LibraryTabsClient(props: LibraryTabsClientProps) {
           Library
         </h1>
         <p className="text-sm text-muted mt-0.5">
-          Sessions, plans, exercises, and drills — searchable, assignable.
+          Reuse — your saved sessions, plans, exercises, and drills. Open one in Builder to edit, or
+          assign it from Calendar.
         </p>
       </div>
 
