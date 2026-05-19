@@ -175,7 +175,7 @@ export default function MfaLoginPage() {
               setBackupMode(true);
               setError("");
             }}
-            className="text-sm text-primary-600 dark:text-primary-400 hover:underline block mx-auto mb-4"
+            className="text-sm text-primary-600 dark:text-primary-400 hover:underline mx-auto mb-4 inline-flex items-center justify-center min-h-[44px] px-3"
           >
             Use a backup code instead
           </button>
@@ -212,14 +212,17 @@ export default function MfaLoginPage() {
               setBackupCode("");
               setError("");
             }}
-            className="text-sm text-primary-600 dark:text-primary-400 hover:underline block mx-auto mb-4"
+            className="text-sm text-primary-600 dark:text-primary-400 hover:underline mx-auto mb-4 inline-flex items-center justify-center min-h-[44px] px-3"
           >
             Use authenticator app instead
           </button>
         </>
       )}
 
-      <Link href="/login" className="text-sm text-muted hover:text-foreground block text-center">
+      <Link
+        href="/login"
+        className="text-sm text-muted hover:text-foreground text-center inline-flex items-center justify-center min-h-[44px] px-3 mx-auto"
+      >
         Back to login
       </Link>
     </div>
