@@ -879,6 +879,69 @@ export async function getAthleteRoster(
   });
 }
 
+/* ─── Athlete First-Screen helpers ─────────────────────────────────────────
+   These two queries feed the "decision card" at the top of the athlete
+   detail page — the goal is one viewport of everything a coach needs to
+   make a call. Kept narrow on purpose: a single upcoming session, a
+   single most-recent note. Anything deeper lives in the section tabs
+   below. ────────────────────────────────────────────────────────────── */
+
+export type NextSession = {
+  id: string;
+  scheduledDate: string;
+  status: string;
+  title: string | null;
+} | null;
+
+export async function getAthleteNextSession(athleteId: string): Promise<NextSession> {
+  const session = await prisma.trainingSession.findFirst({
+    where: {
+      athleteId,
+      scheduledDate: { gte: new Date() },
+      status: { notIn: ["COMPLETED", "SKIPPED"] },
+    },
+    orderBy: { scheduledDate: "asc" },
+    select: {
+      id: true,
+      scheduledDate: true,
+      status: true,
+      plan: { select: { name: true } },
+    },
+  });
+  if (!session) return null;
+  return {
+    id: session.id,
+    scheduledDate: session.scheduledDate.toISOString(),
+    status: session.status as string,
+    title: session.plan?.name ?? null,
+  };
+}
+
+export type LatestNote = {
+  id: string;
+  content: string;
+  category: string;
+  createdAt: string;
+} | null;
+
+export async function getAthleteLatestNote(
+  athleteId: string,
+  coachProfileId: string
+): Promise<LatestNote> {
+  const note = await prisma.coachNote.findFirst({
+    where: { athleteProfileId: athleteId, coachProfileId },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, content: true, category: true, createdAt: true },
+  });
+  if (!note) return null;
+  return {
+    id: note.id,
+    content: note.content,
+    category: note.category as string,
+    createdAt: note.createdAt.toISOString(),
+  };
+}
+
 /* ─── Athlete Profile ─────────────────────────────────────────────────────── */
 
 /** Fetch full athlete profile, verifying it belongs to this coach. */
