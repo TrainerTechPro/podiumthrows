@@ -464,7 +464,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
       >
         <Bell size={20} strokeWidth={1.75} aria-hidden="true" />
         {count > 0 && (
-          <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-danger-500 text-white text-nano font-bold tabular-nums px-1 animate-spring-up">
+          <span className="absolute top-1.5 right-1.5 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-danger-700 text-white text-nano font-bold tabular-nums px-1 animate-spring-up">
             {count > 99 ? "99+" : count}
           </span>
         )}

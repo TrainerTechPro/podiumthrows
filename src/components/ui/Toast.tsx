@@ -425,6 +425,7 @@ function Toaster({
       `}</style>
 
       <div
+        role="region"
         aria-label="Notifications"
         className={cn(
           "fixed z-[60] flex flex-col-reverse pointer-events-none",

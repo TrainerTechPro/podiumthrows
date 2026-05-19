@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
+import { ATHLETE_1, loginViaAPI } from "./helpers/auth";
 
 /**
  * Athlete mobile-daily-loop screenshot harness (UX audit 2).
@@ -14,25 +15,13 @@ import path from "node:path";
  *   - First-viewport (above the fold) by default.
  *   - Full-page variants suffixed __fullpage.
  *
- * Auth: relies on a pre-baked storage-state at e2e/.auth/athlete.json.
- * Generate it once with the dev server running:
- *
- *   JAR=/tmp/jar.txt
- *   curl -s -c $JAR -o /dev/null http://localhost:3000/login
- *   CSRF=$(awk '/csrf-token/{print $7}' $JAR)
- *   curl -s -b $JAR -c $JAR -X POST http://localhost:3000/api/auth/login \
- *     -H "Content-Type: application/json" -H "X-CSRF-Token: $CSRF" \
- *     -d '{"email":"athlete1@example.com","password":"athlete123"}'
- *   # ...then convert $JAR cookies into Playwright storageState JSON.
- *
- * This sidesteps the login rate-limiter (one login per harness run) and
- * the form-state race in dev mode HMR.
+ * Auth: each screenshot context logs in through the API after loading /login
+ * for a CSRF cookie. That keeps the harness independent from stale
+ * e2e/.auth/*.json files while still avoiding the form-state race in dev HMR.
  */
 
 const OUT_DIR = path.resolve(process.cwd(), "tasks/screenshots/athlete-ux-audit-2");
 fs.mkdirSync(OUT_DIR, { recursive: true });
-
-const ATHLETE_STORAGE = path.resolve(process.cwd(), "e2e/.auth/athlete.json");
 
 const SURFACES = [
   { path: "/athlete/dashboard", slug: "athlete-dashboard" },
@@ -51,17 +40,14 @@ test.describe("Athlete mobile daily loop", () => {
   for (const vp of VIEWPORTS) {
     for (const surface of SURFACES) {
       test(`${surface.slug}__${vp.name}`, async ({ browser }) => {
-        if (!fs.existsSync(ATHLETE_STORAGE)) {
-          test.skip(true, `Missing ${ATHLETE_STORAGE} — generate it first.`);
-        }
-
         const context = await browser.newContext({
-          storageState: ATHLETE_STORAGE,
           viewport: { width: vp.width, height: vp.height },
           deviceScaleFactor: 2,
         });
 
         try {
+          await loginViaAPI(context, "http://localhost:3000", ATHLETE_1.email, ATHLETE_1.password);
+
           const page = await context.newPage();
           const response = await page.goto(surface.path, {
             waitUntil: "networkidle",

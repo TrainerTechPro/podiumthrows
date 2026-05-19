@@ -92,8 +92,10 @@ export function TabCore({ profile }: { profile: ProfileData }) {
   const today = localToday();
 
   return (
-    <div className="rounded-xl bg-[var(--card-bg)] border border-[var(--card-border)] p-5 sm:p-6 space-y-8">
-      <h2 className="text-lg font-heading font-semibold text-[var(--foreground)]">Core Info</h2>
+    <div className="space-y-8 sm:rounded-xl sm:border sm:border-[var(--card-border)] sm:bg-[var(--card-bg)] sm:p-6">
+      <h2 className="sr-only sm:not-sr-only sm:text-lg sm:font-heading sm:font-semibold sm:text-[var(--foreground)]">
+        Core Info
+      </h2>
 
       {/* ── Name ──────────────────────────────────────────────────────── */}
       <section className="space-y-3">
@@ -109,6 +111,8 @@ export function TabCore({ profile }: { profile: ProfileData }) {
             <input
               id="core-first-name"
               type="text"
+              name="firstName"
+              autoComplete="given-name"
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
               className="input w-full"
@@ -125,6 +129,8 @@ export function TabCore({ profile }: { profile: ProfileData }) {
             <input
               id="core-last-name"
               type="text"
+              name="lastName"
+              autoComplete="family-name"
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
               className="input w-full"
@@ -148,6 +154,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
                 onClick={() => setClassStanding(classStanding === cs.value ? "" : cs.value)}
                 className={cn(
                   "px-3.5 py-2 rounded-lg text-sm font-medium border transition-colors",
+                  "min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
                   classStanding === cs.value
                     ? "border-primary-500 bg-primary-500/8 text-primary-700 dark:text-primary-300"
                     : "border-[var(--card-border)] bg-[var(--card-bg)] text-muted hover:text-[var(--foreground)]"
@@ -167,6 +174,8 @@ export function TabCore({ profile }: { profile: ProfileData }) {
             <Input
               id="core-grad-year"
               type="number"
+              name="gradYear"
+              inputMode="numeric"
               value={gradYear}
               onChange={(e) => setGradYear(e.target.value)}
               className="w-full"
@@ -196,6 +205,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
               onClick={() => setTurnDirection(turnDirection === value ? "" : value)}
               className={cn(
                 "flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium border transition-colors",
+                "min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
                 turnDirection === value
                   ? "border-primary-500 bg-primary-500/8 text-primary-700 dark:text-primary-300"
                   : "border-[var(--card-border)] bg-[var(--card-bg)] text-muted hover:text-[var(--foreground)]"
@@ -221,6 +231,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
                 onClick={() => toggleEvent(ev.value)}
                 className={cn(
                   "rounded-lg border px-4 py-3 text-sm font-medium transition-colors text-center",
+                  "min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
                   selected
                     ? "border-primary-500 bg-primary-500/8 text-primary-700 dark:text-primary-300"
                     : "border-[var(--card-border)] bg-[var(--card-bg)] text-muted hover:text-[var(--foreground)]"
@@ -244,6 +255,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
               onClick={() => setGender(g.value)}
               className={cn(
                 "px-4 py-2.5 rounded-lg text-sm font-medium border transition-colors",
+                "min-h-[44px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
                 gender === g.value
                   ? "border-primary-500 bg-primary-500/8 text-primary-700 dark:text-primary-300"
                   : "border-[var(--card-border)] bg-[var(--card-bg)] text-muted hover:text-[var(--foreground)]"
@@ -261,6 +273,8 @@ export function TabCore({ profile }: { profile: ProfileData }) {
         <div className="max-w-xs">
           <input
             type="date"
+            name="dateOfBirth"
+            autoComplete="bday"
             value={dateOfBirth}
             onChange={(e) => setDateOfBirth(e.target.value)}
             max={today}
@@ -286,6 +300,8 @@ export function TabCore({ profile }: { profile: ProfileData }) {
             <Input
               id="core-height"
               type="number"
+              name="heightCm"
+              inputMode="decimal"
               value={heightCm}
               onChange={(e) => setHeightCm(e.target.value)}
               className="w-full"
@@ -305,6 +321,8 @@ export function TabCore({ profile }: { profile: ProfileData }) {
             <Input
               id="core-weight"
               type="number"
+              name="weightKg"
+              inputMode="decimal"
               value={weightKg}
               onChange={(e) => setWeightKg(e.target.value)}
               className="w-full"

@@ -44,6 +44,7 @@ export function FeedbackButton({ role }: FeedbackButtonProps) {
         data-feedback-overlay="true"
         className={[
           "fixed z-40 inline-flex items-center justify-center",
+          role === "ATHLETE" ? "max-sm:hidden" : "",
           "h-12 w-12 rounded-full",
           "bg-primary-500 text-surface-950",
           "shadow-lg shadow-primary-500/30",

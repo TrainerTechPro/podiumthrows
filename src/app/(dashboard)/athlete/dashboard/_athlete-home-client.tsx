@@ -631,11 +631,11 @@ function MasterProfileBanner() {
         <div className="font-mono text-nano font-medium uppercase tracking-[0.18em] text-primary-500">
           Build your profile
         </div>
-        <div className="mt-0.5 truncate text-body font-medium leading-[1.3] text-[var(--foreground)]">
-          Tell us about your training so the program can adapt to you.
+        <div className="mt-0.5 text-body font-medium leading-[1.3] text-[var(--foreground)]">
+          Finish your training profile.
         </div>
-        <div className="mt-0.5 truncate font-mono text-nano tracking-[0.04em] text-[var(--muted)]">
-          ~5 MIN · YOU CAN COME BACK
+        <div className="mt-0.5 font-mono text-nano tracking-[0.04em] text-[var(--muted)]">
+          5 MIN · COME BACK ANYTIME
         </div>
       </div>
       <ChevronRight

@@ -1,6 +1,7 @@
 import { test, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
+import { ATHLETE_1, COACH, loginViaAPI } from "./helpers/auth";
 
 /**
  * Mobile keyboard-open screenshots — verifies that sticky CTAs and form
@@ -30,10 +31,6 @@ import path from "node:path";
 const OUT_DIR = path.resolve(process.cwd(), "tasks/screenshots/mobile-keyboard");
 fs.mkdirSync(OUT_DIR, { recursive: true });
 
-const AUTH_DIR = path.resolve(process.cwd(), "e2e/.auth");
-const ATHLETE_STORAGE = path.join(AUTH_DIR, "athlete.json");
-const COACH_STORAGE = path.join(AUTH_DIR, "coach.json");
-
 const BASE_URL = "http://localhost:3000";
 
 type Surface = {
@@ -57,19 +54,16 @@ const VIEWPORTS = [
   { name: "mobile-390-kb", width: 390, height: 553 }, // 844 - 291
 ];
 
-test.describe.configure({ mode: "parallel" });
+test.describe.configure({ mode: "serial" });
 test.describe("Mobile keyboard-open screenshots", () => {
   for (const vp of VIEWPORTS) {
     for (const surface of SURFACES) {
       const filename = `${surface.slug}__${vp.name}.png`;
 
       test(filename, async ({ browser }) => {
+        test.setTimeout(60_000);
+
         const context = await browser.newContext({
-          ...(surface.auth === "coach"
-            ? { storageState: COACH_STORAGE }
-            : surface.auth === "athlete"
-              ? { storageState: ATHLETE_STORAGE }
-              : {}),
           viewport: { width: vp.width, height: vp.height },
           deviceScaleFactor: 2,
         });
@@ -77,19 +71,30 @@ test.describe("Mobile keyboard-open screenshots", () => {
         try {
           await context.addCookies([{ name: "theme", value: "dark", url: BASE_URL }]);
 
+          if (surface.auth === "athlete") {
+            await loginViaAPI(context, BASE_URL, ATHLETE_1.email, ATHLETE_1.password);
+          } else if (surface.auth === "coach") {
+            await loginViaAPI(context, BASE_URL, COACH.email, COACH.password);
+          }
+
           const page = await context.newPage();
           const response = await page.goto(surface.path, {
-            waitUntil: "networkidle",
+            waitUntil: "domcontentloaded",
             timeout: 30_000,
           });
-          expect(response, `${surface.path} produced no response`).toBeTruthy();
+          expect(response?.ok(), `${surface.path} -> ${response?.status()}`).toBeTruthy();
+
+          const landed = new URL(page.url()).pathname;
+          expect(landed, `Expected ${surface.path}; landed on ${landed}`).toBe(surface.path);
 
           // Force-focus the first text input so the screenshot reflects the
           // actively-typing state, not the resting layout.
           await page
-            .locator('input[type="text"], input[type="email"], input[type="password"], textarea, input:not([type])')
+            .locator(
+              'input[type="text"], input[type="email"], input[type="password"], textarea, input:not([type])'
+            )
             .first()
-            .focus()
+            .focus({ timeout: 5_000 })
             .catch(() => {
               // Surface has no input — capture the resting layout at the
               // truncated viewport instead. Still tells us if sticky bottom

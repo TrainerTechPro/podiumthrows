@@ -386,7 +386,7 @@ function AthleteTopBar({
         className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--color-border-default)] px-4 min-h-[3.25rem] flex items-center gap-3 shrink-0"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
-        <LogoMark size={32} />
+        <LogoMark size={40} />
 
         <div className="flex-1" />
 

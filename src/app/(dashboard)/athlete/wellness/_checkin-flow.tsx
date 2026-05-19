@@ -498,19 +498,21 @@ export function CheckinFlow({
       {/* Save-status chip — small, top-right, reads from outbox + draft state.
           Quiet by design: visible only when there's a pending save or the
           user is offline. */}
-      <div className="absolute top-0 right-0 z-10 pointer-events-none">
-        <SaveStatusChip
-          // We only render this branch for STEP_ORDER phases (the early
-          // returns above handle submitting/error/queued/summary), so
-          // isSaving is always false here. The chip surfaces offline +
-          // outbox-pending state, which is the value worth showing on
-          // step screens — submit-in-flight has its own dedicated UI.
-          isSaving={false}
-          pending={outboxStatus.pending}
-          isOnline={outboxStatus.isOnline}
-          authNeeded={outboxStatus.authNeeded}
-        />
-      </div>
+      {(!outboxStatus.isOnline || outboxStatus.pending > 0 || outboxStatus.authNeeded) && (
+        <div className="absolute top-0 right-0 z-10 pointer-events-none">
+          <SaveStatusChip
+            // We only render this branch for STEP_ORDER phases (the early
+            // returns above handle submitting/error/queued/summary), so
+            // isSaving is always false here. The chip surfaces offline +
+            // outbox-pending state, which is the value worth showing on
+            // step screens — submit-in-flight has its own dedicated UI.
+            isSaving={false}
+            pending={outboxStatus.pending}
+            isOnline={outboxStatus.isOnline}
+            authNeeded={outboxStatus.authNeeded}
+          />
+        </div>
+      )}
       <div key={phase} className={animationClass}>
         {activeStep}
       </div>
