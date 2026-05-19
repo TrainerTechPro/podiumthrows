@@ -14,6 +14,7 @@ import {
   onboardingReducer,
   currentStepNumber,
   canAdvance,
+  missingForStep,
   distanceToMeters,
   weightToKg,
   type OnboardingMode,
@@ -363,6 +364,11 @@ export function OnboardingWizard({
           className="sticky bottom-0 bg-[var(--surface-overlay)] border-t border-[var(--card-border)] px-0 py-3 space-y-2"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
         >
+          {showPrimaryButton && primaryDisabled && missingForStep(state) && (
+            <p aria-live="polite" className="text-center text-xs text-muted -mt-1 mb-1">
+              {missingForStep(state)}
+            </p>
+          )}
           {showPrimaryButton && (
             <Button
               type="button"
