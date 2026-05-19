@@ -6,7 +6,7 @@ import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { clearAllUserDrafts } from "@/lib/draft-persistence";
-import { Sun, Moon, Menu, X, LogOut, Search, Settings, Megaphone, Dumbbell } from "lucide-react";
+import { Sun, Moon, Menu, X, LogOut, Search, Settings } from "lucide-react";
 import { Sidebar, COACH_NAV_SECTIONS, NavSection } from "@/components/ui/Sidebar";
 import { SkipLink } from "@/components/ui/SkipLink";
 import { BottomTabBar } from "@/components/layout/BottomTabBar";
@@ -80,18 +80,8 @@ function LogoMark({ size = 44 }: { size?: number }) {
 function UserMenu({ user, settingsHref }: { user: DashboardUser; settingsHref: string }) {
   const [open, setOpen] = useState(false);
   const [isDark, setIsDark] = useState(false);
-  const [switchingMode, setSwitchingMode] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
-
-  // Only coaches who've opted into training get the mode-switch item.
-  // Athletes always live on /athlete; regular coaches always on /coach.
-  const canSwitchMode = user.role === "COACH" && user.trainingEnabled === true;
-  const currentMode = (user.activeMode as "COACH" | "TRAINING") ?? "COACH";
-  const nextMode: "COACH" | "TRAINING" = currentMode === "COACH" ? "TRAINING" : "COACH";
-  const switchLabel = nextMode === "TRAINING" ? "Switch to Training mode" : "Switch to Coach mode";
-  const SwitchIcon = nextMode === "TRAINING" ? Dumbbell : Megaphone;
-  const switchDestination = nextMode === "TRAINING" ? "/athlete/dashboard" : "/coach/dashboard";
 
   useEffect(() => {
     setIsDark(document.documentElement.classList.contains("dark"));
@@ -111,27 +101,6 @@ function UserMenu({ user, settingsHref }: { user: DashboardUser; settingsHref: s
     document.documentElement.classList.toggle("dark", nowDark);
     document.cookie = `theme=${nowDark ? "dark" : "light"}; path=/; max-age=31536000; SameSite=Lax`;
     setIsDark(nowDark);
-  }
-
-  async function handleSwitchMode() {
-    if (switchingMode) return;
-    setSwitchingMode(true);
-    try {
-      const res = await fetch("/api/user/mode", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", ...csrfHeaders() },
-        body: JSON.stringify({ mode: nextMode }),
-      });
-      if (!res.ok) {
-        setSwitchingMode(false);
-        return;
-      }
-      setOpen(false);
-      router.push(switchDestination);
-      router.refresh();
-    } catch {
-      setSwitchingMode(false);
-    }
   }
 
   async function handleLogout() {
@@ -171,18 +140,6 @@ function UserMenu({ user, settingsHref }: { user: DashboardUser; settingsHref: s
             <p className="text-sm font-medium text-[var(--foreground)] truncate">{user.name}</p>
             <p className="text-xs text-muted truncate">{user.email}</p>
           </div>
-
-          {canSwitchMode && (
-            <button
-              type="button"
-              onClick={handleSwitchMode}
-              disabled={switchingMode}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 text-sm font-medium text-[var(--color-brand-strong)] hover:bg-[var(--color-brand-subtle)] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <SwitchIcon size={16} strokeWidth={1.75} aria-hidden="true" />
-              {switchingMode ? "Switching…" : switchLabel}
-            </button>
-          )}
 
           <button
             type="button"
@@ -295,7 +252,7 @@ function CoachTopBar({
 
       {actions && <div className="flex items-center gap-2">{actions}</div>}
 
-      {user.trainingEnabled && (
+      {user.role === "COACH" && user.trainingEnabled && (
         <ModeToggle activeMode={(user.activeMode as "COACH" | "TRAINING") ?? "COACH"} />
       )}
 
@@ -433,6 +390,12 @@ function AthleteTopBar({
 
         <div className="flex-1" />
 
+        {user.role === "COACH" && user.trainingEnabled && (
+          <ModeToggle
+            activeMode={(user.activeMode as "COACH" | "TRAINING") ?? "TRAINING"}
+            compact
+          />
+        )}
         <NotificationBell initialCount={notificationCount ?? 0} role={user.role} />
         <UserMenu user={user} settingsHref="/athlete/settings" />
       </header>
