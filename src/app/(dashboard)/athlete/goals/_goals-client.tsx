@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useTransition } from "react";
+import { useUrlState } from "@/lib/hooks/useUrlState";
 import { ChevronDown, ChevronRight, Pencil, Plus, Sparkles, Target, Trophy } from "lucide-react";
 import { Badge, Button, EmptyState, ProgressBar, StaggeredList, useConfirm } from "@/components";
 import { useToast } from "@/components/ui/Toast";
@@ -263,7 +264,12 @@ interface GoalsClientProps {
 export function GoalsClient({ initialData }: GoalsClientProps) {
   const toast = useToast();
   const [data, setData] = useState<GoalsPageData>(initialData);
-  const [showAchieved, setShowAchieved] = useState(false);
+  const [showAchievedRaw, setShowAchievedRaw] = useUrlState("achieved", "0");
+  const showAchieved = showAchievedRaw === "1";
+  const setShowAchieved = (next: boolean | ((prev: boolean) => boolean)) => {
+    const resolved = typeof next === "function" ? next(showAchieved) : next;
+    setShowAchievedRaw(resolved ? "1" : "0");
+  };
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardPreset, setWizardPreset] = useState<
     React.ComponentProps<typeof GoalWizardSheet>["preset"] | undefined

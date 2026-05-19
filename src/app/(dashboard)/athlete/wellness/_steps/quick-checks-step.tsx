@@ -37,25 +37,25 @@ const hydrationOptions: CardOption<HydrationValue>[] = [
     value: "POOR",
     label: "Poor",
     icon: <AlertTriangle size={16} strokeWidth={1.75} aria-hidden="true" />,
-    colorClass: "text-red-500",
-    borderClass: "border-red-500/60",
-    bgClass: "bg-red-500/10",
+    colorClass: "text-danger-500",
+    borderClass: "border-danger-500/60",
+    bgClass: "bg-danger-500/10",
   },
   {
     value: "ADEQUATE",
     label: "Adequate",
     icon: <Minus size={16} strokeWidth={1.75} aria-hidden="true" />,
-    colorClass: "text-yellow-500",
-    borderClass: "border-yellow-500/60",
-    bgClass: "bg-yellow-500/10",
+    colorClass: "text-warning-500",
+    borderClass: "border-warning-500/60",
+    bgClass: "bg-warning-500/10",
   },
   {
     value: "GOOD",
     label: "Good",
     icon: <Check size={16} strokeWidth={1.75} aria-hidden="true" />,
-    colorClass: "text-emerald-500",
-    borderClass: "border-emerald-500/60",
-    bgClass: "bg-emerald-500/10",
+    colorClass: "text-success-500",
+    borderClass: "border-success-500/60",
+    bgClass: "bg-success-500/10",
   },
 ];
 
@@ -64,25 +64,25 @@ const injuryOptions: CardOption<InjuryValue>[] = [
     value: "NONE",
     label: "None",
     icon: <CheckCircle size={16} strokeWidth={1.75} aria-hidden="true" />,
-    colorClass: "text-emerald-500",
-    borderClass: "border-emerald-500/60",
-    bgClass: "bg-emerald-500/10",
+    colorClass: "text-success-500",
+    borderClass: "border-success-500/60",
+    bgClass: "bg-success-500/10",
   },
   {
     value: "MONITORING",
     label: "Monitoring",
     icon: <Eye size={16} strokeWidth={1.75} aria-hidden="true" />,
-    colorClass: "text-amber-500",
-    borderClass: "border-amber-500/60",
-    bgClass: "bg-amber-500/10",
+    colorClass: "text-primary-500",
+    borderClass: "border-primary-500/60",
+    bgClass: "bg-primary-500/10",
   },
   {
     value: "ACTIVE",
     label: "Active",
     icon: <AlertCircle size={16} strokeWidth={1.75} aria-hidden="true" />,
-    colorClass: "text-red-500",
-    borderClass: "border-red-500/60",
-    bgClass: "bg-red-500/10",
+    colorClass: "text-danger-500",
+    borderClass: "border-danger-500/60",
+    bgClass: "bg-danger-500/10",
   },
 ];
 
@@ -103,7 +103,7 @@ function TappableCard<T extends string>({
       onClick={() => onSelect(option.value)}
       className={cn(
         "flex-1 flex flex-col items-center gap-2 rounded-xl border p-3 min-h-[56px]",
-        "transition-all duration-150",
+        "transition-colors duration-150",
         selected
           ? cn(option.borderClass, option.bgClass)
           : "border-[var(--card-border)] bg-[var(--card-bg)] hover:border-[var(--card-border)] hover:bg-surface-50 dark:hover:bg-surface-800/50"
@@ -149,11 +149,11 @@ export function QuickChecksStep({ data, onChange, onNext, onBack }: StepProps) {
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center shrink-0">
+        <div className="w-10 h-10 rounded-xl bg-success-500/10 flex items-center justify-center shrink-0">
           <CheckCircle
             size={20}
             strokeWidth={1.75}
-            className="text-emerald-500"
+            className="text-success-500"
             aria-hidden="true"
           />
         </div>
@@ -200,7 +200,7 @@ export function QuickChecksStep({ data, onChange, onNext, onBack }: StepProps) {
         <div
           ref={notesRef}
           className={cn(
-            "transition-all duration-200 overflow-hidden",
+            "transition-colors duration-200 overflow-hidden",
             showInjuryNotes ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2"
           )}
         >
@@ -220,8 +220,8 @@ export function QuickChecksStep({ data, onChange, onNext, onBack }: StepProps) {
               className={cn(
                 "w-full bg-[var(--card-bg)] border border-[var(--card-border)] rounded-xl p-4 text-sm",
                 "text-[var(--foreground)] placeholder:text-muted/60",
-                "focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500/50",
-                "resize-none transition-all duration-150"
+                "focus-visible:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500/50",
+                "resize-none transition-colors duration-150"
               )}
             />
           </div>

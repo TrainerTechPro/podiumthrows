@@ -92,7 +92,7 @@ export function GroupModal({ open, onClose, group, onSaved }: GroupModalProps) {
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? "Something went wrong");
+        throw new Error(data?.error ?? "Couldn't save group — please try again.");
       }
 
       onSaved();
@@ -167,7 +167,7 @@ export function GroupModal({ open, onClose, group, onSaved }: GroupModalProps) {
                 type="button"
                 onClick={() => setColor(c)}
                 className={cn(
-                  "w-8 h-8 rounded-full transition-all",
+                  "w-8 h-8 rounded-full transition-colors",
                   color === c
                     ? "ring-2 ring-offset-2 ring-[var(--foreground)] ring-offset-[var(--card-bg)] scale-110"
                     : "hover:scale-110"

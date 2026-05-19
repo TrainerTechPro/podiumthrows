@@ -103,7 +103,7 @@ export function RPESlider({
               onClick={() => !disabled && onChange(n)}
               disabled={disabled}
               className={cn(
-                "text-nano tabular-nums transition-all duration-150 leading-none",
+                "text-nano tabular-nums transition-[font-weight,color] duration-150 leading-none",
                 "hover:font-semibold",
                 n === value ? "font-bold" : "font-normal text-muted"
               )}

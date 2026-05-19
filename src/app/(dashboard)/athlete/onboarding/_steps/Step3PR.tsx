@@ -88,7 +88,7 @@ export function Step3PR({
               <button
                 type="button"
                 onClick={() => onChange({ prDate: today })}
-                className="px-4 min-h-[44px] rounded-xl text-sm font-medium text-primary-500 hover:bg-primary-500/10 active:scale-[0.97] transition-all duration-150"
+                className="px-4 min-h-[44px] rounded-xl text-sm font-medium text-primary-500 hover:bg-primary-500/10 active:scale-[0.97] transition-colors duration-150"
               >
                 Today
               </button>

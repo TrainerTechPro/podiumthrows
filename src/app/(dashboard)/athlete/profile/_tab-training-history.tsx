@@ -223,7 +223,7 @@ export function TabTrainingHistory({ profile }: { profile: ProfileData }) {
           disabled={isPending}
           className="w-full sm:w-auto"
         >
-          {isPending ? "Saving..." : "Save Changes"}
+          {isPending ? "Saving changes…" : "Save Changes"}
         </Button>
       </div>
     </div>

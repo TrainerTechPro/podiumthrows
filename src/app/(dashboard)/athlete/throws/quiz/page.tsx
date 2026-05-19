@@ -160,9 +160,9 @@ export default function AthleteTypingQuizPage() {
     return (
       <div className="animate-fade-in space-y-6">
         <div className="card text-center py-12 space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+          <div className="w-16 h-16 mx-auto rounded-full bg-success-100 dark:bg-success-900/30 flex items-center justify-center">
             <svg
-              className="w-8 h-8 text-green-600 dark:text-green-400"
+              className="w-8 h-8 text-success-600 dark:text-success-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -217,7 +217,7 @@ export default function AthleteTypingQuizPage() {
       </div>
 
       {submitError && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-xl text-sm">
+        <div className="p-3 bg-danger-50 dark:bg-danger-900/20 text-danger-700 dark:text-danger-400 rounded-xl text-sm">
           {submitError}
         </div>
       )}
@@ -232,7 +232,7 @@ export default function AthleteTypingQuizPage() {
         </div>
         <div className="w-full bg-[var(--muted-bg)] rounded-full h-2">
           <div
-            className="bg-primary-500 h-2 rounded-full transition-all duration-300"
+            className="bg-primary-500 h-2 rounded-full transition-colors duration-300"
             style={{ width: `${(answeredSoFar / totalQuestions) * 100}%` }}
           />
         </div>
@@ -276,7 +276,7 @@ export default function AthleteTypingQuizPage() {
               <button
                 key={option.value}
                 onClick={() => handleOptionClick(option.score)}
-                className={`w-full text-left p-4 rounded-xl border-2 transition-all duration-150 group ${
+                className={`w-full text-left p-4 rounded-xl border-2 transition-colors duration-150 group ${
                   isSelected
                     ? "border-primary-500 bg-[rgba(212,168,67,0.08)]"
                     : "border-[var(--card-border)] hover:border-[rgba(212,168,67,0.3)] dark:hover:border-primary-500 hover:bg-[var(--muted-bg)]/50"
@@ -341,9 +341,9 @@ export default function AthleteTypingQuizPage() {
           <button
             onClick={handleNext}
             disabled={!pendingScore || saving}
-            className="flex items-center gap-1.5 px-5 min-h-[44px] rounded-xl bg-primary-500 hover:opacity-90 text-white text-sm font-bold transition-all active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
+            className="flex items-center gap-1.5 px-5 min-h-[44px] rounded-xl bg-primary-500 hover:opacity-90 text-white text-sm font-bold transition-colors active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {saving ? "Saving..." : isLastQuestion ? "Submit" : "Next"}
+            {saving ? "Scoring…" : isLastQuestion ? "See Results" : "Next"}
             {!saving && !isLastQuestion && (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

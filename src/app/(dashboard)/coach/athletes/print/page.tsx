@@ -119,10 +119,13 @@ export default async function PrintRosterPage({
               {coach.firstName} {coach.lastName}
             </span>
             {coach.organization && (
-              <span className="text-muted print:text-gray-600"> &mdash; {coach.organization}</span>
+              <span className="text-muted print:text-surface-600">
+                {" "}
+                &mdash; {coach.organization}
+              </span>
             )}
             {teamLabel && (
-              <span className="text-muted print:text-gray-600"> &mdash; {teamLabel}</span>
+              <span className="text-muted print:text-surface-600"> &mdash; {teamLabel}</span>
             )}
           </>
         }
@@ -169,7 +172,10 @@ export default async function PrintRosterPage({
               const monitoring = r?.injuryStatus === "MONITORING";
 
               return (
-                <tr key={a.id} className="border-b border-gray-300 print:border-gray-400 align-top">
+                <tr
+                  key={a.id}
+                  className="border-b border-surface-300 print:border-surface-400 align-top"
+                >
                   <td className="py-1.5 px-2 font-semibold">
                     {a.lastName}, {a.firstName}
                   </td>

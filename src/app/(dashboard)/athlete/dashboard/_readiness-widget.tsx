@@ -53,7 +53,7 @@ function ReadinessRing({ score }: { score: number }) {
           strokeWidth="8"
           strokeLinecap="round"
           strokeDasharray={`${dash} ${circ}`}
-          className="transition-all duration-700"
+          className="transition-colors duration-700"
         />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
@@ -70,14 +70,14 @@ function ReadinessRing({ score }: { score: number }) {
 
 function BreakdownBar({ label, value, max = 10 }: { label: string; value: number; max?: number }) {
   const pct = (value / max) * 100;
-  const barColor = pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-red-500";
+  const barColor = pct >= 70 ? "bg-success-500" : pct >= 40 ? "bg-primary-500" : "bg-danger-500";
 
   return (
     <div className="flex items-center gap-2 text-xs">
       <span className="w-14 text-muted shrink-0 text-right">{label}</span>
       <div className="flex-1 h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
         <div
-          className={`h-full rounded-full ${barColor} transition-all duration-500`}
+          className={`h-full rounded-full ${barColor} transition-colors duration-500`}
           style={{ width: `${Math.min(pct, 100)}%` }}
         />
       </div>
@@ -169,7 +169,7 @@ export function ReadinessWidget({ data }: { data: ReadinessData | null }) {
 
       {/* Expandable breakdown */}
       <div
-        className="grid transition-all duration-200 ease-out"
+        className="grid transition-colors duration-200 ease-out"
         style={{
           gridTemplateRows: expanded ? "1fr" : "0fr",
         }}

@@ -60,8 +60,8 @@ function BadgeCard({
     <button
       type="button"
       onClick={() => onSelect(badge)}
-      className={`card group relative overflow-hidden p-4 flex flex-col items-center text-center gap-2 text-left transition-transform active:scale-[0.97] hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-amber-400/40 ${
-        earned ? "ring-1 ring-amber-400/30 dark:ring-amber-500/20" : "border-dashed"
+      className={`card group relative overflow-hidden p-4 flex flex-col items-center text-center gap-2 text-left transition-transform active:scale-[0.97] hover:scale-[1.02] focus-visible:outline-none focus:ring-2 focus:ring-primary-400/40 ${
+        earned ? "ring-1 ring-primary-400/30 dark:ring-primary-500/20" : "border-dashed"
       }`}
       aria-label={
         earned
@@ -109,7 +109,7 @@ function BadgeCard({
           aria-hidden="true"
         >
           <div
-            className="h-full bg-amber-500 transition-[width] duration-500 ease-out"
+            className="h-full bg-primary-500 transition-[width] duration-500 ease-out"
             style={{ width: `${pct}%` }}
           />
         </div>
@@ -191,7 +191,7 @@ function BadgeDetailSheet({
               aria-label={`${stripEmoji(badge.title)} progress`}
             >
               <div
-                className="h-full bg-amber-500 transition-[width] duration-700 ease-out"
+                className="h-full bg-primary-500 transition-[width] duration-700 ease-out"
                 style={{ width: `${pct}%` }}
               />
             </div>

@@ -22,7 +22,7 @@ export function AddNoteCTA({ roster }: { roster: SidelineRosterAthlete[] }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="w-full flex items-center justify-between gap-4 rounded-2xl p-5 bg-primary-500 text-surface-950 active:scale-[0.98] transition-transform focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+        className="w-full flex items-center justify-between gap-4 rounded-2xl p-5 bg-primary-500 text-surface-950 active:scale-[0.98] transition-transform focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
         disabled={roster.length === 0}
       >
         <div className="flex items-center gap-3 text-left">
@@ -63,7 +63,7 @@ export function AddNoteCTA({ roster }: { roster: SidelineRosterAthlete[] }) {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Search roster"
-              className="w-full rounded-xl pl-9 pr-3 py-2.5 text-sm bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] placeholder:text-[var(--color-text-secondary)] focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+              className="w-full rounded-xl pl-9 pr-3 py-2.5 text-sm bg-[var(--card-bg)] border border-[var(--card-border)] text-[var(--foreground)] placeholder:text-[var(--color-text-secondary)] focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
             />
           </label>
 

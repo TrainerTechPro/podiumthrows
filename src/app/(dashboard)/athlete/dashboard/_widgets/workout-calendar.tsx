@@ -116,7 +116,7 @@ export function WorkoutCalendarWidget({ days }: { days: CalendarDay[] }) {
               <div className="flex items-center gap-0.5 h-2 mt-0.5">
                 {hasCompleted && (
                   <span
-                    className="w-1.5 h-1.5 rounded-full bg-emerald-500"
+                    className="w-1.5 h-1.5 rounded-full bg-success-500"
                     style={dotStyle(dayNum * 20)}
                     aria-label="Completed"
                   />
@@ -137,7 +137,7 @@ export function WorkoutCalendarWidget({ days }: { days: CalendarDay[] }) {
       {/* Legend */}
       <div className="flex items-center justify-center gap-4 mt-3 pt-2 border-t border-[var(--card-border)]">
         <div className="flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span className="w-1.5 h-1.5 rounded-full bg-success-500" />
           <span className="text-nano text-muted">Completed</span>
         </div>
         <div className="flex items-center gap-1.5">

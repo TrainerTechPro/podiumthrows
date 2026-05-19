@@ -32,7 +32,7 @@ export default function EventGroupsPage() {
       const json = await res.json();
       setGroups(json.data ?? []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(err instanceof Error ? err.message : "Couldn't load groups — please try again.");
     } finally {
       setLoading(false);
     }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
@@ -10,6 +10,9 @@ import { Radio, RadioGroup } from "@/components/ui/Radio";
 import dynamic from "next/dynamic";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { validateNewPassword } from "@/lib/api-schemas";
+import { focusFirstError } from "@/lib/forms/focus-first-error";
+
+type PwInvalidField = "current" | "new" | "confirm";
 import { QuickActionsSettings } from "@/components/ui/QuickActionsSettings";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 import { SendFeedbackCard } from "@/components/feedback/SendFeedbackCard";
@@ -220,6 +223,10 @@ export default function CoachSettingsPage() {
   });
   const [pwSaving, setPwSaving] = useState(false);
   const [pwMessage, setPwMessage] = useState<{ type: string; text: string } | null>(null);
+  const [pwInvalidField, setPwInvalidField] = useState<PwInvalidField | null>(null);
+  const pwFormRef = useRef<HTMLFormElement>(null);
+  const [inviteEmailInvalid, setInviteEmailInvalid] = useState(false);
+  const inviteFormRef = useRef<HTMLFormElement>(null);
 
   // Invitation form
   const [inviteForm, setInviteForm] = useState({ email: "", sport: "", position: "" });
@@ -393,8 +400,11 @@ export default function CoachSettingsPage() {
 
   async function handleChangePassword(e: React.FormEvent) {
     e.preventDefault();
+    setPwInvalidField(null);
     if (passwordForm.newPassword !== passwordForm.confirmPassword) {
       setPwMessage({ type: "error", text: "Passwords do not match" });
+      setPwInvalidField("confirm");
+      queueMicrotask(() => focusFirstError(pwFormRef.current));
       return;
     }
     // Mirror server password rules so the user gets the specific complaint
@@ -403,6 +413,8 @@ export default function CoachSettingsPage() {
     const policyError = validateNewPassword(passwordForm.newPassword);
     if (policyError) {
       setPwMessage({ type: "error", text: policyError });
+      setPwInvalidField("new");
+      queueMicrotask(() => focusFirstError(pwFormRef.current));
       return;
     }
     setPwSaving(true);
@@ -422,8 +434,13 @@ export default function CoachSettingsPage() {
         toast("Password updated successfully");
         setPasswordForm({ currentPassword: "", newPassword: "", confirmPassword: "" });
       } else {
-        setPwMessage({ type: "error", text: data.error || "Failed to update password" });
-        toast(data.error || "Failed to update password", "error");
+        const msg = data.error || "Couldn't update password — try again in a moment.";
+        setPwMessage({ type: "error", text: msg });
+        // Server password errors almost always mean the current password is
+        // wrong — focus the current-password field so the user can re-enter.
+        setPwInvalidField("current");
+        queueMicrotask(() => focusFirstError(pwFormRef.current));
+        toast(msg, "error");
       }
     } catch {
       setPwMessage({ type: "error", text: "Network error — please try again." });
@@ -437,6 +454,7 @@ export default function CoachSettingsPage() {
     e.preventDefault();
     setInviteSending(true);
     setInviteMessage(null);
+    setInviteEmailInvalid(false);
     try {
       const res = await fetch("/api/invitations", {
         method: "POST",
@@ -453,8 +471,13 @@ export default function CoachSettingsPage() {
         setInviteForm({ email: "", sport: "", position: "" });
         loadInvitations();
       } else {
-        setInviteMessage({ type: "error", text: data.error || "Failed to send invitation" });
-        toast(data.error || "Failed to send invitation", "error");
+        const msg = data.error || "Couldn't send invitation — check the email and try again.";
+        setInviteMessage({ type: "error", text: msg });
+        // Email is the only required + format-sensitive field — almost every
+        // server-side rejection is something the user fixes by editing email.
+        setInviteEmailInvalid(true);
+        queueMicrotask(() => focusFirstError(inviteFormRef.current));
+        toast(msg, "error");
       }
     } catch {
       setInviteMessage({ type: "error", text: "Network error — please try again." });
@@ -495,7 +518,7 @@ export default function CoachSettingsPage() {
 
   const planColors: Record<string, string> = {
     FREE: "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300",
-    PRO: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    PRO: "bg-info-100 text-info-700 dark:bg-info-900/30 dark:text-info-400",
     ELITE: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
   };
 
@@ -559,207 +582,230 @@ export default function CoachSettingsPage() {
           ))}
         </div>
 
-        {/* Profile Tab */}
+        {/* Profile Tab — one panel, two divided sections (Profile + Password).
+            Units stays its own panel because it's a different concept (display
+            preferences, not account identity). */}
         {activeTab === "profile" && (
-          <div className="animate-spring-up">
-            <form onSubmit={handleSaveProfile} className="card mb-6">
-              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">Profile</h2>
-              <div className="space-y-4">
-                {/* Profile Picture */}
-                <div className="flex items-center gap-6 pb-4 border-b border-[var(--card-border)]">
-                  <div className="relative group">
-                    {profile.avatarUrl ? (
-                      <Image
-                        src={profile.avatarUrl}
-                        alt="Profile"
-                        width={72}
-                        height={72}
-                        unoptimized
-                        className="w-18 h-18 rounded-full object-cover border-2 border-[var(--card-border)]"
-                        style={{ width: 72, height: 72 }}
+          <div className="animate-spring-up space-y-6">
+            <div className="rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)] divide-y divide-[var(--card-border)]">
+              {/* ── Profile ─────────────────────────────────────────────── */}
+              <section className="p-5 sm:p-7">
+                <header className="mb-5">
+                  <h2 className="text-section font-heading font-semibold text-[var(--foreground)]">
+                    Profile
+                  </h2>
+                  <p className="text-sm text-muted mt-0.5">
+                    Visible to your athletes and on shared reports.
+                  </p>
+                </header>
+                <form onSubmit={handleSaveProfile} className="space-y-5">
+                  <div className="flex items-center gap-5">
+                    <div className="relative group shrink-0">
+                      {profile.avatarUrl ? (
+                        <Image
+                          src={profile.avatarUrl}
+                          alt="Profile"
+                          width={72}
+                          height={72}
+                          unoptimized
+                          className="rounded-full object-cover border-2 border-[var(--card-border)]"
+                          style={{ width: 72, height: 72 }}
+                        />
+                      ) : (
+                        <div className="w-[72px] h-[72px] rounded-full bg-[rgba(212,168,67,0.12)] flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-xl border-2 border-[var(--card-border)]">
+                          {profile.firstName?.[0] || "C"}
+                          {profile.lastName?.[0] || ""}
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => setShowPhotoEditor(true)}
+                        className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 focus-visible:opacity-100 transition-opacity"
+                        aria-label="Edit profile photo"
+                      >
+                        <Camera
+                          className="h-5 w-5 text-white"
+                          aria-hidden="true"
+                          strokeWidth={1.75}
+                        />
+                      </button>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowPhotoEditor(true)}
+                      className="btn-secondary text-sm min-h-[44px]"
+                    >
+                      {profile.avatarUrl ? "Edit photo" : "Add photo"}
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="firstName" className="label">
+                        First name
+                      </label>
+                      <input
+                        id="firstName"
+                        type="text"
+                        value={profile.firstName}
+                        onChange={(e) => setProfile((p) => ({ ...p, firstName: e.target.value }))}
+                        className="input"
                       />
+                    </div>
+                    <div>
+                      <label htmlFor="lastName" className="label">
+                        Last name
+                      </label>
+                      <input
+                        id="lastName"
+                        type="text"
+                        value={profile.lastName}
+                        onChange={(e) => setProfile((p) => ({ ...p, lastName: e.target.value }))}
+                        className="input"
+                      />
+                    </div>
+                  </div>
+                  <div>
+                    <label htmlFor="email" className="label">
+                      Email
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      value={profile.email}
+                      disabled
+                      aria-describedby="email-hint"
+                      className="input bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 cursor-not-allowed"
+                    />
+                    <p id="email-hint" className="text-xs text-muted mt-1">
+                      Email is locked — contact support to change it.
+                    </p>
+                  </div>
+                  <div>
+                    <label htmlFor="bio" className="label">
+                      Bio
+                    </label>
+                    <textarea
+                      id="bio"
+                      value={profile.bio}
+                      onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))}
+                      placeholder="Brief coaching background and philosophy"
+                      rows={3}
+                      className="input resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="organization" className="label">
+                      Organization
+                    </label>
+                    <input
+                      id="organization"
+                      type="text"
+                      value={profile.organization}
+                      onChange={(e) => setProfile((p) => ({ ...p, organization: e.target.value }))}
+                      placeholder="e.g. University of Oregon, USATF"
+                      className="input"
+                    />
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    {saved ? (
+                      <span className="text-sm text-success-600 font-medium flex items-center gap-1.5">
+                        <Check className="h-4 w-4" aria-hidden="true" strokeWidth={1.75} />
+                        Saved
+                      </span>
                     ) : (
-                      <div className="w-[72px] h-[72px] rounded-full bg-[rgba(212,168,67,0.12)] flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold text-xl border-2 border-[var(--card-border)]">
-                        {profile.firstName?.[0] || "C"}
-                        {profile.lastName?.[0] || ""}
-                      </div>
+                      <span />
                     )}
-                    <button
-                      type="button"
-                      onClick={() => setShowPhotoEditor(true)}
-                      className="absolute inset-0 rounded-full bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
-                      title="Edit profile photo"
-                    >
-                      <Camera
-                        className="h-5 w-5 text-white"
-                        aria-hidden="true"
-                        strokeWidth={1.75}
-                      />
+                    <button type="submit" disabled={saving} className="btn-primary min-h-[44px]">
+                      {saving ? "Saving changes…" : "Save changes"}
                     </button>
                   </div>
-                  <div className="flex flex-col gap-1.5">
-                    <button
-                      type="button"
-                      onClick={() => setShowPhotoEditor(true)}
-                      className="btn-secondary text-sm"
-                    >
-                      {profile.avatarUrl ? "Edit Photo" : "Add Photo"}
-                    </button>
-                    <p className="text-xs text-muted">Crop, zoom &amp; rotate</p>
-                  </div>
-                </div>
+                </form>
+              </section>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="firstName" className="label">
-                      First Name
-                    </label>
-                    <input
-                      id="firstName"
-                      type="text"
-                      value={profile.firstName}
-                      onChange={(e) => setProfile((p) => ({ ...p, firstName: e.target.value }))}
-                      className="input"
-                    />
+              {/* ── Password ────────────────────────────────────────────── */}
+              <section className="p-5 sm:p-7">
+                <header className="mb-5">
+                  <h2 className="text-section font-heading font-semibold text-[var(--foreground)]">
+                    Change password
+                  </h2>
+                  <p className="text-sm text-muted mt-0.5">
+                    Use at least 8 characters. You&apos;ll stay signed in on this device.
+                  </p>
+                </header>
+                {pwMessage && (
+                  <div
+                    className={`mb-4 p-3 rounded-lg text-sm border ${
+                      pwMessage.type === "error"
+                        ? "bg-status-danger-bg text-status-danger-fg border-status-danger-fg/20"
+                        : "bg-status-success-bg text-status-success-fg border-status-success-fg/20"
+                    }`}
+                    role="alert"
+                  >
+                    {pwMessage.text}
                   </div>
-                  <div>
-                    <label htmlFor="lastName" className="label">
-                      Last Name
-                    </label>
-                    <input
-                      id="lastName"
-                      type="text"
-                      value={profile.lastName}
-                      onChange={(e) => setProfile((p) => ({ ...p, lastName: e.target.value }))}
-                      className="input"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label htmlFor="email" className="label">
-                    Email
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    value={profile.email}
-                    disabled
-                    className="input bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 cursor-not-allowed"
-                  />
-                  <p className="text-xs text-muted mt-1">Email cannot be changed</p>
-                </div>
-                <div>
-                  <label htmlFor="bio" className="label">
-                    Bio
-                  </label>
-                  <textarea
-                    id="bio"
-                    value={profile.bio}
-                    onChange={(e) => setProfile((p) => ({ ...p, bio: e.target.value }))}
-                    placeholder="Brief coaching background and philosophy"
-                    rows={3}
-                    className="input resize-none"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="organization" className="label">
-                    Organization
-                  </label>
-                  <input
-                    id="organization"
-                    type="text"
-                    value={profile.organization}
-                    onChange={(e) => setProfile((p) => ({ ...p, organization: e.target.value }))}
-                    placeholder="e.g. University of Oregon, USATF"
-                    className="input"
-                  />
-                </div>
-              </div>
-              <div className="flex items-center justify-between mt-6 pt-4 border-t border-[var(--card-border)]">
-                {saved && (
-                  <span className="text-sm text-green-600 font-medium flex items-center gap-1">
-                    <Check className="h-4 w-4" aria-hidden="true" strokeWidth={1.75} />
-                    Saved
-                  </span>
                 )}
-                {!saved && <div />}
-                <button type="submit" disabled={saving} className="btn-primary">
-                  {saving ? "Saving…" : "Save Changes"}
-                </button>
-              </div>
-            </form>
+                <form ref={pwFormRef} onSubmit={handleChangePassword} className="space-y-5">
+                  <div>
+                    <label htmlFor="currentPassword" className="label">
+                      Current password
+                    </label>
+                    <PasswordInput
+                      id="currentPassword"
+                      value={passwordForm.currentPassword}
+                      onChange={(e) =>
+                        setPasswordForm((p) => ({ ...p, currentPassword: e.target.value }))
+                      }
+                      autoComplete="current-password"
+                      aria-invalid={pwInvalidField === "current"}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="newPassword" className="label">
+                      New password
+                    </label>
+                    <PasswordInput
+                      id="newPassword"
+                      value={passwordForm.newPassword}
+                      onChange={(e) =>
+                        setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))
+                      }
+                      autoComplete="new-password"
+                      aria-invalid={pwInvalidField === "new"}
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="confirmPassword" className="label">
+                      Confirm new password
+                    </label>
+                    <PasswordInput
+                      id="confirmPassword"
+                      value={passwordForm.confirmPassword}
+                      onChange={(e) =>
+                        setPasswordForm((p) => ({ ...p, confirmPassword: e.target.value }))
+                      }
+                      autoComplete="new-password"
+                      aria-invalid={pwInvalidField === "confirm"}
+                    />
+                  </div>
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="submit"
+                      disabled={
+                        pwSaving || !passwordForm.currentPassword || !passwordForm.newPassword
+                      }
+                      className="btn-primary min-h-[44px]"
+                    >
+                      {pwSaving ? "Updating password…" : "Update password"}
+                    </button>
+                  </div>
+                </form>
+              </section>
+            </div>
 
-            {/* Units Section — per-data-type metric/imperial display prefs */}
+            {/* Display preferences are a separate concept from account identity,
+                so they get their own quiet panel. */}
             <CoachUnitsPanel />
-
-            {/* Password Section */}
-            <form onSubmit={handleChangePassword} className="card">
-              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
-                Change Password
-              </h2>
-              {pwMessage && (
-                <div
-                  className={`mb-4 p-3 rounded-lg text-sm border ${
-                    pwMessage.type === "error"
-                      ? "bg-status-danger-bg text-status-danger-fg border-status-danger-fg/20"
-                      : "bg-status-success-bg text-status-success-fg border-status-success-fg/20"
-                  }`}
-                  role="alert"
-                >
-                  {pwMessage.text}
-                </div>
-              )}
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="currentPassword" className="label">
-                    Current Password
-                  </label>
-                  <PasswordInput
-                    id="currentPassword"
-                    value={passwordForm.currentPassword}
-                    onChange={(e) =>
-                      setPasswordForm((p) => ({ ...p, currentPassword: e.target.value }))
-                    }
-                    autoComplete="current-password"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="newPassword" className="label">
-                    New Password
-                  </label>
-                  <PasswordInput
-                    id="newPassword"
-                    value={passwordForm.newPassword}
-                    onChange={(e) =>
-                      setPasswordForm((p) => ({ ...p, newPassword: e.target.value }))
-                    }
-                    autoComplete="new-password"
-                  />
-                </div>
-                <div>
-                  <label htmlFor="confirmPassword" className="label">
-                    Confirm New Password
-                  </label>
-                  <PasswordInput
-                    id="confirmPassword"
-                    value={passwordForm.confirmPassword}
-                    onChange={(e) =>
-                      setPasswordForm((p) => ({ ...p, confirmPassword: e.target.value }))
-                    }
-                    autoComplete="new-password"
-                  />
-                </div>
-              </div>
-              <div className="mt-6 pt-4 border-t border-[var(--card-border)] flex justify-end">
-                <button
-                  type="submit"
-                  disabled={pwSaving || !passwordForm.currentPassword || !passwordForm.newPassword}
-                  className="btn-primary"
-                >
-                  {pwSaving ? "Updating…" : "Update Password"}
-                </button>
-              </div>
-            </form>
           </div>
         )}
 
@@ -791,11 +837,11 @@ export default function CoachSettingsPage() {
                       Free Plan
                     </span>
                   ) : subscription.paymentFailedAt ? (
-                    <span className="text-sm text-amber-500 font-medium">Past Due</span>
+                    <span className="text-sm text-primary-500 font-medium">Past Due</span>
                   ) : subscription.cancelAtPeriodEnd ? (
-                    <span className="text-sm text-amber-500 font-medium">Canceling</span>
+                    <span className="text-sm text-primary-500 font-medium">Canceling</span>
                   ) : (
-                    <span className="text-sm text-emerald-500 font-medium">Active</span>
+                    <span className="text-sm text-success-500 font-medium">Active</span>
                   )}
                 </div>
                 {subscription.currentPeriodEnd && subscription.plan !== "FREE" && (
@@ -824,7 +870,7 @@ export default function CoachSettingsPage() {
                 {PLAN_LIMITS[subscription.plan] !== Infinity && (
                   <div className="w-full bg-[var(--muted-bg)] rounded-full h-2">
                     <div
-                      className="bg-amber-500 h-2 rounded-full transition-all"
+                      className="bg-primary-500 h-2 rounded-full transition-colors"
                       style={{
                         width: `${Math.min(100, (subscription.athleteCount / (PLAN_LIMITS[subscription.plan] || 1)) * 100)}%`,
                       }}
@@ -862,7 +908,7 @@ export default function CoachSettingsPage() {
                 <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -870,7 +916,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -878,7 +924,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -890,7 +936,7 @@ export default function CoachSettingsPage() {
                 <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -898,7 +944,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -906,7 +952,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -914,7 +960,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -926,7 +972,7 @@ export default function CoachSettingsPage() {
                 <ul className="space-y-2 text-sm text-surface-700 dark:text-surface-300">
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -934,7 +980,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -942,15 +988,7 @@ export default function CoachSettingsPage() {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
-                      aria-hidden="true"
-                      strokeWidth={1.75}
-                    />
-                    Video annotation (coming soon)
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check
-                      className="h-4 w-4 text-green-500 shrink-0"
+                      className="h-4 w-4 text-success-500 shrink-0"
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
@@ -962,152 +1000,167 @@ export default function CoachSettingsPage() {
           </div>
         )}
 
-        {/* Team Tab — invitations roster + coach preferences (the panel below
-            handles preferences). Both share the "team" id; the original
-            invitations/preferences IDs only ran the data fetch. */}
+        {/* Team Tab — one divided panel (Invite form + Sent invitations list),
+            matching the Profile-tab recipe. */}
         {activeTab === "team" && (
-          <div className="animate-spring-up space-y-6">
-            <form onSubmit={handleSendInvite} className="card">
-              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
-                Invite an Athlete
-              </h2>
-              <p className="text-sm text-surface-700 dark:text-surface-300 mb-4">
-                Send an invitation link to an athlete. They&apos;ll be automatically linked to your
-                account when they register.
-              </p>
-              {inviteMessage && (
-                <div
-                  className={`mb-4 p-3 rounded-lg text-sm ${
-                    inviteMessage.type === "error"
-                      ? "bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800"
-                      : "bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800"
-                  }`}
-                >
-                  {inviteMessage.text}
-                </div>
-              )}
-              <div className="space-y-4">
-                <div>
-                  <label htmlFor="inviteEmail" className="label">
-                    Athlete Email
-                  </label>
-                  <input
-                    id="inviteEmail"
-                    type="email"
-                    value={inviteForm.email}
-                    onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))}
-                    placeholder="athlete@example.com"
-                    className="input"
-                    required
-                  />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="animate-spring-up">
+            <div className="rounded-2xl bg-[var(--card-bg)] border border-[var(--card-border)] divide-y divide-[var(--card-border)]">
+              {/* ── Invite an athlete ──────────────────────────────────── */}
+              <section className="p-5 sm:p-7">
+                <header className="mb-5">
+                  <h2 className="text-section font-heading font-semibold text-[var(--foreground)]">
+                    Invite an athlete
+                  </h2>
+                  <p className="text-sm text-muted mt-0.5">
+                    They&apos;ll be linked to your roster automatically when they accept.
+                  </p>
+                </header>
+                {inviteMessage && (
+                  <div
+                    className={`mb-4 p-3 rounded-lg text-sm ${
+                      inviteMessage.type === "error"
+                        ? "bg-status-danger-bg text-status-danger-fg border border-status-danger-fg/20"
+                        : "bg-status-success-bg text-status-success-fg border border-status-success-fg/20"
+                    }`}
+                    role="alert"
+                  >
+                    {inviteMessage.text}
+                  </div>
+                )}
+                <form ref={inviteFormRef} onSubmit={handleSendInvite} className="space-y-5">
                   <div>
-                    <label htmlFor="inviteSport" className="label">
-                      Event (optional)
+                    <label htmlFor="inviteEmail" className="label">
+                      Athlete email
                     </label>
                     <input
-                      id="inviteSport"
-                      type="text"
-                      value={inviteForm.sport}
-                      onChange={(e) => setInviteForm((f) => ({ ...f, sport: e.target.value }))}
-                      placeholder="e.g. Shot Put, Discus"
+                      id="inviteEmail"
+                      type="email"
+                      value={inviteForm.email}
+                      onChange={(e) => setInviteForm((f) => ({ ...f, email: e.target.value }))}
+                      aria-invalid={inviteEmailInvalid}
+                      placeholder="athlete@example.com"
                       className="input"
+                      required
                     />
                   </div>
-                  <div>
-                    <label htmlFor="invitePosition" className="label">
-                      Classification (optional)
-                    </label>
-                    <input
-                      id="invitePosition"
-                      type="text"
-                      value={inviteForm.position}
-                      onChange={(e) => setInviteForm((f) => ({ ...f, position: e.target.value }))}
-                      placeholder="e.g. D1, Professional"
-                      className="input"
-                    />
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 flex justify-end">
-                <button type="submit" disabled={inviteSending} className="btn-primary">
-                  {inviteSending ? "Sending…" : "Send Invitation"}
-                </button>
-              </div>
-            </form>
-
-            <div className="card">
-              <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
-                Sent Invitations
-              </h2>
-              {invitations.length === 0 ? (
-                <div className="flex flex-col items-center text-center py-8 gap-2">
-                  <div className="text-surface-300 dark:text-surface-600">
-                    <svg
-                      width="24"
-                      height="24"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth="1.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      aria-hidden="true"
-                    >
-                      <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                      <polyline points="22,6 12,13 2,6" />
-                    </svg>
-                  </div>
-                  <p className="text-sm font-semibold text-[var(--foreground)]">
-                    No invitations sent
-                  </p>
-                  <p className="text-xs text-muted max-w-full sm:max-w-[220px]">
-                    Use the form above to invite an athlete by email — they&apos;ll show up here
-                    once sent.
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {invitations.map((inv) => (
-                    <div
-                      key={inv.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-[var(--muted-bg)] gap-2"
-                    >
-                      <div className="min-w-0">
-                        <p className="text-sm font-medium text-[var(--foreground)] truncate">
-                          {inv.email}
-                        </p>
-                        <p className="text-xs text-surface-700 dark:text-surface-300">
-                          {inv.sport && `${inv.sport}`}
-                          {inv.sport && inv.position && " - "}
-                          {inv.position && `${inv.position}`}
-                          {(inv.sport || inv.position) && " \u00b7 "}
-                          Sent {formatRelativeTime(inv.createdAt)}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span
-                          className={`px-2 py-0.5 text-xs rounded-full font-medium ${
-                            inv.status === "PENDING"
-                              ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
-                              : inv.status === "ACCEPTED"
-                                ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
-                                : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
-                          }`}
-                        >
-                          {inv.status === "PENDING" && new Date(inv.expiresAt) < new Date()
-                            ? "Expired"
-                            : inv.status.charAt(0) + inv.status.slice(1).toLowerCase()}
-                        </span>
-                        {inv.status === "PENDING" && new Date(inv.expiresAt) >= new Date() && (
-                          <span className="text-xs text-muted">Link delivered by email</span>
-                        )}
-                      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="inviteSport" className="label">
+                        Event (optional)
+                      </label>
+                      <input
+                        id="inviteSport"
+                        type="text"
+                        value={inviteForm.sport}
+                        onChange={(e) => setInviteForm((f) => ({ ...f, sport: e.target.value }))}
+                        placeholder="e.g. Shot Put, Discus"
+                        className="input"
+                      />
                     </div>
-                  ))}
-                </div>
-              )}
+                    <div>
+                      <label htmlFor="invitePosition" className="label">
+                        Classification (optional)
+                      </label>
+                      <input
+                        id="invitePosition"
+                        type="text"
+                        value={inviteForm.position}
+                        onChange={(e) => setInviteForm((f) => ({ ...f, position: e.target.value }))}
+                        placeholder="e.g. D1, Professional"
+                        className="input"
+                      />
+                    </div>
+                  </div>
+                  <div className="flex justify-end pt-1">
+                    <button
+                      type="submit"
+                      disabled={inviteSending}
+                      className="btn-primary min-h-[44px]"
+                    >
+                      {inviteSending ? "Sending invite…" : "Send invite"}
+                    </button>
+                  </div>
+                </form>
+              </section>
+
+              {/* ── Sent invitations ───────────────────────────────────── */}
+              <section className="p-5 sm:p-7">
+                <header className="mb-5">
+                  <h2 className="text-section font-heading font-semibold text-[var(--foreground)]">
+                    Sent invitations
+                  </h2>
+                  <p className="text-sm text-muted mt-0.5">
+                    Track who&apos;s been invited and whether they&apos;ve accepted.
+                  </p>
+                </header>
+                {invitations.length === 0 ? (
+                  <div className="flex flex-col items-center text-center py-8 gap-2">
+                    <div className="text-surface-300 dark:text-surface-600">
+                      <svg
+                        width="24"
+                        height="24"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.5"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        aria-hidden="true"
+                      >
+                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                        <polyline points="22,6 12,13 2,6" />
+                      </svg>
+                    </div>
+                    <p className="text-sm font-semibold text-[var(--foreground)]">
+                      No invitations sent
+                    </p>
+                    <p className="text-xs text-muted max-w-full sm:max-w-[220px]">
+                      Use the form above to invite an athlete by email — they&apos;ll show up here
+                      once sent.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {invitations.map((inv) => (
+                      <div
+                        key={inv.id}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-lg bg-[var(--muted-bg)] gap-2"
+                      >
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium text-[var(--foreground)] truncate">
+                            {inv.email}
+                          </p>
+                          <p className="text-xs text-surface-700 dark:text-surface-300">
+                            {inv.sport && `${inv.sport}`}
+                            {inv.sport && inv.position && " - "}
+                            {inv.position && `${inv.position}`}
+                            {(inv.sport || inv.position) && " \u00b7 "}
+                            Sent {formatRelativeTime(inv.createdAt)}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span
+                            className={`px-2 py-0.5 text-xs rounded-full font-medium ${
+                              inv.status === "PENDING"
+                                ? "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400"
+                                : inv.status === "ACCEPTED"
+                                  ? "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400"
+                                  : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300"
+                            }`}
+                          >
+                            {inv.status === "PENDING" && new Date(inv.expiresAt) < new Date()
+                              ? "Expired"
+                              : inv.status.charAt(0) + inv.status.slice(1).toLowerCase()}
+                          </span>
+                          {inv.status === "PENDING" && new Date(inv.expiresAt) >= new Date() && (
+                            <span className="text-xs text-muted">Link delivered by email</span>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </section>
             </div>
           </div>
         )}
@@ -1390,7 +1443,7 @@ export default function CoachSettingsPage() {
                   />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-                Saving...
+                Saving changes…
               </div>
             )}
           </div>
@@ -1451,7 +1504,7 @@ export default function CoachSettingsPage() {
                   <span
                     aria-hidden="true"
                     className={`relative inline-flex h-6 w-11 shrink-0 rounded-full transition-colors ${
-                      reducedMotion ? "bg-amber-500" : "bg-[var(--color-border-strong)]"
+                      reducedMotion ? "bg-primary-500" : "bg-[var(--color-border-strong)]"
                     }`}
                   >
                     <span

@@ -132,12 +132,12 @@ export default async function CoachThrowsSessionPrintPage({
             <span className="font-semibold">
               {athlete.firstName} {athlete.lastName}
             </span>
-            <span className="text-muted print:text-gray-600">
+            <span className="text-muted print:text-surface-600">
               {" "}
               &middot; {formatEventType(ses.event)}
             </span>
             {athlete.events && athlete.events.length > 1 && (
-              <span className="text-muted print:text-gray-600">
+              <span className="text-muted print:text-surface-600">
                 {" "}
                 &middot; Events: {athlete.events.map((e) => formatEventType(e)).join(", ")}
               </span>
@@ -161,7 +161,7 @@ export default async function CoachThrowsSessionPrintPage({
       />
 
       {ses.notes && (
-        <p className="text-xs italic text-muted print:text-gray-700 mb-4 leading-relaxed border-l-2 border-gray-300 print:border-gray-400 pl-3">
+        <p className="text-xs italic text-muted print:text-surface-700 mb-4 leading-relaxed border-l-2 border-surface-300 print:border-surface-400 pl-3">
           {ses.notes}
         </p>
       )}
@@ -170,7 +170,7 @@ export default async function CoachThrowsSessionPrintPage({
       <div className="grid grid-cols-[1.6fr_1fr] gap-5 print-keep-together">
         {/* ─── Left column: prescribed blocks in execution order ──────── */}
         <section>
-          <h2 className="text-nano font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
+          <h2 className="text-nano font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-surface-400 print:text-black print:border-surface-400">
             Session Plan
           </h2>
 
@@ -183,11 +183,11 @@ export default async function CoachThrowsSessionPrintPage({
                 return (
                   <div
                     key={b.id}
-                    className="print-block border border-gray-300 print:border-gray-500 rounded-md print:rounded-none p-2.5"
+                    className="print-block border border-surface-300 print:border-surface-500 rounded-md print:rounded-none p-2.5"
                   >
                     <div className="flex items-baseline justify-between gap-2 mb-1.5">
                       <div className="text-xs font-semibold print:text-black">
-                        <span className="font-mono text-muted print:text-gray-600 mr-1.5">
+                        <span className="font-mono text-muted print:text-surface-600 mr-1.5">
                           #{idx + 1}
                         </span>
                         {label}
@@ -218,7 +218,7 @@ export default async function CoachThrowsSessionPrintPage({
         {/* ─── Right column: observation / writing space ─────────────── */}
         <section className="space-y-4">
           <div>
-            <h2 className="text-nano font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
+            <h2 className="text-nano font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-surface-400 print:text-black print:border-surface-400">
               Athlete State
             </h2>
             <FieldGrid
@@ -232,14 +232,14 @@ export default async function CoachThrowsSessionPrintPage({
           </div>
 
           <div>
-            <h2 className="text-nano font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
+            <h2 className="text-nano font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-surface-400 print:text-black print:border-surface-400">
               Coaching Cues
             </h2>
             <NoteLines count={3} />
           </div>
 
           <div>
-            <h2 className="text-nano font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
+            <h2 className="text-nano font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-surface-400 print:text-black print:border-surface-400">
               Observations
             </h2>
             <NoteLines count={6} />
@@ -271,13 +271,13 @@ function ThrowingBlockCard({ config }: { config: ThrowingConfig | null }) {
           </span>
         )}
         {intMin != null && intMax != null && (
-          <span className="text-muted print:text-gray-600">
+          <span className="text-muted print:text-surface-600">
             Intensity {intMin}&ndash;{intMax}%
           </span>
         )}
       </div>
-      {technique && <p className="text-muted print:text-gray-600">Focus: {technique}</p>}
-      {config?.notes && <p className="italic text-muted print:text-gray-700">{config.notes}</p>}
+      {technique && <p className="text-muted print:text-surface-600">Focus: {technique}</p>}
+      {config?.notes && <p className="italic text-muted print:text-surface-700">{config.notes}</p>}
     </div>
   );
 }
@@ -285,7 +285,7 @@ function ThrowingBlockCard({ config }: { config: ThrowingConfig | null }) {
 function StrengthBlockCard({ config }: { config: StrengthConfig | null }) {
   const exercises = config?.exercises ?? [];
   if (exercises.length === 0 && !config?.notes) {
-    return <p className="text-xs text-muted print:text-gray-600">No exercises specified.</p>;
+    return <p className="text-xs text-muted print:text-surface-600">No exercises specified.</p>;
   }
   return (
     <div className="text-xs print:text-black space-y-1">
@@ -295,10 +295,10 @@ function StrengthBlockCard({ config }: { config: StrengthConfig | null }) {
             {exercises.map((ex, i) => (
               <tr key={i} className="align-baseline">
                 <td className="py-0.5 pr-2 print:text-black">{ex.name || "Exercise"}</td>
-                <td className="py-0.5 text-right font-mono tabular-nums w-20 text-muted print:text-gray-700">
+                <td className="py-0.5 text-right font-mono tabular-nums w-20 text-muted print:text-surface-700">
                   {ex.sets != null && ex.reps != null ? `${ex.sets} × ${ex.reps}` : "—"}
                 </td>
-                <td className="py-0.5 pl-2 text-right font-mono tabular-nums w-12 text-muted print:text-gray-700">
+                <td className="py-0.5 pl-2 text-right font-mono tabular-nums w-12 text-muted print:text-surface-700">
                   {ex.percentage != null ? `${ex.percentage}%` : ""}
                 </td>
               </tr>
@@ -306,7 +306,7 @@ function StrengthBlockCard({ config }: { config: StrengthConfig | null }) {
           </tbody>
         </table>
       )}
-      {config?.notes && <p className="italic text-muted print:text-gray-700">{config.notes}</p>}
+      {config?.notes && <p className="italic text-muted print:text-surface-700">{config.notes}</p>}
     </div>
   );
 }
@@ -315,12 +315,12 @@ function WarmCoolBlockCard({ config }: { config: WarmCoolConfig | null }) {
   const duration = config?.duration;
   const drills = config?.drills ?? [];
   if (!duration && drills.length === 0 && !config?.notes) {
-    return <p className="text-xs text-muted print:text-gray-600">As needed.</p>;
+    return <p className="text-xs text-muted print:text-surface-600">As needed.</p>;
   }
   return (
     <div className="text-xs print:text-black space-y-1">
       {duration && (
-        <p className="font-mono tabular-nums text-muted print:text-gray-700">{duration} min</p>
+        <p className="font-mono tabular-nums text-muted print:text-surface-700">{duration} min</p>
       )}
       {drills.length > 0 && (
         <ul className="space-y-0.5">
@@ -329,10 +329,10 @@ function WarmCoolBlockCard({ config }: { config: WarmCoolConfig | null }) {
             const drillDuration = typeof d === "object" ? d.duration : undefined;
             return (
               <li key={i} className="flex items-baseline gap-1.5">
-                <span className="text-muted print:text-gray-500">&middot;</span>
+                <span className="text-muted print:text-surface-500">&middot;</span>
                 <span className="flex-1">{name}</span>
                 {drillDuration ? (
-                  <span className="font-mono tabular-nums text-muted print:text-gray-700">
+                  <span className="font-mono tabular-nums text-muted print:text-surface-700">
                     {drillDuration}min
                   </span>
                 ) : null}
@@ -341,7 +341,7 @@ function WarmCoolBlockCard({ config }: { config: WarmCoolConfig | null }) {
           })}
         </ul>
       )}
-      {config?.notes && <p className="italic text-muted print:text-gray-700">{config.notes}</p>}
+      {config?.notes && <p className="italic text-muted print:text-surface-700">{config.notes}</p>}
     </div>
   );
 }
@@ -351,7 +351,7 @@ function NotesBlockCard({ config }: { config: NotesConfig | null }) {
   return text ? (
     <p className="text-xs whitespace-pre-wrap print:text-black">{text}</p>
   ) : (
-    <p className="text-xs italic text-muted print:text-gray-600">No notes.</p>
+    <p className="text-xs italic text-muted print:text-surface-600">No notes.</p>
   );
 }
 
@@ -362,10 +362,10 @@ function FieldGrid({ fields }: { fields: { label: string; width: "narrow" | "wid
     <div className="grid grid-cols-2 gap-x-3 gap-y-2">
       {fields.map((f) => (
         <div key={f.label} className="flex items-baseline gap-2">
-          <span className="text-nano uppercase tracking-wider text-muted print:text-gray-600 shrink-0">
+          <span className="text-nano uppercase tracking-wider text-muted print:text-surface-600 shrink-0">
             {f.label}
           </span>
-          <span className="flex-1 border-b border-gray-300 print:border-gray-400 h-4" />
+          <span className="flex-1 border-b border-surface-300 print:border-surface-400 h-4" />
         </div>
       ))}
     </div>
@@ -376,7 +376,7 @@ function NoteLines({ count }: { count: number }) {
   return (
     <div className="space-y-2.5">
       {Array.from({ length: count }, (_, i) => (
-        <div key={i} className="border-b border-gray-200 print:border-gray-300 h-4" />
+        <div key={i} className="border-b border-surface-200 print:border-surface-300 h-4" />
       ))}
     </div>
   );

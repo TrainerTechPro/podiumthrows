@@ -88,17 +88,14 @@ export function RecurringScheduleEditor({
     setSaving(true);
 
     try {
-      const res = await fetch(
-        `/api/coach/questionnaires/${questionnaireId}/schedule`,
-        {
-          method: "PUT",
-          headers: { "Content-Type": "application/json", ...csrfHeaders() },
-          body: JSON.stringify({
-            ...schedule,
-            endDate: schedule.endDate || undefined,
-          }),
-        }
-      );
+      const res = await fetch(`/api/coach/questionnaires/${questionnaireId}/schedule`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", ...csrfHeaders() },
+        body: JSON.stringify({
+          ...schedule,
+          endDate: schedule.endDate || undefined,
+        }),
+      });
 
       if (!res.ok) {
         const data = await res.json();
@@ -108,7 +105,7 @@ export function RecurringScheduleEditor({
 
       onSaved();
     } catch {
-      setError("Something went wrong");
+      setError("Couldn't save schedule — please try again.");
     } finally {
       setSaving(false);
     }
@@ -117,10 +114,10 @@ export function RecurringScheduleEditor({
   const handleDelete = useCallback(async () => {
     setSaving(true);
     try {
-      await fetch(
-        `/api/coach/questionnaires/${questionnaireId}/schedule`,
-        { method: "DELETE", headers: csrfHeaders() }
-      );
+      await fetch(`/api/coach/questionnaires/${questionnaireId}/schedule`, {
+        method: "DELETE",
+        headers: csrfHeaders(),
+      });
       onSaved();
     } catch {
       setError("Failed to delete schedule");
@@ -157,9 +154,7 @@ export function RecurringScheduleEditor({
       {/* Specific days picker */}
       {schedule.frequency === "SPECIFIC_DAYS" && (
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-[var(--foreground)]">
-            Days of Week
-          </label>
+          <label className="block text-sm font-medium text-[var(--foreground)]">Days of Week</label>
           <div className="flex gap-1.5">
             {DAY_LABELS.map((label, i) => (
               <button
@@ -184,9 +179,7 @@ export function RecurringScheduleEditor({
         label="Time of Day (informational)"
         type="time"
         value={schedule.timeOfDay}
-        onChange={(e) =>
-          setSchedule((prev) => ({ ...prev, timeOfDay: e.target.value }))
-        }
+        onChange={(e) => setSchedule((prev) => ({ ...prev, timeOfDay: e.target.value }))}
       />
 
       {/* Date range */}
@@ -196,25 +189,19 @@ export function RecurringScheduleEditor({
           type="date"
           required
           value={schedule.startDate}
-          onChange={(e) =>
-            setSchedule((prev) => ({ ...prev, startDate: e.target.value }))
-          }
+          onChange={(e) => setSchedule((prev) => ({ ...prev, startDate: e.target.value }))}
         />
         <Input
           label="End Date (optional)"
           type="date"
           value={schedule.endDate}
-          onChange={(e) =>
-            setSchedule((prev) => ({ ...prev, endDate: e.target.value }))
-          }
+          onChange={(e) => setSchedule((prev) => ({ ...prev, endDate: e.target.value }))}
         />
       </div>
 
       {/* Athlete assignment */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-[var(--foreground)]">
-          Assign To
-        </label>
+        <label className="block text-sm font-medium text-[var(--foreground)]">Assign To</label>
         <label className="flex items-center gap-2 text-sm cursor-pointer">
           <input
             type="checkbox"
@@ -232,9 +219,7 @@ export function RecurringScheduleEditor({
 
         {!schedule.assignToAll && (
           <div className="max-h-48 overflow-y-auto space-y-1 border border-[var(--card-border)] rounded-xl p-2">
-            {athletes.length === 0 && (
-              <p className="text-xs text-muted p-2">No athletes found</p>
-            )}
+            {athletes.length === 0 && <p className="text-xs text-muted p-2">No athletes found</p>}
             {athletes.map((athlete) => (
               <label
                 key={athlete.id}

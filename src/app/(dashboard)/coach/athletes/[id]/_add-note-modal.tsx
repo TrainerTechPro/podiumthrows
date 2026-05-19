@@ -72,7 +72,7 @@ export function AddNoteModal({ athleteId, athleteName, onClose }: AddNoteModalPr
             disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           type="button"
         >
-          {saving ? "Saving..." : "Save Note"}
+          {saving ? "Saving note…" : "Save Note"}
         </button>
       }
     >

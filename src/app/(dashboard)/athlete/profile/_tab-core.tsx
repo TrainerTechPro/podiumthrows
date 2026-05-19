@@ -71,7 +71,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
 
         const data = await res.json().catch(() => null);
         if (!res.ok || !data?.success) {
-          toastError("Save Failed", data?.error ?? "Something went wrong.");
+          toastError("Save failed", data?.error ?? "Couldn't save profile — try again.");
           return;
         }
 
@@ -325,7 +325,7 @@ export function TabCore({ profile }: { profile: ProfileData }) {
           disabled={isPending}
           className="w-full sm:w-auto"
         >
-          {isPending ? "Saving..." : "Save Changes"}
+          {isPending ? "Saving changes…" : "Save Changes"}
         </Button>
       </div>
     </div>

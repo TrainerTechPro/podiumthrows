@@ -1,22 +1,28 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useState, useRef, FormEvent } from "react";
 import Link from "next/link";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { focusFirstError } from "@/lib/forms/focus-first-error";
 import { parseApiError } from "@/lib/form-errors";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
   const [error, setError] = useState("");
+  const [emailInvalid, setEmailInvalid] = useState(false);
   const [loading, setLoading] = useState(false);
+  const formRef = useRef<HTMLFormElement>(null);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    setEmailInvalid(false);
 
     if (!email) {
       setError("Please enter your email address.");
+      setEmailInvalid(true);
+      queueMicrotask(() => focusFirstError(formRef.current));
       return;
     }
 
@@ -104,7 +110,7 @@ export default function ForgotPasswordPage() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label htmlFor="email" className="label">
             Email
@@ -117,6 +123,7 @@ export default function ForgotPasswordPage() {
             className="input"
             placeholder="coach@example.com"
             autoComplete="email"
+            aria-invalid={emailInvalid}
             autoFocus
             required
           />
@@ -145,7 +152,7 @@ export default function ForgotPasswordPage() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              Sending...
+              Sending reset link…
             </span>
           ) : (
             "Send Reset Link"

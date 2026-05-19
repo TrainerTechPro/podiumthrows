@@ -61,8 +61,8 @@ export function TabTechnical({ profile }: { profile: ProfileData }) {
         <div className="space-y-6">
           {/* ── Primary Limiter ────────────────────────────────────── */}
           {data.primaryLimiter && (
-            <div className="card p-4 border-2 border-amber-400/30 dark:border-amber-600/30 bg-amber-50/50 dark:bg-amber-900/10">
-              <p className="text-xs font-semibold text-amber-700 dark:text-amber-400 uppercase tracking-wider mb-1">
+            <div className="card p-4 border-2 border-primary-400/30 dark:border-primary-600/30 bg-primary-50/50 dark:bg-primary-900/10">
+              <p className="text-xs font-semibold text-primary-700 dark:text-primary-400 uppercase tracking-wider mb-1">
                 Primary Limiter
               </p>
               <p className="text-sm text-[var(--foreground)]">{data.primaryLimiter}</p>
@@ -79,7 +79,7 @@ export function TabTechnical({ profile }: { profile: ProfileData }) {
                 {data.strengths.map((s, i) => (
                   <span
                     key={i}
-                    className="px-3 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20"
+                    className="px-3 py-1 rounded-full text-xs font-medium bg-success-500/10 text-success-700 dark:text-success-400 border border-success-500/20"
                   >
                     {s}
                   </span>
@@ -98,7 +98,7 @@ export function TabTechnical({ profile }: { profile: ProfileData }) {
                 {data.weaknesses.map((w, i) => (
                   <span
                     key={i}
-                    className="px-3 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20"
+                    className="px-3 py-1 rounded-full text-xs font-medium bg-primary-500/10 text-primary-700 dark:text-primary-400 border border-primary-500/20"
                   >
                     {i + 1}. {w}
                   </span>
@@ -141,9 +141,11 @@ export function TabTechnical({ profile }: { profile: ProfileData }) {
                 {data.cuesFail.map((cue, i) => (
                   <div
                     key={i}
-                    className="card p-3 space-y-1 border border-red-500/20 bg-red-50/30 dark:bg-red-900/10"
+                    className="card p-3 space-y-1 border border-danger-500/20 bg-danger-50/30 dark:bg-danger-900/10"
                   >
-                    <p className="text-sm font-medium text-red-700 dark:text-red-400">{cue.cue}</p>
+                    <p className="text-sm font-medium text-danger-700 dark:text-danger-400">
+                      {cue.cue}
+                    </p>
                     <p className="text-xs text-muted">{cue.why}</p>
                   </div>
                 ))}

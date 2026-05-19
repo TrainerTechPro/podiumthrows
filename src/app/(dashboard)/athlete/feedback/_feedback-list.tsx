@@ -259,7 +259,7 @@ function FeedbackRow({
           aria-label="React with thumbs up"
           className={`min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center transition-colors ${
             item.reaction === "THUMBS_UP"
-              ? "bg-emerald-500/15 text-emerald-500"
+              ? "bg-success-500/15 text-success-500"
               : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"
           }`}
         >
@@ -273,7 +273,7 @@ function FeedbackRow({
           aria-label="React with thumbs down"
           className={`min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center transition-colors ${
             item.reaction === "THUMBS_DOWN"
-              ? "bg-red-500/15 text-red-500"
+              ? "bg-danger-500/15 text-danger-500"
               : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"
           }`}
         >

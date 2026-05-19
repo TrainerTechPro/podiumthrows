@@ -194,7 +194,7 @@ function EmptyView() {
             the system generates your program.
           </p>
         </div>
-        <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary-500 group-hover:gap-3 transition-all">
+        <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary-500 group-hover:gap-3 transition-colors">
           Get Started
           <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
         </span>
@@ -260,7 +260,7 @@ function DraftView({ draft }: { draft: DraftConfig }) {
               {formatEventName(draft.event)} &middot; Last updated {updatedDate}
             </p>
           </div>
-          <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary-500 group-hover:gap-3 transition-all">
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary-500 group-hover:gap-3 transition-colors">
             Continue
             <ChevronRight size={16} strokeWidth={1.75} aria-hidden="true" />
           </span>
@@ -501,8 +501,8 @@ function ActiveView({
                 {nextSession.status === "IN_PROGRESS" ? "Continue Workout" : "Next Session"}
               </h2>
               {nextSession.status === "IN_PROGRESS" && (
-                <span className="flex items-center gap-1 text-nano font-semibold text-emerald-500 uppercase tracking-wider">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="flex items-center gap-1 text-nano font-semibold text-success-500 uppercase tracking-wider">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success-500 animate-pulse" />
                   Live
                 </span>
               )}
@@ -578,7 +578,7 @@ function ActiveView({
                   <div
                     key={phase.id}
                     className={cn(
-                      "flex-1 min-w-[100px] rounded-lg border px-3 py-3 text-center transition-all",
+                      "flex-1 min-w-[100px] rounded-lg border px-3 py-3 text-center transition-colors",
                       isCurrent
                         ? cn(colors.bg, colors.border, "ring-2 ring-primary-500/30")
                         : isPast

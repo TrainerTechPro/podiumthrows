@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useUrlStateMany } from "@/lib/hooks/useUrlState";
 import { Badge, DataTable, Button, ConfirmDialog, useToast } from "@/components";
 import type { Column } from "@/components";
 import type { ExerciseItem } from "@/lib/data/coach";
@@ -61,9 +62,9 @@ function getBandsForFilter(event: ThrowEvent, gender: Gender): string[] {
 
 /** Color tier for correlation: green >= 0.75, amber >= 0.60, blue < 0.60 */
 function correlationTierClasses(absR: number): { dot: string; text: string } {
-  if (absR >= 0.75) return { dot: "bg-emerald-500", text: "text-emerald-500" };
-  if (absR >= 0.6) return { dot: "bg-amber-500", text: "text-amber-500" };
-  return { dot: "bg-blue-500", text: "text-blue-500" };
+  if (absR >= 0.75) return { dot: "bg-success-500", text: "text-success-500" };
+  if (absR >= 0.6) return { dot: "bg-primary-500", text: "text-primary-500" };
+  return { dot: "bg-info-500", text: "text-info-500" };
 }
 
 /** Build a map of exercise name → { correlation, absCorrelation, type } */
@@ -175,23 +176,47 @@ function CorrelationCell({
 export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
   const router = useRouter();
   const { error: toastError } = useToast();
-  const [activeCategory, setActiveCategory] = useState<string>("All");
+  const url = useUrlStateMany();
+
+  /* All filter state lives in the URL so a coach can refresh / share / back
+     and not lose their analysis context. */
+  const activeCategory = (() => {
+    const c = url.get("cat", "All");
+    return (CATEGORIES as readonly string[]).includes(c) ? c : "All";
+  })();
+  const setActiveCategory = (next: string) => url.set({ cat: next === "All" ? null : next });
+
+  const filterEvent = (() => {
+    const v = url.get("event", "SHOT_PUT");
+    return (["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const).includes(v as ThrowEvent)
+      ? (v as ThrowEvent)
+      : "SHOT_PUT";
+  })();
+  const setFilterEvent = (next: ThrowEvent) =>
+    url.set({ event: next === "SHOT_PUT" ? null : next, band: null });
+
+  const filterGender = (() => {
+    const v = url.get("gender", "MALE");
+    return v === "FEMALE" ? "FEMALE" : "MALE";
+  })();
+  const setFilterGender = (next: Gender) =>
+    url.set({ gender: next === "MALE" ? null : next, band: null });
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<ExerciseItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ExerciseItem | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Correlation filter state
-  const [filterEvent, setFilterEvent] = useState<ThrowEvent>("SHOT_PUT");
-  const [filterGender, setFilterGender] = useState<Gender>("MALE");
   const availableBands = useMemo(
     () => getBandsForFilter(filterEvent, filterGender),
     [filterEvent, filterGender]
   );
-  const [filterBand, setFilterBand] = useState<string>(() => {
-    const bands = getBandsForFilter("SHOT_PUT", "MALE");
+  const defaultBand = useMemo(() => {
+    const bands = getBandsForFilter(filterEvent, filterGender);
     return bands.length > 0 ? bands[Math.floor(bands.length / 2)] : "";
-  });
+  }, [filterEvent, filterGender]);
+  const filterBand = url.get("band", defaultBand);
+  const setFilterBand = (next: string) => url.set({ band: next === defaultBand ? null : next });
 
   // Reset band when event/gender changes if current band isn't available
   const effectiveBand = useMemo(() => {
@@ -316,7 +341,7 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
                   e.stopPropagation();
                   setDeleteTarget(row);
                 }}
-                className="text-sm text-red-600 dark:text-red-400 hover:underline font-medium"
+                className="text-sm text-danger-600 dark:text-danger-400 hover:underline font-medium"
               >
                 Delete
               </button>
@@ -416,11 +441,17 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
         searchable
         searchPlaceholder="Search exercises..."
         pageSize={25}
+        urlStateKey=""
         emptyTitle="No exercises in your library"
         emptyDescription={
           activeCategory !== "All"
             ? `No ${activeCategory} exercises — switch category or add a custom one.`
             : "Add one or import the catalog to get started."
+        }
+        emptyAction={
+          <Button variant="primary" size="sm" onClick={handleAdd}>
+            + Add Exercise
+          </Button>
         }
         actions={
           <Button variant="primary" size="sm" onClick={handleAdd}>

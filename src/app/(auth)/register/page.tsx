@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useEffect, FormEvent } from "react";
+import { useState, useEffect, useRef, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
+import { focusFirstError } from "@/lib/forms/focus-first-error";
 import { PasswordInput } from "@/components/ui/PasswordInput";
 
 type Role = "COACH" | "ATHLETE";
+type StandardField = "firstName" | "lastName" | "email" | "password" | "confirmPassword";
+type ClaimField = "claimEmail" | "claimPassword" | "claimConfirmPassword";
 
 const EVENT_LABELS: Record<string, string> = {
   SHOT_PUT: "Shot Put",
@@ -34,7 +37,9 @@ export default function RegisterPage() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
+  const [invalidField, setInvalidField] = useState<StandardField | null>(null);
   const [loading, setLoading] = useState(false);
+  const standardFormRef = useRef<HTMLFormElement>(null);
 
   // Claim flow state
   const [claimProfile, setClaimProfile] = useState<{
@@ -50,6 +55,8 @@ export default function RegisterPage() {
   const [claimConfirmPassword, setClaimConfirmPassword] = useState("");
   const [claimLoading, setClaimLoading] = useState(false);
   const [claimError, setClaimError] = useState("");
+  const [claimInvalidField, setClaimInvalidField] = useState<ClaimField | null>(null);
+  const claimFormRef = useRef<HTMLFormElement>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState("");
 
@@ -76,7 +83,11 @@ export default function RegisterPage() {
           setInviteError(data.error);
         }
       })
-      .catch(() => setInviteError("Failed to verify invite"))
+      .catch(() =>
+        setInviteError(
+          "We couldn't verify this invite. Check your connection and reopen the link from your coach — the link itself is still valid."
+        )
+      )
       .finally(() => setInviteLoading(false));
   }, [inviteToken]);
 
@@ -88,19 +99,38 @@ export default function RegisterPage() {
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError("");
+    setInvalidField(null);
 
-    if (!firstName || !lastName || !email || !password) {
+    const firstMissing: StandardField | null = !firstName
+      ? "firstName"
+      : !lastName
+        ? "lastName"
+        : !email
+          ? "email"
+          : !password
+            ? "password"
+            : null;
+
+    if (firstMissing) {
       setError("Please fill in all fields.");
+      setInvalidField(firstMissing);
+      // Defer to next tick so aria-invalid lands in the DOM before the
+      // helper queries for it.
+      queueMicrotask(() => focusFirstError(standardFormRef.current));
       return;
     }
 
     if (password.length < 8) {
       setError("Password must be at least 8 characters.");
+      setInvalidField("password");
+      queueMicrotask(() => focusFirstError(standardFormRef.current));
       return;
     }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match.");
+      setInvalidField("confirmPassword");
+      queueMicrotask(() => focusFirstError(standardFormRef.current));
       return;
     }
 
@@ -134,7 +164,10 @@ export default function RegisterPage() {
         // Map known duplicate-email errors to a generic message to avoid
         // user enumeration. The API may return "User with this email already
         // exists" or similar variants.
-        const raw = (data?.error || "Registration failed").toString();
+        const raw = (
+          data?.error ||
+          "We couldn't create that account. Make sure your email and password are valid, then try again."
+        ).toString();
         const isDuplicate = /already\s*(exists|registered|in\s*use)|duplicate|in\s*use/i.test(raw);
         setError(
           isDuplicate
@@ -149,7 +182,9 @@ export default function RegisterPage() {
         data.data?.redirectTo || (role === "COACH" ? "/coach/dashboard" : "/athlete/dashboard")
       );
     } catch {
-      setError("Network error. Please try again.");
+      setError(
+        "We couldn't reach the server. Check your connection and try again — nothing has been saved yet."
+      );
       setLoading(false);
     }
   }
@@ -161,19 +196,26 @@ export default function RegisterPage() {
   async function handleClaim(e: FormEvent) {
     e.preventDefault();
     setClaimError("");
+    setClaimInvalidField(null);
 
     if (!claimEmail || !claimPassword) {
       setClaimError("Email and password are required.");
+      setClaimInvalidField(!claimEmail ? "claimEmail" : "claimPassword");
+      queueMicrotask(() => focusFirstError(claimFormRef.current));
       return;
     }
 
     if (claimPassword.length < 8) {
       setClaimError("Password must be at least 8 characters.");
+      setClaimInvalidField("claimPassword");
+      queueMicrotask(() => focusFirstError(claimFormRef.current));
       return;
     }
 
     if (claimPassword !== claimConfirmPassword) {
       setClaimError("Passwords do not match.");
+      setClaimInvalidField("claimConfirmPassword");
+      queueMicrotask(() => focusFirstError(claimFormRef.current));
       return;
     }
 
@@ -194,12 +236,19 @@ export default function RegisterPage() {
       });
       const data = await res.json();
       if (!res.ok || !data?.success) {
-        throw new Error(data?.error || "Failed to claim account");
+        throw new Error(
+          data?.error ||
+            "We couldn't activate your account. Double-check the form and try again — if the issue continues, ask your coach to resend the invite."
+        );
       }
       const target = data.data?.redirectTo ?? "/athlete/onboarding";
       router.push(target);
     } catch (err: unknown) {
-      setClaimError(err instanceof Error ? err.message : "Failed to claim account");
+      setClaimError(
+        err instanceof Error
+          ? err.message
+          : "We couldn't activate your account. Check your connection and try again — if the issue continues, ask your coach to resend the invite."
+      );
     } finally {
       setClaimLoading(false);
     }
@@ -210,7 +259,7 @@ export default function RegisterPage() {
     return (
       <div className="card p-8 text-center">
         <div className="inline-block w-6 h-6 border-2 border-primary-500/30 border-t-primary-500 rounded-full animate-spin mb-3" />
-        <p className="text-sm text-muted">Verifying invite...</p>
+        <p className="text-sm text-muted">Verifying invite…</p>
       </div>
     );
   }
@@ -358,7 +407,12 @@ export default function RegisterPage() {
           {claimError}
         </div>
 
-        <form onSubmit={handleClaim} className="space-y-4" aria-busy={claimLoading}>
+        <form
+          ref={claimFormRef}
+          onSubmit={handleClaim}
+          className="space-y-4"
+          aria-busy={claimLoading}
+        >
           <div>
             <label htmlFor="claimEmail" className="label">
               Email
@@ -371,6 +425,7 @@ export default function RegisterPage() {
               className="input"
               placeholder="you@example.com"
               autoComplete="email"
+              aria-invalid={claimInvalidField === "claimEmail"}
               required
             />
           </div>
@@ -386,6 +441,7 @@ export default function RegisterPage() {
               placeholder="Minimum 8 characters"
               autoComplete="new-password"
               minLength={8}
+              aria-invalid={claimInvalidField === "claimPassword"}
               required
             />
           </div>
@@ -400,6 +456,7 @@ export default function RegisterPage() {
               onChange={(e) => setClaimConfirmPassword(e.target.value)}
               placeholder="Re-enter your password"
               autoComplete="new-password"
+              aria-invalid={claimInvalidField === "claimConfirmPassword"}
               required
             />
           </div>
@@ -427,7 +484,7 @@ export default function RegisterPage() {
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                   />
                 </svg>
-                Activating account...
+                Activating account…
               </span>
             ) : (
               "Activate My Account"
@@ -538,7 +595,7 @@ export default function RegisterPage() {
         {error}
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4" aria-busy={loading}>
+      <form ref={standardFormRef} onSubmit={handleSubmit} className="space-y-4" aria-busy={loading}>
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="firstName" className="label">
@@ -552,6 +609,7 @@ export default function RegisterPage() {
               className="input"
               placeholder="Marcus"
               autoComplete="given-name"
+              aria-invalid={invalidField === "firstName"}
               required
             />
           </div>
@@ -567,6 +625,7 @@ export default function RegisterPage() {
               className="input"
               placeholder="Petrov"
               autoComplete="family-name"
+              aria-invalid={invalidField === "lastName"}
               required
             />
           </div>
@@ -584,6 +643,7 @@ export default function RegisterPage() {
             className="input"
             placeholder="you@example.com"
             autoComplete="email"
+            aria-invalid={invalidField === "email"}
             required
           />
         </div>
@@ -599,6 +659,7 @@ export default function RegisterPage() {
             placeholder="Minimum 8 characters"
             autoComplete="new-password"
             minLength={8}
+            aria-invalid={invalidField === "password"}
             required
           />
         </div>
@@ -613,6 +674,7 @@ export default function RegisterPage() {
             onChange={(e) => setConfirmPassword(e.target.value)}
             placeholder="Re-enter your password"
             autoComplete="new-password"
+            aria-invalid={invalidField === "confirmPassword"}
             required
           />
         </div>
@@ -640,7 +702,7 @@ export default function RegisterPage() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                 />
               </svg>
-              Creating account...
+              Creating account…
             </span>
           ) : (
             "Create Account"

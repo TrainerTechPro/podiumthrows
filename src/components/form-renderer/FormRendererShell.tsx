@@ -182,7 +182,8 @@ export function FormRendererShell({
         context: "form-renderer/FormRendererShell",
         error: err,
       });
-      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      const msg =
+        err instanceof Error ? err.message : "Couldn't save responses — try again in a moment.";
       setSubmitError(msg);
       toast.error(msg);
     } finally {
@@ -322,7 +323,7 @@ export function FormRendererShell({
         onConfirm={confirmSubmit}
         title="Submit Responses"
         description="Are you sure you want to submit? Your responses cannot be changed after submission."
-        confirmLabel="Submit"
+        confirmLabel="Save Responses"
         loading={submitting}
       />
     </div>

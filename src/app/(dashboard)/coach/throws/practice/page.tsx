@@ -160,7 +160,7 @@ export default function PracticeSessionsPage() {
                 value={formName}
                 onChange={(e) => setFormName(e.target.value)}
                 required
-                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
                 placeholder="e.g. Monday Morning Practice"
               />
             </div>
@@ -172,11 +172,13 @@ export default function PracticeSessionsPage() {
                 value={formNotes}
                 onChange={(e) => setFormNotes(e.target.value)}
                 rows={2}
-                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)] resize-none"
+                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)] resize-none"
                 placeholder="Focus areas, weather, venue…"
               />
             </div>
-            {createError && <p className="text-xs text-red-600 dark:text-red-400">{createError}</p>}
+            {createError && (
+              <p className="text-xs text-danger-600 dark:text-danger-400">{createError}</p>
+            )}
             <div className="flex gap-2 pt-1">
               <button
                 type="button"
@@ -222,9 +224,9 @@ export default function PracticeSessionsPage() {
       {/* Empty state */}
       {sessions.length === 0 && !showForm && (
         <div className="card text-center py-16 space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-emerald-50 dark:bg-emerald-900/20 flex items-center justify-center mx-auto">
+          <div className="w-14 h-14 rounded-2xl bg-success-50 dark:bg-success-900/20 flex items-center justify-center mx-auto">
             <svg
-              className="w-7 h-7 text-emerald-500"
+              className="w-7 h-7 text-success-500"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -262,7 +264,7 @@ export default function PracticeSessionsPage() {
       {activeSessions.length > 0 && (
         <div className="space-y-3">
           <h2 className="text-sm font-semibold text-surface-700 dark:text-surface-300 flex items-center gap-2">
-            <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-block w-2 h-2 rounded-full bg-success-500 animate-pulse" />
             Active
           </h2>
           {activeSessions.map((session) => (
@@ -296,12 +298,12 @@ function SessionCard({ session }: { session: PracticeSessionSummary }) {
       {/* Status indicator */}
       <div
         className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-          isActive ? "bg-emerald-100 dark:bg-emerald-900/30" : "bg-[var(--muted-bg)]"
+          isActive ? "bg-success-100 dark:bg-success-900/30" : "bg-[var(--muted-bg)]"
         }`}
       >
         {isActive ? (
           <svg
-            className="w-5 h-5 text-emerald-600 dark:text-emerald-400"
+            className="w-5 h-5 text-success-600 dark:text-success-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -330,8 +332,8 @@ function SessionCard({ session }: { session: PracticeSessionSummary }) {
         <div className="flex items-center gap-2 flex-wrap">
           <p className="font-semibold text-[var(--foreground)] text-sm truncate">{session.name}</p>
           {isActive && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-nano font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 flex-shrink-0">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-nano font-semibold bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 flex-shrink-0">
+              <span className="w-1.5 h-1.5 rounded-full bg-success-500 animate-pulse" />
               Active
             </span>
           )}

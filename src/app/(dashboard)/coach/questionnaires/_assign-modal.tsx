@@ -98,7 +98,7 @@ export function AssignModal({
     >
       <div className="space-y-2 max-h-[300px] overflow-y-auto">
         {result && (
-          <div className="px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20 text-sm text-green-600 dark:text-green-400">
+          <div className="px-3 py-2 rounded-lg bg-success-500/10 border border-success-500/20 text-sm text-success-600 dark:text-success-400">
             {result}
           </div>
         )}

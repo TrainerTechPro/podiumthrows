@@ -31,10 +31,10 @@ const statusColors: Record<AvatarStatus, string> = {
 function getAvatarColor(name: string): string {
   const colors = [
     "bg-primary-100 text-primary-700 dark:bg-primary-500/20 dark:text-primary-300",
-    "bg-blue-100 text-blue-700 dark:bg-blue-500/20 dark:text-blue-300",
+    "bg-info-100 text-info-700 dark:bg-info-500/20 dark:text-info-300",
     "bg-violet-100 text-violet-700 dark:bg-violet-500/20 dark:text-violet-300",
-    "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300",
-    "bg-rose-100 text-rose-700 dark:bg-rose-500/20 dark:text-rose-300",
+    "bg-success-100 text-success-700 dark:bg-success-500/20 dark:text-success-300",
+    "bg-danger-100 text-danger-700 dark:bg-danger-500/20 dark:text-danger-300",
     "bg-teal-100 text-teal-700 dark:bg-teal-500/20 dark:text-teal-300",
   ];
   let hash = 0;

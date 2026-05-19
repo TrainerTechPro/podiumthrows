@@ -54,14 +54,14 @@ const ATHLETE_ACTIONS: QuickActionDef[] = [
     label: "Start Session",
     icon: Play,
     href: "/athlete/quick-start",
-    color: "text-emerald-500",
+    color: "text-success-500",
   },
   {
     id: "wellness",
     label: "Health Check-in",
     icon: Heart,
     href: "/athlete/wellness",
-    color: "text-rose-500",
+    color: "text-danger-500",
   },
   {
     id: "log-throw",
@@ -70,7 +70,7 @@ const ATHLETE_ACTIONS: QuickActionDef[] = [
     href: "/athlete/throws/log",
     color: "text-primary-500",
   },
-  { id: "goals", label: "Goals", icon: Trophy, href: "/athlete/goals", color: "text-amber-500" },
+  { id: "goals", label: "Goals", icon: Trophy, href: "/athlete/goals", color: "text-primary-500" },
   {
     id: "profile",
     label: "Profile",
@@ -93,22 +93,22 @@ const COACH_ACTIONS: QuickActionDef[] = [
     label: "Session Builder",
     icon: Layers,
     href: "/coach/throws/builder",
-    color: "text-blue-500",
+    color: "text-info-500",
   },
-  { id: "roster", label: "Roster", icon: Users, href: "/coach/athletes", color: "text-cyan-500" },
+  { id: "roster", label: "Roster", icon: Users, href: "/coach/athletes", color: "text-info-500" },
   {
     id: "programs",
     label: "Programs",
     icon: FileText,
     href: "/coach/plans",
-    color: "text-amber-500",
+    color: "text-primary-500",
   },
   {
     id: "wellness",
     label: "Team Wellness",
     icon: Activity,
     href: "/coach/wellness",
-    color: "text-rose-500",
+    color: "text-danger-500",
   },
 ];
 
@@ -288,7 +288,7 @@ function CustomizerPanel({
 
       <button
         onClick={() => onChange({ enabled: false })}
-        className="w-full text-center text-micro text-muted hover:text-red-500 dark:hover:text-red-400 transition-colors py-1"
+        className="w-full text-center text-micro text-muted hover:text-danger-500 dark:hover:text-danger-400 transition-colors py-1"
       >
         Disable Quick Actions
       </button>
@@ -426,7 +426,7 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
                     <Link
                       href={action.href}
                       onClick={() => setOpen(false)}
-                      className="flex items-center gap-3 mx-1.5 px-3 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/60 active:scale-[0.98] transition-all duration-150"
+                      className="flex items-center gap-3 mx-1.5 px-3 py-2.5 rounded-xl hover:bg-surface-50 dark:hover:bg-surface-800/60 active:scale-[0.98] transition-[background-color,transform] duration-150"
                     >
                       <div className="w-9 h-9 rounded-xl bg-surface-100 dark:bg-surface-800 flex items-center justify-center shrink-0">
                         <Icon
@@ -494,10 +494,10 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
           "fixed z-[9995] w-14 h-14 rounded-full",
           "flex items-center justify-center",
           "bg-primary-500 hover:bg-primary-600 active:scale-95",
-          "text-white shadow-xl shadow-primary-500/25",
+          "text-[var(--color-text-on-brand)] shadow-xl shadow-primary-500/25",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
           "focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
-          "transition-all duration-150",
+          "transition-[background-color,transform,box-shadow] duration-150",
           position === "right" ? "right-5 sm:right-6" : "left-5 sm:left-6"
         )}
         style={{

@@ -71,7 +71,7 @@ export function AthleteAvatarControl({ athleteId, name, avatarUrl, isProxy }: Pr
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="relative group rounded-full focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-[var(--card-bg)]"
+        className="relative group rounded-full focus-visible:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 focus:ring-offset-[var(--card-bg)]"
         aria-label={avatarUrl ? `Change photo for ${name}` : `Upload photo for ${name}`}
       >
         <Avatar name={name} src={avatarUrl} size="lg" />

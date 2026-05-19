@@ -48,11 +48,11 @@ export function WeekRecapCard({ recap }: { recap: WeekRecap }) {
 
         {recap.prsHit > 0 && (
           <div className="text-center">
-            <div className="flex items-center justify-center gap-1 text-amber-500 mb-1">
+            <div className="flex items-center justify-center gap-1 text-primary-500 mb-1">
               <Trophy size={12} strokeWidth={1.75} aria-hidden="true" />
               <span className="text-nano font-semibold uppercase tracking-wider">PRs</span>
             </div>
-            <p className="text-lg font-bold tabular-nums text-amber-500">
+            <p className="text-lg font-bold tabular-nums text-primary-500">
               <AnimatedNumber value={recap.prsHit} decimals={0} />
             </p>
           </div>

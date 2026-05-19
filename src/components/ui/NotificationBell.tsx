@@ -54,7 +54,7 @@ function notificationIcon(type: string) {
         <span
           className={cn(
             base,
-            "bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400"
+            "bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400"
           )}
         >
           <Trophy {...iconProps} />
@@ -550,7 +550,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
                     onClick={() => handleClickNotification(n)}
                     className={cn(
                       "w-full flex items-start gap-3 px-4 py-3 text-left transition-colors hover:bg-surface-50 dark:hover:bg-surface-800/50",
-                      !n.read && "bg-amber-50/40 dark:bg-amber-500/5"
+                      !n.read && "bg-primary-50 dark:bg-primary-500/5"
                     )}
                   >
                     {notificationIcon(n.type)}
@@ -567,7 +567,7 @@ export function NotificationBell({ initialCount = 0, role }: NotificationBellPro
                           {n.title}
                         </p>
                         <div className="flex items-center gap-1.5 shrink-0">
-                          {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />}
+                          {!n.read && <span className="w-1.5 h-1.5 rounded-full bg-primary-500" />}
                           <span className="text-nano text-muted tabular-nums whitespace-nowrap">
                             {relativeTime(n.createdAt)}
                           </span>

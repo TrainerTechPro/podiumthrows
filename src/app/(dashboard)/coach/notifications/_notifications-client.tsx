@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useUrlState } from "@/lib/hooks/useUrlState";
 import {
   Bell,
   Trophy,
@@ -52,7 +53,7 @@ function NotificationIcon({ type }: { type: string }) {
     case "COMPETITION_PR":
       return (
         <div
-          className={`${base} bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400`}
+          className={`${base} bg-primary-100 dark:bg-primary-500/20 text-primary-600 dark:text-primary-400`}
         >
           <Trophy {...ICON_PROPS} />
         </div>
@@ -277,7 +278,7 @@ function NotificationCard({
   // Swipe affordance: drawer is invisible at rest and fades in
   // proportional to swipe distance, fully visible at the latch threshold.
   // Two reasons this matters:
-  //   1. The unread row uses bg-amber-500/5 (95% transparent) so a
+  //   1. The unread row uses bg-primary-500/5 (95% transparent) so a
   //      full-opacity drawer behind it bled blue/red through every unread
   //      card even when the user wasn't swiping.
   //   2. iOS Safari promotes the foreground (transform: translateX) to a
@@ -312,7 +313,7 @@ function NotificationCard({
             if (!n.read) onMarkRead(n.id, true);
             else onMarkRead(n.id, false);
           }}
-          className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-info-500 text-white text-micro font-semibold focus:outline-none focus:ring-2 focus:ring-info-500/50"
+          className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-info-500 text-white text-micro font-semibold focus-visible:outline-none focus:ring-2 focus:ring-info-500/50"
           tabIndex={swipeOpen ? 0 : -1}
         >
           <Check size={16} strokeWidth={2.25} aria-hidden="true" />
@@ -324,7 +325,7 @@ function NotificationCard({
             closeSwipe();
             onDelete(n.id);
           }}
-          className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-danger-500 text-white text-micro font-semibold focus:outline-none focus:ring-2 focus:ring-danger-500/50"
+          className="w-[72px] flex flex-col items-center justify-center gap-0.5 bg-danger-500 text-white text-micro font-semibold focus-visible:outline-none focus:ring-2 focus:ring-danger-500/50"
           tabIndex={swipeOpen ? 0 : -1}
         >
           <Trash2 size={16} strokeWidth={2.25} aria-hidden="true" />
@@ -336,7 +337,7 @@ function NotificationCard({
       <div
         className={`group relative z-10 flex items-start gap-3 p-4 border ${
           !n.read
-            ? "border-amber-400/20 bg-amber-50/50 dark:bg-amber-500/5"
+            ? "border-primary-400/20 bg-primary-50/50 dark:bg-primary-500/5"
             : "border-surface-200 dark:border-surface-800 bg-[var(--card-bg)]"
         } rounded-xl ${animating ? "transition-transform duration-200 ease-out" : ""}`}
         style={{ transform: `translateX(${offsetX}px)` }}
@@ -357,7 +358,7 @@ function NotificationCard({
             <div className="flex items-center gap-2 shrink-0">
               {!n.read && (
                 <span
-                  className="w-2 h-2 rounded-full bg-amber-500 shrink-0"
+                  className="w-2 h-2 rounded-full bg-primary-500 shrink-0"
                   role="status"
                   aria-label="Unread"
                 />
@@ -422,7 +423,7 @@ function DesktopOverflowMenu({
         onClick={() => setOpen((v) => !v)}
         aria-label="More actions"
         aria-expanded={open}
-        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 rounded-md p-1.5 text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-opacity focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+        className="opacity-0 group-hover:opacity-100 focus-visible:opacity-100 rounded-md p-1.5 text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-opacity focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
       >
         <MoreHorizontal size={14} strokeWidth={1.75} aria-hidden="true" />
       </button>
@@ -465,9 +466,10 @@ function DesktopOverflowMenu({
 
 const CATEGORY_CHIPS: { key: NotificationCategory; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "feedback", label: "Feedback" },
+  { key: "unread", label: "Unread" },
+  { key: "comments", label: "Comments" },
+  { key: "sessions", label: "Sessions" },
   { key: "prs", label: "PRs" },
-  { key: "team", label: "Team" },
   { key: "system", label: "System" },
 ];
 
@@ -487,13 +489,19 @@ function emptyCopy(
           : "Coach feedback, assigned questionnaires, videos, and competition reminders will appear here.",
     };
   }
-  if (category === "feedback") {
+  if (category === "unread") {
     return {
-      title: "No feedback yet",
+      title: "All caught up",
+      description: "You've read every notification. Switch to All to see the full history.",
+    };
+  }
+  if (category === "comments") {
+    return {
+      title: "No comments yet",
       description:
         role === "ATHLETE"
           ? "Your coach will post here when they review a session."
-          : "Athlete responses to your feedback will appear here.",
+          : "Athlete reactions to your feedback will appear here.",
     };
   }
   if (category === "prs") {
@@ -505,18 +513,19 @@ function emptyCopy(
           : "When your athletes hit personal bests, you'll see them here.",
     };
   }
-  if (category === "team") {
+  if (category === "sessions") {
     return {
-      title: "Quiet team feed",
+      title: "No session activity",
       description:
         role === "COACH"
-          ? "Roster joins, programming requests, and readiness flags land here."
-          : "Workout assignments, streaks, and competition reminders land here.",
+          ? "Workout assignments, completions, program checkpoints, and roster joins land here."
+          : "Assigned workouts, streaks, competition reminders, and program updates land here.",
     };
   }
   return {
     title: "Nothing in System",
-    description: "Questionnaires, videos, and engine updates land here.",
+    description:
+      "Questionnaires, videos, invitations, readiness flags, and weekly recaps land here.",
   };
 }
 
@@ -544,7 +553,13 @@ export function NotificationsClient({
   const toast = useToast();
   const [items, setItems] = useState<NotificationItem[]>(initialNotifications);
   const [cursor, setCursor] = useState<string | null>(initialNextCursor);
-  const [category, setCategory] = useState<NotificationCategory>("all");
+  const [categoryRaw, setCategoryRaw] = useUrlState("category", "all");
+  const category = (
+    ["all", "unread", "comments", "sessions", "prs", "system"].includes(categoryRaw)
+      ? categoryRaw
+      : "all"
+  ) as NotificationCategory;
+  const setCategory = (next: NotificationCategory) => setCategoryRaw(next);
   const [serverUnread, setServerUnread] = useState(initialUnreadCount);
   const [loading, setLoading] = useState(false);
   const [reloading, setReloading] = useState(false);
@@ -773,7 +788,7 @@ export function NotificationsClient({
           type="button"
           onClick={markAllRead}
           disabled={markingAll || visibleUnread === 0}
-          className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-primary-700 dark:text-primary-300 bg-primary-100 dark:bg-primary-500/15 hover:bg-primary-200 dark:hover:bg-primary-500/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+          className="shrink-0 inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold text-primary-700 dark:text-primary-300 bg-primary-100 dark:bg-primary-500/15 hover:bg-primary-200 dark:hover:bg-primary-500/25 transition-colors disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
         >
           <Check size={12} strokeWidth={2.25} aria-hidden="true" />
           {markingAll ? "Marking…" : "Mark all read"}
@@ -840,7 +855,7 @@ export function NotificationsClient({
                 type="button"
                 onClick={loadMore}
                 disabled={loading}
-                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-[var(--foreground)] bg-[var(--card-bg)] border border-[var(--card-border)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-50 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+                className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-[var(--foreground)] bg-[var(--card-bg)] border border-[var(--card-border)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors disabled:opacity-50 focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
               >
                 {loading ? (
                   <>

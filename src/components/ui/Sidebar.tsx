@@ -4,26 +4,7 @@ import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  Users,
-  UsersRound,
-  Calendar,
-  Target,
-  Heart,
-  Settings,
-  Bell,
-  CalendarRange,
-  UserCircle,
-  BarChart3,
-  UserPlus,
-  ChevronRight,
-  Trophy,
-  Clock,
-  Library,
-  Wrench,
-  Megaphone,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -84,7 +65,7 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
           type="button"
           onClick={() => setExpanded(!expanded)}
           className={cn(
-            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all duration-150 group",
+            "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-[background-color,color] duration-150 group",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
             isParentActive
               ? "text-primary-700 dark:text-primary-300"
@@ -141,7 +122,7 @@ function SidebarNavItem({ item, depth = 0 }: { item: NavItem; depth?: number }) 
     <Link
       href={item.href}
       className={cn(
-        "flex items-center gap-3 rounded-xl text-sm font-medium transition-all duration-150 group",
+        "flex items-center gap-3 rounded-xl text-sm font-medium transition-[background-color,color] duration-150 group",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
         depth > 0 ? "px-3 py-2" : "px-3 py-2.5",
         isActive
@@ -249,254 +230,15 @@ export function Sidebar({ sections, header, footer, open, onClose, className }: 
   );
 }
 
-/* ─── Shared icon props for consistent sizing ─────────────────────────── */
-
-const iconSize = { size: 20, strokeWidth: 1.75, "aria-hidden": true as const };
-
 /* ─── Pre-built nav configs ─────────────────────────────────────────────── */
 
-export const COACH_NAV_SECTIONS: NavSection[] = [
-  {
-    items: [
-      // ── Dashboard ──
-      // Wellness lives here as a tab (?tab=readiness) per IA decision —
-      // glance-surface, not a separate destination. /coach/wellness still
-      // serves until the readiness tab lands.
-      {
-        label: "Dashboard",
-        href: "/coach/dashboard",
-        icon: <LayoutDashboard {...iconSize} />,
-        matchPaths: ["/coach/dashboard", "/coach/wellness"],
-      },
+// Re-exported from a non-client file (coach-nav-sections.tsx) so server
+// components can import them without webpack stripping non-component
+// exports across the "use client" boundary. See that file for the actual
+// definitions and tasks/navigation-contract-2026-05-18.md for the contract.
+export { getCoachNavSections, COACH_NAV_SECTIONS } from "./coach-nav-sections";
 
-      // ── Athletes ──
-      // Tier-1 (Roster, Self-Logs, Competitions) lives in /coach/athletes
-      // page header pills, not as sidebar children. Tier-2 surfaces (Throws,
-      // Invitations, Groups, Event Groups, Goals, Announcements) are sibling
-      // routes under /coach/athletes/* and get sidebar children. Self-Logs
-      // and Competitions are reachable in 1-2 clicks via the Roster header.
-      // Hub is killed (per IA Q5 sign-off — content redistributes to
-      // Dashboard widgets and Roster header). Team Feed is renamed to
-      // Announcements and lifted to /coach/athletes/announcements.
-      {
-        label: "Athletes",
-        href: "/coach/athletes",
-        icon: <Users {...iconSize} />,
-        matchPaths: [
-          "/coach/athletes",
-          "/coach/invitations",
-          "/coach/competitions",
-          "/coach/team",
-          "/coach/teams",
-          "/coach/event-groups",
-          "/coach/goals",
-          "/coach/athlete-logs",
-          "/coach/hub",
-          "/coach/throws/assessment",
-        ],
-        children: [
-          {
-            label: "Roster",
-            href: "/coach/athletes",
-            icon: <Users {...iconSize} />,
-            matchPaths: ["/coach/athletes"],
-          },
-          {
-            label: "Throws",
-            href: "/coach/athletes/throws",
-            icon: <Target {...iconSize} />,
-            matchPaths: ["/coach/athletes/throws"],
-          },
-          {
-            label: "Invitations",
-            href: "/coach/athletes/invitations",
-            icon: <UserPlus {...iconSize} />,
-            matchPaths: ["/coach/athletes/invitations", "/coach/invitations"],
-          },
-          {
-            label: "Groups",
-            href: "/coach/athletes/groups",
-            icon: <UsersRound {...iconSize} />,
-            matchPaths: ["/coach/athletes/groups", "/coach/teams"],
-          },
-          {
-            label: "Event Groups",
-            href: "/coach/athletes/event-groups",
-            icon: <UsersRound {...iconSize} />,
-            matchPaths: ["/coach/athletes/event-groups", "/coach/event-groups"],
-          },
-          {
-            label: "Goals",
-            href: "/coach/athletes/goals",
-            icon: <Target {...iconSize} />,
-            matchPaths: ["/coach/athletes/goals", "/coach/goals"],
-          },
-          {
-            label: "Announcements",
-            href: "/coach/athletes/announcements",
-            icon: <Megaphone {...iconSize} />,
-            matchPaths: ["/coach/athletes/announcements", "/coach/team"],
-          },
-        ],
-      },
-
-      // ── Calendar ──
-      // Absorbs /coach/schedule, /coach/practices, /coach/availability,
-      // /coach/throws/practice. Tabs live in URL (?view=).
-      {
-        label: "Calendar",
-        href: "/coach/calendar",
-        icon: <CalendarRange {...iconSize} />,
-        matchPaths: [
-          "/coach/calendar",
-          "/coach/schedule",
-          "/coach/practices",
-          "/coach/availability",
-          "/coach/throws/practice",
-        ],
-      },
-
-      // ── Library ──
-      // Absorbs /coach/exercises, /coach/throws/library, /coach/throws/drills,
-      // /coach/plans, /coach/videos/drills. Tabs live in URL (?view=).
-      {
-        label: "Library",
-        href: "/coach/library",
-        icon: <Library {...iconSize} />,
-        matchPaths: [
-          "/coach/library",
-          "/coach/exercises",
-          "/coach/plans",
-          "/coach/throws/library",
-          "/coach/throws/drills",
-          "/coach/videos/drills",
-        ],
-      },
-
-      // ── Builder ──
-      // Absorbs /coach/throws/builder, /coach/plans/new, /coach/plans/generate.
-      // Tabs live in URL (?type=session|plan|drill).
-      {
-        label: "Builder",
-        href: "/coach/builder",
-        icon: <Wrench {...iconSize} />,
-        matchPaths: [
-          "/coach/builder",
-          "/coach/throws/builder",
-          "/coach/plans/new",
-          "/coach/plans/generate",
-        ],
-      },
-
-      // ── MVP cut (2026-05-15) ───────────────────────────────────────────
-      // Questionnaires + Video Analysis are flag-gated post-MVP per
-      // tasks/product-audit-roadmap-2026-05-15.md. Routes remain at
-      // /coach/questionnaires + /coach/video-analysis behind feature
-      // flags; reachable for admins/dev with NEXT_PUBLIC_FEATURE_*
-      // env vars on, otherwise the page redirects to /coach/dashboard.
-    ],
-  },
-  {
-    items: [
-      // Notifications and Feedback Inbox both live in the top-bar (bell + inbox icon).
-      // Settings absorbs Tools (calculators) and Integrations as tabs.
-      {
-        label: "Settings",
-        href: "/coach/settings",
-        icon: <Settings {...iconSize} />,
-        matchPaths: ["/coach/settings", "/coach/integrations", "/coach/tools"],
-      },
-    ],
-  },
-];
-
-export const ATHLETE_NAV_SECTIONS: NavSection[] = [
-  {
-    items: [
-      {
-        label: "My Dashboard",
-        href: "/athlete/dashboard",
-        icon: <LayoutDashboard {...iconSize} />,
-      },
-      {
-        label: "Training",
-        href: "/athlete/sessions",
-        icon: <Calendar {...iconSize} />,
-        matchPaths: ["/athlete/sessions"],
-      },
-      {
-        label: "Throws",
-        href: "/athlete/throws",
-        icon: <Target {...iconSize} />,
-        matchPaths: [
-          "/athlete/throws",
-          "/athlete/throws/log",
-          "/athlete/throws/history",
-          "/athlete/throws/session",
-          "/athlete/throws/trends",
-          "/athlete/throws/readiness",
-          "/athlete/achievements",
-          "/athlete/competitions",
-        ],
-        children: [
-          {
-            label: "Hub",
-            href: "/athlete/throws",
-            icon: <Target {...iconSize} />,
-            matchPaths: ["/athlete/throws"],
-          },
-          {
-            label: "Trends",
-            href: "/athlete/throws/trends",
-            icon: <BarChart3 {...iconSize} />,
-            matchPaths: ["/athlete/throws/trends"],
-          },
-          {
-            label: "History",
-            href: "/athlete/throws/history",
-            icon: <Clock {...iconSize} />,
-            matchPaths: ["/athlete/throws/history", "/athlete/throws/session"],
-          },
-          {
-            label: "PRs",
-            href: "/athlete/achievements",
-            icon: <Trophy {...iconSize} />,
-            matchPaths: ["/athlete/achievements"],
-          },
-          {
-            label: "Competitions",
-            href: "/athlete/competitions",
-            icon: <Calendar {...iconSize} />,
-            matchPaths: ["/athlete/competitions"],
-          },
-          {
-            label: "Readiness",
-            href: "/athlete/throws/readiness",
-            icon: <Heart {...iconSize} />,
-            matchPaths: ["/athlete/throws/readiness"],
-          },
-        ],
-      },
-      // MVP cut (2026-05-15): Team, Availability, Insights removed from
-      // athlete primary nav per audit. Team + Insights redirect to
-      // /athlete/dashboard in next.config.mjs. Availability remains as
-      // a deep-linkable surface (coach calendar references it) but isn't
-      // a daily destination.
-      // Competitions + PRs live inside the Throws group above.
-    ],
-  },
-  {
-    title: "Readiness",
-    items: [
-      { label: "Wellness Check-in", href: "/athlete/wellness", icon: <Heart {...iconSize} /> },
-    ],
-  },
-  {
-    title: "My Profile",
-    items: [
-      { label: "Notifications", href: "/athlete/notifications", icon: <Bell {...iconSize} /> },
-      { label: "Profile", href: "/athlete/profile", icon: <UserCircle {...iconSize} /> },
-      { label: "Settings", href: "/athlete/settings", icon: <Settings {...iconSize} /> },
-    ],
-  },
-];
+// ATHLETE_NAV_SECTIONS was removed 2026-05-18. The athlete shell is
+// mobile-native (BottomTabBar) on every viewport — desktop is a roomy
+// fallback, not a separate sidebar product. See
+// tasks/navigation-contract-2026-05-18.md for the canonical contract.

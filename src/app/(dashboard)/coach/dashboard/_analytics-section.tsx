@@ -54,9 +54,9 @@ export function AnalyticsSection({
               <span
                 className={cn(
                   deltaVal > 0
-                    ? "text-emerald-500"
+                    ? "text-success-500"
                     : deltaVal < 0
-                      ? "text-red-500"
+                      ? "text-danger-500"
                       : "text-[var(--foreground)]"
                 )}
               >

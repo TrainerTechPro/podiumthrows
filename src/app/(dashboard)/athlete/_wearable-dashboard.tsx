@@ -54,7 +54,7 @@ function TrendArrow({
   return (
     <span
       className={`inline-flex items-center gap-0.5 text-nano font-medium ${
-        isGood ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
+        isGood ? "text-success-600 dark:text-success-400" : "text-primary-600 dark:text-primary-400"
       }`}
     >
       {isPositive ? (
@@ -103,7 +103,7 @@ function HeroBanner({
   const delta = trendDelta(score, averages[avgKey] ?? null);
 
   const gradient = isWhoop
-    ? "bg-gradient-to-br from-emerald-500/10 via-[var(--card-bg)] to-[var(--card-bg)]"
+    ? "bg-gradient-to-br from-success-500/10 via-[var(--card-bg)] to-[var(--card-bg)]"
     : "bg-gradient-to-br from-violet-500/10 via-[var(--card-bg)] to-[var(--card-bg)]";
 
   return (
@@ -130,8 +130,8 @@ function HeroBanner({
           <p
             className={`text-sm font-semibold tabular-nums ${
               delta >= 0
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-amber-600 dark:text-amber-400"
+                ? "text-success-600 dark:text-success-400"
+                : "text-primary-600 dark:text-primary-400"
             }`}
           >
             {delta >= 0 ? "+" : ""}
@@ -158,12 +158,15 @@ function TwoUpCards({ device, today }: { device: "whoop" | "oura"; today: WhoopR
             <AnimatedNumber
               value={w.strain ?? 0}
               decimals={1}
-              className="text-2xl font-bold text-amber-600 dark:text-amber-400 tabular-nums"
+              className="text-2xl font-bold text-primary-600 dark:text-primary-400 tabular-nums"
             />
             <span className="text-sm text-muted">/21</span>
           </div>
           <div className="h-1.5 rounded-full bg-surface-200 dark:bg-surface-700 overflow-hidden">
-            <div className="h-full rounded-full bg-amber-500" style={{ width: `${strainPct}%` }} />
+            <div
+              className="h-full rounded-full bg-primary-500"
+              style={{ width: `${strainPct}%` }}
+            />
           </div>
         </div>
 
@@ -174,7 +177,9 @@ function TwoUpCards({ device, today }: { device: "whoop" | "oura"; today: WhoopR
             {w.sleepDurationMs !== null ? formatMs(w.sleepDurationMs) : "--"}
           </p>
           <p className="text-xs text-muted">
-            {w.sleepEfficiency !== null ? `${w.sleepEfficiency.toFixed(0)}% efficiency` : "No data"}
+            {w.sleepEfficiency !== null
+              ? `${w.sleepEfficiency.toFixed(0)}% efficiency`
+              : "Efficiency not synced"}
           </p>
         </div>
       </div>
@@ -209,7 +214,7 @@ function TwoUpCards({ device, today }: { device: "whoop" | "oura"; today: WhoopR
           <AnimatedNumber
             value={o.activityScore ?? 0}
             decimals={0}
-            className="text-2xl font-bold text-emerald-600 dark:text-emerald-400 tabular-nums"
+            className="text-2xl font-bold text-success-600 dark:text-success-400 tabular-nums"
           />
         </div>
         <p className="text-xs text-muted">
@@ -383,7 +388,7 @@ function SleepStages({ device, today }: { device: "whoop" | "oura"; today: Whoop
 
       {/* Stacked bar */}
       <div className="flex h-2.5 rounded-full overflow-hidden gap-0.5">
-        <div className="bg-blue-400 rounded-full" style={{ width: `${lightPct}%` }} />
+        <div className="bg-info-400 rounded-full" style={{ width: `${lightPct}%` }} />
         <div className="bg-indigo-500 rounded-full" style={{ width: `${deepPct}%` }} />
         <div className="bg-purple-500 rounded-full" style={{ width: `${remPct}%` }} />
       </div>
@@ -391,7 +396,7 @@ function SleepStages({ device, today }: { device: "whoop" | "oura"; today: Whoop
       {/* Legend */}
       <div className="flex items-center gap-4 text-xs text-muted">
         <span className="inline-flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-blue-400" />
+          <span className="w-2 h-2 rounded-full bg-info-400" />
           Light {lightLabel}
         </span>
         <span className="inline-flex items-center gap-1.5">

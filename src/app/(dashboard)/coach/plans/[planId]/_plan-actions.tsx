@@ -218,7 +218,7 @@ export function PlanActions({
               type="date"
               value={scheduledDate}
               onChange={(e) => setScheduledDate(e.target.value)}
-              className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+              className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
             />
           </div>
 
@@ -291,7 +291,7 @@ export function PlanActions({
               onChange={(e) => setCoachNotes(e.target.value)}
               rows={3}
               placeholder="Coaching cues, emphasis for this assignment…"
-              className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none"
+              className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-sm focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 resize-none"
             />
           </div>
         </div>

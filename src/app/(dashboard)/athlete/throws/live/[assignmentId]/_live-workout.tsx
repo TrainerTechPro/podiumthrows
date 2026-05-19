@@ -120,7 +120,7 @@ function TimelineNode({
           type="button"
           onClick={onTap}
           disabled={isPending}
-          className="w-full text-left rounded-xl px-4 py-3 transition-all"
+          className="w-full text-left rounded-xl px-4 py-3 transition-colors"
           style={{
             backgroundColor: isExpanded
               ? "transparent"
@@ -554,7 +554,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
           </div>
 
           <div className="flex items-center gap-2 min-w-[60px] justify-end">
-            <span className="text-nano tracking-widest font-semibold text-emerald-500/60">
+            <span className="text-nano tracking-widest font-semibold text-success-500/60">
               ● LIVE
             </span>
           </div>
@@ -563,7 +563,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
         {/* Progress bar */}
         <div className="mt-3 h-1 bg-white/[0.03] rounded-full overflow-hidden">
           <div
-            className="h-full rounded-full transition-all duration-700 ease-out"
+            className="h-full rounded-full transition-colors duration-700 ease-out"
             style={{
               width: `${data.blocks.length > 0 ? (completedBlocks / data.blocks.length) * 100 : 0}%`,
               backgroundColor: "var(--color-brand)",

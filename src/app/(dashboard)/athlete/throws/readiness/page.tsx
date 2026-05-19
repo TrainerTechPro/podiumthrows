@@ -82,7 +82,7 @@ function ScoreArc({
             strokeLinecap="round"
             strokeDasharray={circumference}
             strokeDashoffset={circumference - progress}
-            className="transition-all duration-700"
+            className="transition-colors duration-700"
           />
         </svg>
         <div className="absolute inset-0 flex items-center justify-center">
@@ -400,12 +400,12 @@ export default function AthleteProfilePage() {
           {p.typing?.quizAssignedByCoach && !p.typing?.quizCompletedDate && (
             <Link
               href="/athlete/throws/quiz"
-              className="block card card-interactive !p-4 border-2 border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-900/20 hover:border-amber-400 dark:hover:border-amber-600 transition-colors"
+              className="block card card-interactive !p-4 border-2 border-primary-300 dark:border-primary-700 bg-primary-50 dark:bg-primary-900/20 hover:border-primary-400 dark:hover:border-primary-600 transition-colors"
             >
               <div className="flex items-start gap-3">
-                <div className="w-9 h-9 flex-shrink-0 rounded-full bg-amber-100 dark:bg-amber-900/40 flex items-center justify-center">
+                <div className="w-9 h-9 flex-shrink-0 rounded-full bg-primary-100 dark:bg-primary-900/40 flex items-center justify-center">
                   <svg
-                    className="w-5 h-5 text-amber-600 dark:text-amber-400"
+                    className="w-5 h-5 text-primary-600 dark:text-primary-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -420,7 +420,7 @@ export default function AthleteProfilePage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase tracking-wide text-amber-700 dark:text-amber-400">
+                    <span className="text-xs font-bold uppercase tracking-wide text-primary-700 dark:text-primary-400">
                       Action Required
                     </span>
                   </div>
@@ -432,7 +432,7 @@ export default function AthleteProfilePage() {
                   </p>
                 </div>
                 <svg
-                  className="w-5 h-5 text-amber-500 flex-shrink-0 mt-1"
+                  className="w-5 h-5 text-primary-500 flex-shrink-0 mt-1"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -600,13 +600,15 @@ export default function AthleteProfilePage() {
                     />
                   </div>
                 </div>
-                {prError && <p className="text-xs text-red-600 dark:text-red-400">{prError}</p>}
+                {prError && (
+                  <p className="text-xs text-danger-600 dark:text-danger-400">{prError}</p>
+                )}
                 <button
                   onClick={handleRecordPR}
                   disabled={savingPR || !prForm.implement || !prForm.distance}
                   className="btn-primary text-xs px-4 min-h-[44px]"
                 >
-                  {savingPR ? "Saving..." : "Save PR"}
+                  {savingPR ? "Saving PR…" : "Save PR"}
                 </button>
               </div>
             )}
@@ -642,7 +644,7 @@ export default function AthleteProfilePage() {
                     <button
                       key={s.value}
                       onClick={() => setCheckInData({ ...checkInData, selfFeeling: s.value })}
-                      className={`flex-1 min-h-[56px] py-2 px-1 rounded-lg text-center transition-all border ${checkInData.selfFeeling === s.value ? "bg-primary-500 text-white border-primary-500" : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)]"}`}
+                      className={`flex-1 min-h-[56px] py-2 px-1 rounded-lg text-center transition-colors border ${checkInData.selfFeeling === s.value ? "bg-primary-500 text-white border-primary-500" : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)]"}`}
                     >
                       <span className="block text-sm font-bold">{s.value}</span>
                       <span
@@ -690,7 +692,7 @@ export default function AthleteProfilePage() {
                       <button
                         key={sq.value}
                         onClick={() => setCheckInData({ ...checkInData, sleepQuality: sq.value })}
-                        className={`flex-1 min-h-[56px] py-2 px-1 rounded-lg text-center transition-all border ${checkInData.sleepQuality === sq.value ? "bg-primary-500 text-white border-primary-500" : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)]"}`}
+                        className={`flex-1 min-h-[56px] py-2 px-1 rounded-lg text-center transition-colors border ${checkInData.sleepQuality === sq.value ? "bg-primary-500 text-white border-primary-500" : "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 border-[var(--card-border)]"}`}
                       >
                         <span className="block text-sm font-bold">{sq.value}</span>
                         <span
@@ -768,9 +770,11 @@ export default function AthleteProfilePage() {
                 </div>
               </div>
 
-              {saveError && <p className="text-xs text-red-600 dark:text-red-400">{saveError}</p>}
+              {saveError && (
+                <p className="text-xs text-danger-600 dark:text-danger-400">{saveError}</p>
+              )}
               <button onClick={handleCheckIn} disabled={saving} className="btn-primary w-full">
-                {saving ? "Saving..." : "Submit Check-In"}
+                {saving ? "Saving check-in…" : "Save Check-In"}
               </button>
             </div>
           )}

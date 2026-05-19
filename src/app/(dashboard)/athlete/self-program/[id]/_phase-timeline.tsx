@@ -28,36 +28,36 @@ const TIMELINE_COLORS: Record<
   }
 > = {
   ACCUMULATION: {
-    barBg: "bg-blue-500/10",
-    barFill: "bg-blue-500",
-    diamond: "bg-blue-500",
-    diamondBorder: "border-blue-500/40",
-    glow: "ring-blue-500/50 shadow-[0_0_8px_rgba(68,136,255,0.4)]",
-    label: "text-blue-500 dark:text-blue-400",
+    barBg: "bg-info-500/10",
+    barFill: "bg-info-500",
+    diamond: "bg-info-500",
+    diamondBorder: "border-info-500/40",
+    glow: "ring-info-500/50 shadow-[0_0_8px_rgba(68,136,255,0.4)]",
+    label: "text-info-500 dark:text-info-400",
   },
   TRANSMUTATION: {
-    barBg: "bg-amber-500/10",
-    barFill: "bg-amber-500",
-    diamond: "bg-amber-500",
-    diamondBorder: "border-amber-500/40",
-    glow: "ring-amber-500/50 shadow-[0_0_8px_rgba(255,200,0,0.4)]",
-    label: "text-amber-500 dark:text-amber-400",
+    barBg: "bg-primary-500/10",
+    barFill: "bg-primary-500",
+    diamond: "bg-primary-500",
+    diamondBorder: "border-primary-500/40",
+    glow: "ring-primary-500/50 shadow-[0_0_8px_rgba(255,200,0,0.4)]",
+    label: "text-primary-500 dark:text-primary-400",
   },
   REALIZATION: {
-    barBg: "bg-emerald-500/10",
-    barFill: "bg-emerald-500",
-    diamond: "bg-emerald-500",
-    diamondBorder: "border-emerald-500/40",
-    glow: "ring-emerald-500/50 shadow-[0_0_8px_rgba(0,255,136,0.4)]",
-    label: "text-emerald-500 dark:text-emerald-400",
+    barBg: "bg-success-500/10",
+    barFill: "bg-success-500",
+    diamond: "bg-success-500",
+    diamondBorder: "border-success-500/40",
+    glow: "ring-success-500/50 shadow-[0_0_8px_rgba(0,255,136,0.4)]",
+    label: "text-success-500 dark:text-success-400",
   },
   COMPETITION: {
-    barBg: "bg-red-500/10",
-    barFill: "bg-red-500",
-    diamond: "bg-red-500",
-    diamondBorder: "border-red-500/40",
-    glow: "ring-red-500/50 shadow-[0_0_8px_rgba(255,68,68,0.4)]",
-    label: "text-red-500 dark:text-red-400",
+    barBg: "bg-danger-500/10",
+    barFill: "bg-danger-500",
+    diamond: "bg-danger-500",
+    diamondBorder: "border-danger-500/40",
+    glow: "ring-danger-500/50 shadow-[0_0_8px_rgba(255,68,68,0.4)]",
+    label: "text-danger-500 dark:text-danger-400",
   },
 };
 
@@ -127,7 +127,7 @@ function getPhaseProgress(phase: ProgramPhase, currentWeek: number): number {
 
 function DiamondIcon({ weekData }: { weekData: WeekData }) {
   const tc = getTimelineColor(weekData.phase.phase);
-  const base = "w-3 h-3 rotate-45 shrink-0 transition-all duration-200 inline-block";
+  const base = "w-3 h-3 rotate-45 shrink-0 transition-colors duration-200 inline-block";
 
   switch (weekData.status) {
     case "completed":
@@ -220,9 +220,9 @@ export function PhaseTimeline({
                   className={cn(
                     "text-nano font-semibold px-1 py-0.5 rounded shrink-0",
                     phase.status === "COMPLETED"
-                      ? "bg-emerald-500/10 text-emerald-400"
+                      ? "bg-success-500/10 text-success-400"
                       : phase.status === "ACTIVE"
-                        ? "bg-amber-500/10 text-amber-400"
+                        ? "bg-primary-500/10 text-primary-400"
                         : "bg-surface-100 dark:bg-surface-800 text-muted"
                   )}
                 >
@@ -251,7 +251,7 @@ export function PhaseTimeline({
               >
                 <div
                   className={cn(
-                    "absolute inset-y-0 left-0 transition-all duration-700",
+                    "absolute inset-y-0 left-0 transition-colors duration-700",
                     tc.barFill,
                     i === 0 && "rounded-l-full",
                     progress >= 100 && i === phases.length - 1 && "rounded-r-full"
@@ -326,9 +326,9 @@ export function PhaseTimeline({
                   className={cn(
                     "text-nano font-semibold px-1.5 py-0.5 rounded ml-auto",
                     phase.status === "COMPLETED"
-                      ? "bg-emerald-500/10 text-emerald-400"
+                      ? "bg-success-500/10 text-success-400"
                       : phase.status === "ACTIVE"
-                        ? "bg-amber-500/10 text-amber-400"
+                        ? "bg-primary-500/10 text-primary-400"
                         : "bg-surface-100 dark:bg-surface-800 text-muted"
                   )}
                 >

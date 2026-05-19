@@ -131,10 +131,10 @@ export function AssessmentHistory({ assessments }: { assessments: AssessmentHist
                         className={[
                           "font-bold tabular-nums",
                           ex.correlation >= 0.7
-                            ? "text-green-500"
+                            ? "text-success-500"
                             : ex.correlation >= 0.4
-                              ? "text-amber-500"
-                              : "text-red-500",
+                              ? "text-primary-500"
+                              : "text-danger-500",
                         ].join(" ")}
                       >
                         {ex.correlation.toFixed(2)}

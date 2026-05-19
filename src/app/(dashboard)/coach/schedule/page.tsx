@@ -246,7 +246,7 @@ export default function ProgrammingPage() {
             <button
               type="button"
               onClick={goToToday}
-              className="text-sm text-primary-500 hover:underline font-medium focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 rounded"
+              className="text-sm text-primary-500 hover:underline font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 rounded"
             >
               Today
             </button>
@@ -255,7 +255,7 @@ export default function ProgrammingPage() {
           <Link
             href={`/coach/schedule/print?start=${toDateStr(weekStart)}`}
             target="_blank"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-[var(--foreground)] border border-[var(--card-border)] hover:border-primary-500/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-[var(--foreground)] border border-[var(--card-border)] hover:border-primary-500/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
             aria-label="Print this week's program"
           >
             <Printer size={14} strokeWidth={1.75} aria-hidden="true" />

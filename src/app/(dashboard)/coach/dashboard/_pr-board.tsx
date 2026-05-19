@@ -28,7 +28,7 @@ export function PRBoard({ prs }: PRBoardProps) {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Award className="h-5 w-5 text-amber-500" strokeWidth={1.75} aria-hidden="true" />
+          <Award className="h-5 w-5 text-primary-500" strokeWidth={1.75} aria-hidden="true" />
           <div>
             <h3 className="text-sm font-semibold text-[var(--foreground)]">Recent PRs</h3>
             <p className="text-nano text-surface-400">last 14 days</p>
@@ -60,7 +60,7 @@ export function PRBoard({ prs }: PRBoardProps) {
 
             <span className="text-xs text-surface-400 w-16 truncate">{pr.implement}</span>
 
-            <span className="text-sm font-bold tabular-nums text-amber-500 w-24 text-right">
+            <span className="text-sm font-bold tabular-nums text-primary-500 w-24 text-right">
               {pr.distance.toFixed(2)}m
             </span>
 
@@ -100,7 +100,7 @@ export function PRBoard({ prs }: PRBoardProps) {
             </div>
 
             <div className="text-right shrink-0">
-              <p className="text-sm font-bold tabular-nums text-amber-500">
+              <p className="text-sm font-bold tabular-nums text-primary-500">
                 {pr.distance.toFixed(2)}m
               </p>
               <p className="text-nano text-surface-400">{formatDate(pr.date)}</p>

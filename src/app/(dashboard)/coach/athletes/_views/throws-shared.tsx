@@ -55,7 +55,7 @@ function daysSince(dateStr: string): number {
 export function TestingBadge({ records }: { records: { testDate: string }[] }) {
   if (records.length === 0) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 flex-shrink-0">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-danger-100 dark:bg-danger-900/30 text-danger-700 dark:text-danger-400 flex-shrink-0">
         <svg
           className="w-2.5 h-2.5"
           fill="none"
@@ -77,7 +77,7 @@ export function TestingBadge({ records }: { records: { testDate: string }[] }) {
   const days = daysSince(records[0].testDate);
   if (days > 14) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 flex-shrink-0">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-danger-100 dark:bg-danger-900/30 text-danger-700 dark:text-danger-400 flex-shrink-0">
         <svg
           className="w-2.5 h-2.5"
           fill="none"
@@ -98,7 +98,7 @@ export function TestingBadge({ records }: { records: { testDate: string }[] }) {
   }
   if (days > 7) {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 flex-shrink-0">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 flex-shrink-0">
         <svg
           className="w-2.5 h-2.5"
           fill="none"
@@ -118,7 +118,7 @@ export function TestingBadge({ records }: { records: { testDate: string }[] }) {
     );
   }
   return (
-    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 flex-shrink-0">
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400 flex-shrink-0">
       <svg
         className="w-2.5 h-2.5"
         fill="none"

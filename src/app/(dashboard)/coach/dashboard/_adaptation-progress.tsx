@@ -21,41 +21,21 @@ interface AdaptationProgressProps {
 
 function TrendIcon({ slope }: { slope: number | null }) {
   if (slope == null) {
-    return (
-      <Minus
-        className="h-3.5 w-3.5 text-surface-400"
-        strokeWidth={1.75}
-        aria-hidden="true"
-      />
-    );
+    return <Minus className="h-3.5 w-3.5 text-surface-400" strokeWidth={1.75} aria-hidden="true" />;
   }
 
   if (Math.abs(slope) < 0.05) {
-    return (
-      <Minus
-        className="h-3.5 w-3.5 text-surface-400"
-        strokeWidth={1.75}
-        aria-hidden="true"
-      />
-    );
+    return <Minus className="h-3.5 w-3.5 text-surface-400" strokeWidth={1.75} aria-hidden="true" />;
   }
 
   if (slope > 0) {
     return (
-      <TrendingUp
-        className="h-3.5 w-3.5 text-emerald-500"
-        strokeWidth={1.75}
-        aria-hidden="true"
-      />
+      <TrendingUp className="h-3.5 w-3.5 text-success-500" strokeWidth={1.75} aria-hidden="true" />
     );
   }
 
   return (
-    <TrendingDown
-      className="h-3.5 w-3.5 text-red-500"
-      strokeWidth={1.75}
-      aria-hidden="true"
-    />
+    <TrendingDown className="h-3.5 w-3.5 text-danger-500" strokeWidth={1.75} aria-hidden="true" />
   );
 }
 
@@ -98,26 +78,17 @@ export function AdaptationProgress({ rows }: AdaptationProgressProps) {
             <Link
               key={`${row.athleteId}-${row.complexNumber}-${i}`}
               href={`/coach/athletes/${row.athleteId}`}
-              className={cn(
-                "flex items-center gap-3 px-4 py-3 card-interactive"
-              )}
+              className={cn("flex items-center gap-3 px-4 py-3 card-interactive")}
             >
-              <Avatar
-                name={row.athleteName}
-                src={row.avatarUrl}
-                size="sm"
-              />
+              <Avatar name={row.athleteName} src={row.avatarUrl} size="sm" />
 
               <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-[var(--foreground)] truncate">
                   {row.athleteName}
                 </p>
                 <p className="text-xs text-muted truncate">
-                  Complex {row.complexNumber} ·{" "}
-                  {row.sessionsInComplex}
-                  {row.sessionsToForm != null
-                    ? ` / ${row.sessionsToForm} sessions`
-                    : " sessions"}
+                  Complex {row.complexNumber} · {row.sessionsInComplex}
+                  {row.sessionsToForm != null ? ` / ${row.sessionsToForm} sessions` : " sessions"}
                 </p>
               </div>
 

@@ -32,10 +32,7 @@ export function PersonalBestsWidget({ prs }: { prs: PRItem[] }) {
         <h3 className="text-sm font-semibold text-muted uppercase tracking-wider">
           Personal Bests
         </h3>
-        <Link
-          href="/athlete/throws"
-          className="text-xs text-primary-500 hover:underline"
-        >
+        <Link href="/athlete/throws" className="text-xs text-primary-500 hover:underline">
           History &gt;
         </Link>
       </div>
@@ -50,17 +47,10 @@ export function PersonalBestsWidget({ prs }: { prs: PRItem[] }) {
       {prs.length === 0 ? (
         <div className="flex flex-col items-center text-center py-10 px-4 gap-3">
           <div className="w-11 h-11 rounded-xl bg-primary-50 dark:bg-primary-500/10 flex items-center justify-center">
-            <Star
-              size={20}
-              strokeWidth={1.75}
-              className="text-primary-500"
-              aria-hidden="true"
-            />
+            <Star size={20} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
           </div>
           <div className="max-w-[220px]">
-            <p className="text-sm font-semibold text-[var(--foreground)]">
-              No personal bests yet
-            </p>
+            <p className="text-sm font-semibold text-[var(--foreground)]">No personal bests yet</p>
             <p className="text-xs text-muted mt-1">
               Once you log throws, your best marks will appear here.
             </p>
@@ -71,13 +61,13 @@ export function PersonalBestsWidget({ prs }: { prs: PRItem[] }) {
           {prs.map((pr) => (
             <div key={pr.id} className="flex items-center gap-3 px-4 py-3">
               <div
-                className="w-8 h-8 rounded-full bg-amber-500/10 flex items-center justify-center shrink-0"
+                className="w-8 h-8 rounded-full bg-primary-500/10 flex items-center justify-center shrink-0"
                 style={{ animation: "medalShimmer 3s ease-in-out infinite" }}
               >
                 <Award
                   size={14}
                   strokeWidth={1.75}
-                  className="text-amber-500"
+                  className="text-primary-500"
                   aria-hidden="true"
                 />
               </div>
@@ -85,11 +75,9 @@ export function PersonalBestsWidget({ prs }: { prs: PRItem[] }) {
                 <p className="text-sm font-medium text-[var(--foreground)]">
                   {formatEventName(pr.event)}
                 </p>
-                <p className="text-xs text-muted">
-                  {formatRelativeDate(pr.date)}
-                </p>
+                <p className="text-xs text-muted">{formatRelativeDate(pr.date)}</p>
               </div>
-              <span className="text-sm font-bold tabular-nums text-amber-600 dark:text-amber-400 shrink-0">
+              <span className="text-sm font-bold tabular-nums text-primary-600 dark:text-primary-400 shrink-0">
                 <AnimatedNumber value={pr.distance} decimals={2} />m
               </span>
             </div>

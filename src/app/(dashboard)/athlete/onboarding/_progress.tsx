@@ -26,7 +26,7 @@ export function OnboardingProgress({ total, current }: OnboardingProgressProps) 
           <span
             key={i}
             className={cn(
-              "h-2 rounded-full transition-all duration-300 ease-out",
+              "h-2 rounded-full transition-colors duration-300 ease-out",
               isCurrent
                 ? "w-6 bg-primary-500"
                 : isCompleted

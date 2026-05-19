@@ -83,7 +83,7 @@ export function AllTab({ plans, exercises, drills, onTabChange: _onTabChange }: 
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Search sessions, plans, exercises, drills…"
-          className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)] focus:border-primary-500/30"
+          className="w-full pl-10 pr-3 py-2.5 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)] focus:border-primary-500/30"
           aria-label="Search library"
           autoFocus
         />

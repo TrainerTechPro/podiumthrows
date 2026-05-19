@@ -15,17 +15,10 @@ const PLAN_FEATURES: Record<"PRO" | "ELITE", string[]> = {
     "Up to 25 athletes",
     "All Free features",
     "Program builder",
-    "Video analysis",
     "ACWR analytics",
     "Athlete progress exports",
   ],
-  ELITE: [
-    "Unlimited athletes",
-    "Everything in Pro",
-    "Advanced analytics",
-    "Priority support",
-    "Custom branding (coming soon)",
-  ],
+  ELITE: ["Unlimited athletes", "Everything in Pro", "Advanced analytics", "Priority support"],
 };
 
 /* ── Plan card ───────────────────────────────────────────────────────────── */
@@ -76,7 +69,7 @@ function PlanCard({
             <Check
               size={14}
               strokeWidth={2.5}
-              className="mt-0.5 shrink-0 text-emerald-500"
+              className="mt-0.5 shrink-0 text-success-500"
               aria-hidden="true"
             />
             {f}
@@ -127,7 +120,9 @@ export function UpgradeModal({ open, onClose, reason, currentPlan = "FREE" }: Up
       }
       window.location.href = payload.data.url;
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(
+        err instanceof Error ? err.message : "Couldn't start checkout — try again in a moment."
+      );
       setLoadingPlan(null);
     }
   }
@@ -164,7 +159,7 @@ export function UpgradeModal({ open, onClose, reason, currentPlan = "FREE" }: Up
           )}
         </div>
 
-        {error && <p className="text-sm text-red-500 text-center">{error}</p>}
+        {error && <p className="text-sm text-danger-500 text-center">{error}</p>}
 
         <p className="text-xs text-center text-muted">
           Secure checkout via Stripe. Cancel anytime.

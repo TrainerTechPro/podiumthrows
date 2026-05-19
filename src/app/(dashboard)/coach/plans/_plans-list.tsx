@@ -7,7 +7,7 @@ import { DataTable, Badge, Button, ConfirmDialog, EmptyState, useToast } from "@
 import type { Column } from "@/components";
 import type { WorkoutPlanItem } from "@/lib/data/coach";
 import { csrfHeaders } from "@/lib/csrf-client";
-import { FileText } from "lucide-react";
+import { FileText, ChevronRight } from "lucide-react";
 
 const PHASE_LABELS: Record<string, string> = {
   GPP: "GPP",
@@ -203,7 +203,42 @@ export function PlansList({ plans }: { plans: WorkoutPlanItem[] }) {
         loading={deleteLoading}
       />
 
-      <DataTable columns={columns} data={plans} rowKey="id" />
+      <DataTable
+        columns={columns}
+        data={plans}
+        rowKey="id"
+        urlStateKey=""
+        renderCard={(row) => (
+          <Link href={`/coach/plans/${row.id}`} className="card-interactive card block p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="font-semibold text-[var(--foreground)] truncate">{row.name}</p>
+                  {row.isTemplate && <Badge variant="primary">Template</Badge>}
+                </div>
+                <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                  {row.phase && (
+                    <Badge variant={PHASE_VARIANTS[row.phase] ?? "neutral"}>
+                      {PHASE_LABELS[row.phase] ?? row.phase}
+                    </Badge>
+                  )}
+                  {row.event && <Badge variant="neutral">{formatEventName(row.event)}</Badge>}
+                </div>
+                <p className="text-nano uppercase tracking-wider text-muted mt-2 tabular-nums">
+                  {row.blockCount} {row.blockCount === 1 ? "block" : "blocks"} ·{" "}
+                  {row.programmedSessionCount} scheduled · {formatDate(row.createdAt)}
+                </p>
+              </div>
+              <ChevronRight
+                size={18}
+                strokeWidth={1.75}
+                className="text-muted shrink-0 mt-0.5"
+                aria-hidden="true"
+              />
+            </div>
+          </Link>
+        )}
+      />
     </>
   );
 }

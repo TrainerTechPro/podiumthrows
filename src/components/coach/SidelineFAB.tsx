@@ -40,7 +40,7 @@ export function SidelineFAB() {
       onClick={returnToSideline}
       disabled={pending}
       aria-label="Return to sideline"
-      className="md:hidden fixed bottom-5 right-4 z-30 inline-flex items-center gap-2 rounded-full pl-3 pr-4 py-2.5 bg-primary-500 text-surface-950 font-semibold text-sm shadow-lg shadow-primary-500/30 active:scale-[0.95] transition-transform disabled:opacity-60 focus:outline-none focus:ring-2 focus:ring-primary-500/50"
+      className="md:hidden fixed bottom-5 right-4 z-30 inline-flex items-center gap-2 rounded-full pl-3 pr-4 py-2.5 bg-primary-500 text-surface-950 font-semibold text-sm shadow-lg shadow-primary-500/30 active:scale-[0.95] transition-transform disabled:opacity-60 focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50"
       style={{ marginBottom: "env(safe-area-inset-bottom, 0px)" }}
     >
       <Smartphone size={16} strokeWidth={2.25} aria-hidden="true" />

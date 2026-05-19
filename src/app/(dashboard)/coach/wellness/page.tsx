@@ -11,9 +11,9 @@ function scoreTier(score: number): {
   color: string;
   variant: "success" | "warning" | "danger";
 } {
-  if (score >= 7) return { color: "text-emerald-500", variant: "success" };
-  if (score >= 5) return { color: "text-amber-500", variant: "warning" };
-  return { color: "text-red-500", variant: "danger" };
+  if (score >= 7) return { color: "text-success-500", variant: "success" };
+  if (score >= 5) return { color: "text-primary-500", variant: "warning" };
+  return { color: "text-danger-500", variant: "danger" };
 }
 
 export default async function CoachWellnessPage() {
@@ -80,9 +80,9 @@ export default async function CoachWellnessPage() {
                 <span
                   className={`flex items-center gap-0.5 text-sm font-medium ${
                     teamTrend > 0
-                      ? "text-emerald-500"
+                      ? "text-success-500"
                       : teamTrend < 0
-                        ? "text-red-500"
+                        ? "text-danger-500"
                         : "text-muted"
                   }`}
                 >

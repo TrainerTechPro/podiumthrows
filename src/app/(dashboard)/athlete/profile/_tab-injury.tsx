@@ -64,13 +64,13 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
             </h3>
 
             {activeInjuries.length === 0 ? (
-              <div className="flex items-center gap-2 rounded-lg bg-emerald-500/10 px-4 py-3">
+              <div className="flex items-center gap-2 rounded-lg bg-success-500/10 px-4 py-3">
                 <Check
-                  className="w-4 h-4 text-emerald-600 dark:text-emerald-400"
+                  className="w-4 h-4 text-success-600 dark:text-success-400"
                   strokeWidth={1.75}
                   aria-hidden="true"
                 />
-                <span className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                <span className="text-sm font-medium text-success-700 dark:text-success-400">
                   No current limitations
                 </span>
               </div>
@@ -94,8 +94,8 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
                         className={cn(
                           "px-2 py-0.5 rounded-full text-nano font-semibold uppercase",
                           injury.severity === "severe"
-                            ? "bg-red-500/10 text-red-700 dark:text-red-400"
-                            : "bg-amber-500/10 text-amber-700 dark:text-amber-400"
+                            ? "bg-danger-500/10 text-danger-700 dark:text-danger-400"
+                            : "bg-primary-500/10 text-primary-700 dark:text-primary-400"
                         )}
                       >
                         {injury.severity}
@@ -110,22 +110,22 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
                     {/* Training impact flags */}
                     <div className="flex flex-wrap gap-1.5">
                       {injury.throwsBanned && (
-                        <span className="px-2 py-0.5 rounded text-nano font-medium bg-red-500/10 text-red-700 dark:text-red-400">
+                        <span className="px-2 py-0.5 rounded text-nano font-medium bg-danger-500/10 text-danger-700 dark:text-danger-400">
                           No throwing
                         </span>
                       )}
                       {injury.heavyBanned && (
-                        <span className="px-2 py-0.5 rounded text-nano font-medium bg-red-500/10 text-red-700 dark:text-red-400">
+                        <span className="px-2 py-0.5 rounded text-nano font-medium bg-danger-500/10 text-danger-700 dark:text-danger-400">
                           No heavy implements
                         </span>
                       )}
                       {injury.strengthBanned && (
-                        <span className="px-2 py-0.5 rounded text-nano font-medium bg-red-500/10 text-red-700 dark:text-red-400">
+                        <span className="px-2 py-0.5 rounded text-nano font-medium bg-danger-500/10 text-danger-700 dark:text-danger-400">
                           No strength work
                         </span>
                       )}
                       {injury.modifiedLoad && (
-                        <span className="px-2 py-0.5 rounded text-nano font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400">
+                        <span className="px-2 py-0.5 rounded text-nano font-medium bg-primary-500/10 text-primary-700 dark:text-primary-400">
                           Modified load only
                         </span>
                       )}
@@ -159,7 +159,7 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted">{formatDate(injury.injuryDate)}</span>
                       {injury.recovered && (
-                        <span className="px-2 py-0.5 rounded-full text-nano font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">
+                        <span className="px-2 py-0.5 rounded-full text-nano font-medium bg-success-500/10 text-success-700 dark:text-success-400">
                           Recovered
                         </span>
                       )}
@@ -202,12 +202,12 @@ export function TabInjury({ injuries, profile }: TabInjuryProps) {
                     <div key={item.key} className="flex items-center gap-3">
                       {ok ? (
                         <Check
-                          className="w-4 h-4 text-emerald-600 dark:text-emerald-400"
+                          className="w-4 h-4 text-success-600 dark:text-success-400"
                           strokeWidth={1.75}
                           aria-hidden="true"
                         />
                       ) : (
-                        <X className="w-4 h-4 text-red-500" strokeWidth={2} aria-hidden="true" />
+                        <X className="w-4 h-4 text-danger-500" strokeWidth={2} aria-hidden="true" />
                       )}
                       <span className="text-sm text-[var(--foreground)]">{item.label}</span>
                     </div>

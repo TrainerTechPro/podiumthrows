@@ -25,4 +25,13 @@ echo "▸ hex-literal lint"
 echo "▸ text-size lint"
 ./scripts/lint-text-sizes.sh
 
+echo "▸ raw-palette lint"
+./scripts/lint-palette.sh
+
+echo "▸ transition-all lint"
+./scripts/lint-transition-all.sh
+
+echo "▸ focus-suppress lint"
+./scripts/lint-focus-suppress.sh
+
 echo "✓ pre-push checks passed"

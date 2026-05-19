@@ -45,9 +45,9 @@ function StatTile({
   const Icon = d.direction === "up" ? TrendingUp : d.direction === "down" ? TrendingDown : Minus;
   const colorClass =
     d.direction === "up"
-      ? "text-emerald-500"
+      ? "text-success-500"
       : d.direction === "down"
-        ? "text-red-500"
+        ? "text-danger-500"
         : "text-muted";
 
   return (

@@ -121,9 +121,7 @@ export function TabList({ variant = "underline", className, children, ...props }
 
     const ro = new ResizeObserver(() => measureIndicator());
     ro.observe(container);
-    container
-      .querySelectorAll<HTMLButtonElement>("[role='tab']")
-      .forEach((btn) => ro.observe(btn));
+    container.querySelectorAll<HTMLButtonElement>("[role='tab']").forEach((btn) => ro.observe(btn));
 
     window.addEventListener("resize", measureIndicator);
     if (typeof document !== "undefined" && document.fonts?.ready) {
@@ -138,8 +136,8 @@ export function TabList({ variant = "underline", className, children, ...props }
 
   const variants = {
     underline: "border-b border-[var(--card-border)] gap-0",
-    pills:     "gap-1.5",
-    boxed:     "bg-[var(--muted-bg)] p-1 rounded-xl gap-1",
+    pills: "gap-1.5",
+    boxed: "bg-[var(--muted-bg)] p-1 rounded-xl gap-1",
   };
 
   return (
@@ -162,7 +160,9 @@ export function TabList({ variant = "underline", className, children, ...props }
           style={{
             left: indicator.left,
             width: indicator.width,
-            transition: reducedMotion.current ? "none" : "left 250ms ease-out, width 250ms ease-out",
+            transition: reducedMotion.current
+              ? "none"
+              : "left 250ms ease-out, width 250ms ease-out",
           }}
         />
       )}
@@ -202,7 +202,7 @@ export function TabTrigger({
   }, [id, registerTrigger]);
 
   const baseStyles =
-    "relative inline-flex items-center gap-2 text-sm font-medium transition-all duration-150 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 select-none disabled:opacity-40 disabled:cursor-not-allowed";
+    "relative inline-flex items-center gap-2 text-sm font-medium transition-[color,background-color,border-color,box-shadow] duration-150 shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 select-none disabled:opacity-40 disabled:cursor-not-allowed";
 
   const variantStyles = {
     underline: cn(
@@ -214,7 +214,7 @@ export function TabTrigger({
     pills: cn(
       "px-3.5 py-1.5 rounded-full",
       isActive
-        ? "bg-primary-500 text-white shadow-sm"
+        ? "bg-primary-500 text-[var(--color-text-on-brand)] shadow-sm"
         : "text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800"
     ),
     boxed: cn(
@@ -299,7 +299,7 @@ export function TabPanel({ id, children, className, ...props }: TabPanelProps) {
       aria-labelledby={`tab-${id}`}
       hidden={phase === "hidden"}
       tabIndex={0}
-      className={cn("focus:outline-none", className)}
+      className={cn("focus-visible:outline-none", className)}
       style={
         skip
           ? undefined

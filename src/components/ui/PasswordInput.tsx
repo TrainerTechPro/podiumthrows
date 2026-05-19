@@ -58,7 +58,7 @@ export const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
             "h-7 w-7 rounded-md",
             "text-surface-400 hover:text-[var(--foreground)]",
             "transition-colors",
-            "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
             "disabled:opacity-40 disabled:cursor-not-allowed"
           )}
         >

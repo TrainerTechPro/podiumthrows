@@ -349,7 +349,7 @@ function PodiumTab(p: PodiumTabProps) {
   return (
     <div className="space-y-4">
       {p.removeError && (
-        <div className="p-3 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 rounded-xl text-sm">
+        <div className="p-3 bg-danger-50 dark:bg-danger-900/20 text-danger-700 dark:text-danger-400 rounded-xl text-sm">
           {p.removeError}
         </div>
       )}
@@ -563,7 +563,7 @@ function PodiumAthleteCard({
               type="button"
               onClick={onConfirmRemove}
               disabled={isRemoving}
-              className="text-xs px-2.5 py-1.5 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 whitespace-nowrap"
+              className="text-xs px-2.5 py-1.5 rounded-lg bg-danger-600 text-white hover:bg-danger-700 disabled:opacity-60 whitespace-nowrap"
             >
               {isRemoving ? "…" : "Yes"}
             </button>
@@ -579,7 +579,7 @@ function PodiumAthleteCard({
           <button
             type="button"
             onClick={onAskRemove}
-            className="text-xs px-2.5 py-1.5 rounded-lg text-muted hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+            className="text-xs px-2.5 py-1.5 rounded-lg text-muted hover:text-danger-600 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors"
             title="Remove from Podium Throws"
             aria-label={`Remove ${profile.athlete.user.firstName} ${profile.athlete.user.lastName} from Podium Throws`}
           >
@@ -663,7 +663,7 @@ function EnrollmentPanel(p: EnrollmentPanelProps) {
             value={p.enrollForm.athleteId}
             onChange={(e) => p.onAthleteChange(e.target.value)}
             required
-            className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+            className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
           >
             <option value="">Select athlete…</option>
             {p.unenrolledAthletes.map((a) => (
@@ -674,7 +674,7 @@ function EnrollmentPanel(p: EnrollmentPanelProps) {
           </select>
           {p.autoImported && (
             <div className="flex items-center gap-2 mt-1.5 flex-wrap">
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-info-100 dark:bg-info-900/30 text-info-700 dark:text-info-400">
                 <svg
                   className="w-2.5 h-2.5"
                   fill="none"
@@ -692,7 +692,7 @@ function EnrollmentPanel(p: EnrollmentPanelProps) {
                 Auto-imported
               </span>
               {p.autoImportedPrCount > 0 && (
-                <span className="text-nano text-emerald-600 dark:text-emerald-400">
+                <span className="text-nano text-success-600 dark:text-success-400">
                   {p.autoImportedPrCount} mark{p.autoImportedPrCount !== 1 ? "s" : ""} found
                 </span>
               )}
@@ -737,7 +737,7 @@ function EnrollmentPanel(p: EnrollmentPanelProps) {
               p.setEnrollForm((f) => ({ ...f, gender: e.target.value as GenderCode }))
             }
             required
-            className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+            className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
           >
             <option value="">Select…</option>
             <option value="M">Male</option>
@@ -774,11 +774,13 @@ function EnrollmentPanel(p: EnrollmentPanelProps) {
             placeholder={p.enrollDistUnit === "meters" ? "e.g. 18.45" : "e.g. 60.53"}
             value={p.enrollForm.competitionPb}
             onChange={(e) => p.setEnrollForm((f) => ({ ...f, competitionPb: e.target.value }))}
-            className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+            className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
           />
         </div>
 
-        {p.saveError && <p className="text-xs text-red-600 dark:text-red-400">{p.saveError}</p>}
+        {p.saveError && (
+          <p className="text-xs text-danger-600 dark:text-danger-400">{p.saveError}</p>
+        )}
 
         <div className="flex gap-2 pt-1">
           <button type="button" onClick={p.onClose} className="btn-secondary text-sm px-4 py-2">
@@ -862,7 +864,7 @@ function AllTab(p: AllTabProps) {
                   {athlete.user.firstName} {athlete.user.lastName}
                 </p>
                 {!isClaimed && rosterMatch && (
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-amber-100 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 flex-shrink-0">
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-nano font-semibold bg-primary-100 dark:bg-primary-900/20 text-primary-700 dark:text-primary-400 flex-shrink-0">
                     Not yet claimed
                   </span>
                 )}
@@ -913,7 +915,7 @@ function AllTab(p: AllTabProps) {
                   {p.inviteCopied === athlete.id ? (
                     <>
                       <svg
-                        className="w-3 h-3 text-green-500"
+                        className="w-3 h-3 text-success-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"

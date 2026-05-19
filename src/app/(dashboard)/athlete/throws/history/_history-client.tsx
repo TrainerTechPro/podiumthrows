@@ -1,7 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useToast } from "@/components/ui/Toast";
+import type { EventType } from "@prisma/client";
 import type { HistoryDay, HistoryFilter, HistoryResponse } from "@/lib/throws/history-types";
 import { Skeleton, SkeletonLine } from "@/components/ui/Skeleton";
 import { HistoryDayCard } from "./_history-day-card";
@@ -21,8 +23,53 @@ const DEFAULT_FILTER: HistoryFilter = {
   prOnly: false,
 };
 
+const VALID_RANGES = new Set<HistoryFilter["range"]>(["7d", "30d", "90d", "ytd", "all", "custom"]);
+const VALID_EVENTS: EventType[] = ["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"];
+
 function hasAnyActive(f: HistoryFilter): boolean {
   return f.range !== "30d" || f.events.length > 0 || f.implementsKg.length > 0 || f.prOnly;
+}
+
+/** Parse a `?...` searchParams object into a HistoryFilter, falling back to
+ *  DEFAULT_FILTER on missing/invalid values. Bad URL fragments resolve to
+ *  defaults rather than throwing — pasting in a half-trimmed shared link
+ *  should still load something sensible. */
+function filterFromSearch(sp: URLSearchParams): HistoryFilter {
+  const rawRange = sp.get("range");
+  const range = VALID_RANGES.has(rawRange as HistoryFilter["range"])
+    ? (rawRange as HistoryFilter["range"])
+    : "30d";
+
+  const start = range === "custom" ? sp.get("start") : null;
+  const end = range === "custom" ? sp.get("end") : null;
+
+  const events = (sp.get("events") ?? "")
+    .split(",")
+    .map((s) => s.trim())
+    .filter((s): s is EventType => VALID_EVENTS.includes(s as EventType));
+
+  const implementsKg = (sp.get("implements") ?? "")
+    .split(",")
+    .map((s) => Number.parseFloat(s.trim()))
+    .filter((n) => Number.isFinite(n) && n > 0);
+
+  const prOnly = sp.get("prOnly") === "true";
+
+  return { range, start, end, events, implementsKg, prOnly };
+}
+
+/** Serialize a HistoryFilter for the URL — defaults dropped to keep URLs clean. */
+function filterToSearch(f: HistoryFilter): URLSearchParams {
+  const sp = new URLSearchParams();
+  if (f.range !== "30d") sp.set("range", f.range);
+  if (f.range === "custom") {
+    if (f.start) sp.set("start", f.start);
+    if (f.end) sp.set("end", f.end);
+  }
+  if (f.events.length > 0) sp.set("events", f.events.join(","));
+  if (f.implementsKg.length > 0) sp.set("implements", f.implementsKg.join(","));
+  if (f.prOnly) sp.set("prOnly", "true");
+  return sp;
 }
 
 // Detect athlete's IANA timezone once for the session
@@ -78,7 +125,27 @@ interface HistoryClientProps {
 
 export function HistoryClient({ athleteId }: HistoryClientProps) {
   const { error: toastError } = useToast();
-  const [filter, setFilter] = useState<HistoryFilter>(DEFAULT_FILTER);
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  /* Single source of truth = URL. The setter writes to history; the
+     filter object is derived. This is what lets a shared link, refresh,
+     or back-button restore the coach's view exactly. */
+  const filter = useMemo<HistoryFilter>(
+    () => filterFromSearch(new URLSearchParams(searchParams?.toString() ?? "")),
+    [searchParams]
+  );
+
+  const setFilter = useCallback(
+    (next: HistoryFilter | ((prev: HistoryFilter) => HistoryFilter)) => {
+      const resolved = typeof next === "function" ? next(filter) : next;
+      const sp = filterToSearch(resolved);
+      const qs = sp.toString();
+      router.replace(qs ? `${pathname}?${qs}` : pathname, { scroll: false });
+    },
+    [filter, router, pathname]
+  );
   const [days, setDays] = useState<HistoryDay[]>([]);
   const [totals, setTotals] = useState<{ sessions: number; throws: number } | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
@@ -164,13 +231,17 @@ export function HistoryClient({ athleteId }: HistoryClientProps) {
     };
   }, []);
 
-  // Reset and fetch when filter changes.
+  // Reset and fetch when filter changes. Identity changes per render because
+  // `filter` is derived from searchParams, so depend on the serialized form
+  // instead of the object identity to avoid refetching on unrelated renders.
+  const filterKey = useMemo(() => filterToSearch(filter).toString(), [filter]);
   useEffect(() => {
     setDays([]);
     setNextCursor(null);
     setTotals(null);
     fetchHistory(filter);
-  }, [filter, fetchHistory]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filterKey, fetchHistory]);
 
   // Infinite scroll: observe a sentinel div near the bottom of the list.
   useEffect(() => {

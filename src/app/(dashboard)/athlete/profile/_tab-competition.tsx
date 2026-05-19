@@ -329,7 +329,7 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
       <div className="flex items-center justify-end gap-3 pt-2">
         {justSaved && (
           <span
-            className="text-sm font-medium text-green-600 dark:text-green-400"
+            className="text-sm font-medium text-success-600 dark:text-success-400"
             aria-live="polite"
           >
             ✓ Saved
@@ -341,7 +341,7 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
           disabled={isPending}
           className="w-full sm:w-auto"
         >
-          {isPending ? "Saving..." : justSaved ? "Saved" : "Save Changes"}
+          {isPending ? "Saving changes…" : justSaved ? "Saved" : "Save Changes"}
         </Button>
       </div>
     </div>

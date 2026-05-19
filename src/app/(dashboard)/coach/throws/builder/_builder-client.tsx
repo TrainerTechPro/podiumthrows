@@ -465,7 +465,7 @@ export default function ThrowsBuilderClient({ userId }: ThrowsBuilderClientProps
   if (queued) {
     return (
       <div className="max-w-xl mx-auto py-24 text-center space-y-5">
-        <div className="w-14 h-14 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center text-2xl">
+        <div className="w-14 h-14 mx-auto rounded-full bg-primary-500/10 flex items-center justify-center text-2xl">
           ⏳
         </div>
         <div className="space-y-1">
@@ -519,7 +519,7 @@ export default function ThrowsBuilderClient({ userId }: ThrowsBuilderClientProps
             disabled={saving || !validationResult.canAssign}
             className="btn-primary"
           >
-            {saving ? "Saving..." : "Save Session"}
+            {saving ? "Saving session…" : "Save Session"}
           </button>
         </div>
       </div>
@@ -535,7 +535,7 @@ export default function ThrowsBuilderClient({ userId }: ThrowsBuilderClientProps
               key={bt.value}
               type="button"
               onClick={() => addBlock(bt.value)}
-              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-surface-700 dark:text-surface-300 bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--color-border-strong)] hover:shadow-sm transition-all"
+              className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-sm font-medium text-surface-700 dark:text-surface-300 bg-[var(--card-bg)] border border-[var(--card-border)] hover:border-[var(--color-border-strong)] hover:shadow-sm transition-colors"
             >
               <span className="text-lg">{bt.icon}</span>
               {bt.label}
@@ -612,13 +612,17 @@ export default function ThrowsBuilderClient({ userId }: ThrowsBuilderClientProps
                 {rankedExercises.slice(0, 5).map((ex, i) => {
                   const absR = Math.abs(ex.correlation);
                   const dotColor =
-                    absR >= 0.75 ? "bg-emerald-500" : absR >= 0.6 ? "bg-amber-500" : "bg-blue-500";
+                    absR >= 0.75
+                      ? "bg-success-500"
+                      : absR >= 0.6
+                        ? "bg-primary-500"
+                        : "bg-info-500";
                   const textColor =
                     absR >= 0.75
-                      ? "text-emerald-500"
+                      ? "text-success-500"
                       : absR >= 0.6
-                        ? "text-amber-500"
-                        : "text-blue-500";
+                        ? "text-primary-500"
+                        : "text-info-500";
                   return (
                     <div key={i} className="flex items-center gap-1.5">
                       <span
@@ -820,7 +824,7 @@ export default function ThrowsBuilderClient({ userId }: ThrowsBuilderClientProps
                   onDragStart={() => handleDragStart(index)}
                   onDragOver={(e) => handleDragOver(e, index)}
                   onDragEnd={handleDragEnd}
-                  className={`transition-all ${
+                  className={`transition-colors ${
                     dragOverIndex === index ? "transform scale-[1.02] shadow-lg" : ""
                   } ${dragIndex === index ? "opacity-50" : ""}`}
                 >
@@ -906,7 +910,7 @@ function BlockCard({
   return (
     <div
       className={`card !p-0 border-l-4 ${BLOCK_BORDER_COLORS[block.blockType]} overflow-hidden ${
-        hasCritical ? "ring-1 ring-red-500/40" : ""
+        hasCritical ? "ring-1 ring-danger-500/40" : ""
       }`}
     >
       {/* Block header */}
@@ -930,7 +934,7 @@ function BlockCard({
         <button
           type="button"
           onClick={onRemove}
-          className="p-1 rounded text-muted hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          className="p-1 rounded text-muted hover:text-danger-500 dark:hover:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 transition-colors"
         >
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path
@@ -984,12 +988,12 @@ function BlockCard({
         <div
           role="alert"
           data-testid={`block-critical-error-${index}`}
-          className="border-t border-red-500/30 bg-red-500/10 px-4 py-3 space-y-2"
+          className="border-t border-danger-500/30 bg-danger-500/10 px-4 py-3 space-y-2"
         >
           {blockErrors.map((err, i) => (
             <div
               key={`${err.rule}-${i}`}
-              className="flex items-start gap-2 text-xs text-red-700 dark:text-red-300"
+              className="flex items-start gap-2 text-xs text-danger-700 dark:text-danger-300"
             >
               <AlertTriangle
                 className="w-4 h-4 shrink-0 mt-0.5"
@@ -1306,7 +1310,7 @@ function StrengthBlockEditor({
                 <button
                   type="button"
                   onClick={() => removeExercise(i)}
-                  className="p-1 text-muted hover:text-red-500 transition-colors"
+                  className="p-1 text-muted hover:text-danger-500 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path
@@ -1390,7 +1394,7 @@ function WarmupCooldownEditor({
               <button
                 type="button"
                 onClick={() => removeDrill(i)}
-                className="text-muted hover:text-red-500"
+                className="text-muted hover:text-danger-500"
               >
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path

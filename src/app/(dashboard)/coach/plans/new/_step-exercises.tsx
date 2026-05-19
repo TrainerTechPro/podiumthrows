@@ -206,11 +206,11 @@ export function StepExercises({
 
       {/* Bondarchuk implement warnings */}
       {!implementValidation.valid && (
-        <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 space-y-1">
+        <div className="rounded-lg border border-primary-500/30 bg-primary-500/10 px-4 py-3 space-y-1">
           {implementValidation.warnings.map((w, i) => (
             <p
               key={i}
-              className="text-sm text-amber-700 dark:text-amber-400 flex items-start gap-2"
+              className="text-sm text-primary-700 dark:text-primary-400 flex items-start gap-2"
             >
               <span className="shrink-0 mt-0.5">{w.severity === "error" ? "!!" : "!"}</span>
               {w.message}
@@ -334,7 +334,7 @@ export function StepExercises({
                         {ex.exerciseName}
                       </p>
                       {ex.implementKg > 0 && (
-                        <span className="text-xs font-bold text-amber-600 dark:text-amber-400 tabular-nums shrink-0">
+                        <span className="text-xs font-bold text-primary-600 dark:text-primary-400 tabular-nums shrink-0">
                           {ex.implementKg}kg
                         </span>
                       )}
@@ -378,7 +378,7 @@ export function StepExercises({
                       </button>
                       <button
                         onClick={() => removeExercise(exIdx)}
-                        className="p-0.5 rounded hover:bg-red-500/10 text-red-500 ml-1"
+                        className="p-0.5 rounded hover:bg-danger-500/10 text-danger-500 ml-1"
                       >
                         <svg
                           width="12"

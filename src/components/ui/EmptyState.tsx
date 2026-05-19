@@ -52,7 +52,7 @@ export function EmptyState({
       <button
         type="button"
         onClick={onRetry}
-        className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-danger-700 dark:text-danger-300 bg-danger-50 dark:bg-danger-500/15 hover:bg-danger-100 dark:hover:bg-danger-500/25 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-danger-500/50"
+        className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold text-danger-700 dark:text-danger-300 bg-danger-50 dark:bg-danger-500/15 hover:bg-danger-100 dark:hover:bg-danger-500/25 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-danger-500/50"
       >
         <RefreshCw size={12} strokeWidth={2.25} aria-hidden="true" />
         Try again
@@ -108,7 +108,7 @@ export function EmptyState({
                 "text-sm text-[var(--foreground)] rounded-full px-3 py-1.5",
                 "border border-surface-200 dark:border-surface-700",
                 "hover:border-primary-300 dark:hover:border-primary-500/30",
-                "transition-all duration-150",
+                "transition-[background-color,border-color] duration-150",
                 "animate-chip-in"
               )}
               style={{ animationDelay: `${i * 75}ms` }}

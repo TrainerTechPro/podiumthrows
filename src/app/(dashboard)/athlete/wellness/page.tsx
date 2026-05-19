@@ -33,21 +33,21 @@ function formatDate(iso: string): string {
 }
 
 function scoreColor(score: number): string {
-  if (score >= 8) return "text-emerald-600 dark:text-emerald-400";
-  if (score >= 5) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  if (score >= 8) return "text-success-600 dark:text-success-400";
+  if (score >= 5) return "text-primary-600 dark:text-primary-400";
+  return "text-danger-600 dark:text-danger-400";
 }
 
 function scoreDot(score: number): string {
-  if (score >= 8) return "bg-emerald-500";
-  if (score >= 5) return "bg-amber-500";
-  return "bg-red-500";
+  if (score >= 8) return "bg-success-500";
+  if (score >= 5) return "bg-primary-500";
+  return "bg-danger-500";
 }
 
 function scoreBg(score: number): string {
-  if (score >= 8) return "bg-emerald-500/10 border-emerald-500/20";
-  if (score >= 5) return "bg-amber-500/10 border-amber-500/20";
-  return "bg-red-500/10 border-red-500/20";
+  if (score >= 8) return "bg-success-500/10 border-success-500/20";
+  if (score >= 5) return "bg-primary-500/10 border-primary-500/20";
+  return "bg-danger-500/10 border-danger-500/20";
 }
 
 function scoreLabel(score: number): string {
@@ -120,17 +120,17 @@ function ouraLabel(score: number): string {
 }
 
 function ouraScoreColor(score: number): string {
-  if (score >= 85) return "text-emerald-600 dark:text-emerald-400";
-  if (score >= 70) return "text-blue-600 dark:text-blue-400";
-  if (score >= 60) return "text-amber-600 dark:text-amber-400";
-  return "text-red-600 dark:text-red-400";
+  if (score >= 85) return "text-success-600 dark:text-success-400";
+  if (score >= 70) return "text-info-600 dark:text-info-400";
+  if (score >= 60) return "text-primary-600 dark:text-primary-400";
+  return "text-danger-600 dark:text-danger-400";
 }
 
 function ouraBarColor(score: number): string {
-  if (score >= 85) return "bg-emerald-500";
-  if (score >= 70) return "bg-blue-500";
-  if (score >= 60) return "bg-amber-500";
-  return "bg-red-500";
+  if (score >= 85) return "bg-success-500";
+  if (score >= 70) return "bg-info-500";
+  if (score >= 60) return "bg-primary-500";
+  return "bg-danger-500";
 }
 
 function formatSleepDuration(hours: number): string {
@@ -154,7 +154,7 @@ function DeviceVitalsCard({ checkIn }: { checkIn: ReadinessCheckInItem }) {
       label: "HRV",
       value: `${Math.round(checkIn.hrvMs)} ms`,
       icon: Activity,
-      color: "text-blue-500",
+      color: "text-info-500",
     });
   }
   if (checkIn.restingHR != null) {
@@ -162,7 +162,7 @@ function DeviceVitalsCard({ checkIn }: { checkIn: ReadinessCheckInItem }) {
       label: "Resting HR",
       value: `${Math.round(checkIn.restingHR)} bpm`,
       icon: Heart,
-      color: "text-red-500",
+      color: "text-danger-500",
     });
   }
   if (checkIn.spo2 != null) {
@@ -170,7 +170,7 @@ function DeviceVitalsCard({ checkIn }: { checkIn: ReadinessCheckInItem }) {
       label: "SpO2",
       value: `${checkIn.spo2.toFixed(1)}%`,
       icon: Droplets,
-      color: "text-cyan-500",
+      color: "text-info-500",
     });
   }
   if (isOura && checkIn.temperatureDeviation != null) {
@@ -181,10 +181,10 @@ function DeviceVitalsCard({ checkIn }: { checkIn: ReadinessCheckInItem }) {
       icon: Thermometer,
       color:
         checkIn.temperatureDeviation > 0.5
-          ? "text-red-500"
+          ? "text-danger-500"
           : checkIn.temperatureDeviation < -0.5
-            ? "text-blue-500"
-            : "text-emerald-500",
+            ? "text-info-500"
+            : "text-success-500",
     });
   }
   if (!isOura && checkIn.whoopStrain != null) {
@@ -192,7 +192,7 @@ function DeviceVitalsCard({ checkIn }: { checkIn: ReadinessCheckInItem }) {
       label: "Strain",
       value: checkIn.whoopStrain.toFixed(1),
       icon: Zap,
-      color: "text-amber-500",
+      color: "text-primary-500",
     });
   }
 
@@ -373,7 +373,7 @@ function TodayResultCard({
               <p
                 className={cn(
                   "text-xs font-medium mt-1",
-                  ouraActivity >= 100 ? "text-emerald-600 dark:text-emerald-400" : "text-muted"
+                  ouraActivity >= 100 ? "text-success-600 dark:text-success-400" : "text-muted"
                 )}
               >
                 {ouraActivity >= 100 ? "Goal Reached" : ouraLabel(ouraActivity)}
@@ -415,10 +415,10 @@ function TodayResultCard({
               className={cn(
                 "inline-block text-xs font-semibold px-2 py-0.5 rounded-full",
                 checkIn.hydration === "GOOD"
-                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                  ? "bg-success-500/10 text-success-600 dark:text-success-400"
                   : checkIn.hydration === "ADEQUATE"
-                    ? "bg-amber-500/10 text-amber-600 dark:text-amber-400"
-                    : "bg-red-500/10 text-red-600 dark:text-red-400"
+                    ? "bg-primary-500/10 text-primary-600 dark:text-primary-400"
+                    : "bg-danger-500/10 text-danger-600 dark:text-danger-400"
               )}
             >
               {checkIn.hydration.charAt(0) + checkIn.hydration.slice(1).toLowerCase()}
@@ -430,8 +430,8 @@ function TodayResultCard({
                   className={cn(
                     "inline-block text-xs font-semibold px-2 py-0.5 rounded-full",
                     checkIn.injuryStatus === "ACTIVE"
-                      ? "bg-red-500/10 text-red-600 dark:text-red-400"
-                      : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      ? "bg-danger-500/10 text-danger-600 dark:text-danger-400"
+                      : "bg-primary-500/10 text-primary-600 dark:text-primary-400"
                   )}
                 >
                   {checkIn.injuryStatus === "ACTIVE" ? "Injury Active" : "Monitoring"}
@@ -453,11 +453,11 @@ function TodayResultCard({
               <span className="font-semibold">{avg14.toFixed(1)}</span>
             </div>
             {avg7 > avg14 + 0.3 ? (
-              <span className="text-emerald-600 dark:text-emerald-400 font-medium">
+              <span className="text-success-600 dark:text-success-400 font-medium">
                 ↑ Trending up
               </span>
             ) : avg7 < avg14 - 0.3 ? (
-              <span className="text-amber-600 dark:text-amber-400 font-medium">
+              <span className="text-primary-600 dark:text-primary-400 font-medium">
                 ↓ Trending down
               </span>
             ) : (
@@ -495,7 +495,11 @@ function TodayResultCard({
                 <div
                   className={cn(
                     "h-full rounded-full",
-                    f.value >= 8 ? "bg-emerald-500" : f.value >= 5 ? "bg-amber-500" : "bg-red-500"
+                    f.value >= 8
+                      ? "bg-success-500"
+                      : f.value >= 5
+                        ? "bg-primary-500"
+                        : "bg-danger-500"
                   )}
                   style={{ width: `${f.value * 10}%` }}
                 />
@@ -508,10 +512,10 @@ function TodayResultCard({
                       className={cn(
                         "text-nano font-medium px-2 py-0.5 rounded-full border",
                         area.severity === 3
-                          ? "bg-red-500/12 text-red-400 border-red-500/20"
+                          ? "bg-danger-500/12 text-danger-400 border-danger-500/20"
                           : area.severity === 2
-                            ? "bg-amber-500/12 text-amber-400 border-amber-500/20"
-                            : "bg-yellow-500/12 text-yellow-400 border-yellow-500/20"
+                            ? "bg-primary-500/12 text-primary-400 border-primary-500/20"
+                            : "bg-warning-500/12 text-warning-400 border-warning-500/20"
                       )}
                     >
                       {area.region}
@@ -600,13 +604,15 @@ function CheckInCard({ c }: { c: CheckIn }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 ml-5">
         <div>
           <p className="text-nano text-muted uppercase tracking-wide">Sleep</p>
-          <p className="text-xs text-[var(--foreground)] font-medium">
+          <p className="text-xs text-[var(--foreground)] font-medium tabular-nums">
             {c.sleepQuality}/10 · {c.sleepHours}h
           </p>
         </div>
         <div>
           <p className="text-nano text-muted uppercase tracking-wide">Soreness</p>
-          <p className="text-xs text-[var(--foreground)] font-medium">{c.soreness}/10</p>
+          <p className="text-xs text-[var(--foreground)] font-medium tabular-nums">
+            {c.soreness}/10
+          </p>
           {isStructured && areas.length > 0 ? (
             <div className="flex flex-wrap gap-1 mt-0.5">
               {areas.map((area) => (
@@ -615,10 +621,10 @@ function CheckInCard({ c }: { c: CheckIn }) {
                   className={cn(
                     "text-nano font-medium px-2 py-0.5 rounded-full border",
                     area.severity === 3
-                      ? "bg-red-500/12 text-red-400 border-red-500/20"
+                      ? "bg-danger-500/12 text-danger-400 border-danger-500/20"
                       : area.severity === 2
-                        ? "bg-amber-500/12 text-amber-400 border-amber-500/20"
-                        : "bg-yellow-500/12 text-yellow-400 border-yellow-500/20"
+                        ? "bg-primary-500/12 text-primary-400 border-primary-500/20"
+                        : "bg-warning-500/12 text-warning-400 border-warning-500/20"
                   )}
                 >
                   {area.region}
@@ -631,11 +637,15 @@ function CheckInCard({ c }: { c: CheckIn }) {
         </div>
         <div>
           <p className="text-nano text-muted uppercase tracking-wide">Stress</p>
-          <p className="text-xs text-[var(--foreground)] font-medium">{c.stressLevel}/10</p>
+          <p className="text-xs text-[var(--foreground)] font-medium tabular-nums">
+            {c.stressLevel}/10
+          </p>
         </div>
         <div>
           <p className="text-nano text-muted uppercase tracking-wide">Energy</p>
-          <p className="text-xs text-[var(--foreground)] font-medium">{c.energyMood}/10</p>
+          <p className="text-xs text-[var(--foreground)] font-medium tabular-nums">
+            {c.energyMood}/10
+          </p>
         </div>
       </div>
       {c.injuryStatus !== "NONE" && (
@@ -644,8 +654,8 @@ function CheckInCard({ c }: { c: CheckIn }) {
             className={cn(
               "text-xs font-medium",
               c.injuryStatus === "ACTIVE"
-                ? "text-red-600 dark:text-red-400"
-                : "text-amber-600 dark:text-amber-400"
+                ? "text-danger-600 dark:text-danger-400"
+                : "text-primary-600 dark:text-primary-400"
             )}
           >
             {c.injuryStatus === "ACTIVE" ? "Injury Active" : "Monitoring Injury"}

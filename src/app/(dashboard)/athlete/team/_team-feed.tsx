@@ -368,7 +368,7 @@ function TypedBody({ item }: { item: TeamActivityItem }) {
       return (
         <div className="flex items-start gap-2.5">
           <Trophy
-            className="h-4 w-4 text-amber-500 mt-0.5 shrink-0"
+            className="h-4 w-4 text-primary-500 mt-0.5 shrink-0"
             strokeWidth={1.75}
             aria-hidden="true"
           />
@@ -388,7 +388,7 @@ function TypedBody({ item }: { item: TeamActivityItem }) {
               {" 🔥"}
             </p>
             {delta != null && delta > 0 && (
-              <p className="text-micro text-emerald-500 font-mono tabular-nums mt-0.5">
+              <p className="text-micro text-success-500 font-mono tabular-nums mt-0.5">
                 +{delta.toFixed(2)}m from previous best
               </p>
             )}
@@ -423,7 +423,7 @@ function TypedBody({ item }: { item: TeamActivityItem }) {
       return (
         <div className="flex items-start gap-2.5">
           <Flame
-            className="h-4 w-4 text-amber-500 mt-0.5 shrink-0"
+            className="h-4 w-4 text-primary-500 mt-0.5 shrink-0"
             strokeWidth={1.75}
             aria-hidden="true"
           />
@@ -443,7 +443,7 @@ function TypedBody({ item }: { item: TeamActivityItem }) {
       return (
         <div className="flex items-start gap-2.5">
           <Target
-            className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0"
+            className="h-4 w-4 text-success-500 mt-0.5 shrink-0"
             strokeWidth={1.75}
             aria-hidden="true"
           />

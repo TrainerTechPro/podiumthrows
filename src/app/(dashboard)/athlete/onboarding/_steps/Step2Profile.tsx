@@ -60,8 +60,8 @@ export function Step2Profile({
               onClick={() => onClassStanding(classStanding === value ? null : value)}
               aria-pressed={classStanding === value}
               className={cn(
-                "h-11 rounded-xl text-sm font-medium transition-all duration-150 active:scale-[0.97]",
-                "border focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
+                "h-11 rounded-xl text-sm font-medium transition-colors duration-150 active:scale-[0.97]",
+                "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
                 classStanding === value
                   ? "bg-primary-500/12 border-primary-500/50 text-[var(--foreground)]"
                   : "bg-[var(--card-bg)] border-[var(--card-border)] text-muted hover:border-primary-500/30 hover:text-[var(--foreground)]"
@@ -85,8 +85,8 @@ export function Step2Profile({
               onClick={() => onTrainingLevel(trainingLevel === value ? null : value)}
               aria-pressed={trainingLevel === value}
               className={cn(
-                "h-12 rounded-xl text-sm font-medium transition-all duration-150 active:scale-[0.97]",
-                "border focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
+                "h-12 rounded-xl text-sm font-medium transition-colors duration-150 active:scale-[0.97]",
+                "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
                 trainingLevel === value
                   ? "bg-primary-500/12 border-primary-500/50 text-[var(--foreground)]"
                   : "bg-[var(--card-bg)] border-[var(--card-border)] text-muted hover:border-primary-500/30 hover:text-[var(--foreground)]"
@@ -110,8 +110,8 @@ export function Step2Profile({
               onClick={() => onTurnDirection(turnDirection === value ? null : value)}
               aria-pressed={turnDirection === value}
               className={cn(
-                "h-14 rounded-xl text-base font-heading font-semibold transition-all duration-150 active:scale-[0.97]",
-                "border focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
+                "h-14 rounded-xl text-base font-heading font-semibold transition-colors duration-150 active:scale-[0.97]",
+                "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
                 turnDirection === value
                   ? "bg-primary-500/12 border-primary-500/50 text-[var(--foreground)]"
                   : "bg-[var(--card-bg)] border-[var(--card-border)] text-muted hover:border-primary-500/30 hover:text-[var(--foreground)]"

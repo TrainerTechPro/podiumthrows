@@ -120,9 +120,9 @@ function groupBlocks(blocks: AvailabilityBlock[]): BlockGroup[] {
 }
 
 function typeColor(type: AvailType | OverrideType): string {
-  if (type === "AVAILABLE") return "border-green-500";
-  if (type === "UNAVAILABLE") return "border-red-500";
-  return "border-amber-500";
+  if (type === "AVAILABLE") return "border-success-500";
+  if (type === "UNAVAILABLE") return "border-danger-500";
+  return "border-primary-500";
 }
 
 function typeBadgeVariant(type: AvailType | OverrideType): "success" | "danger" | "warning" {
@@ -196,8 +196,8 @@ function DayPill({
       type="button"
       onClick={onClick}
       className={[
-        "w-10 h-10 rounded-full text-xs font-semibold transition-all duration-150",
-        "border focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60",
+        "w-10 h-10 rounded-full text-xs font-semibold transition-colors duration-150",
+        "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60",
         selected
           ? "bg-primary-500 text-white border-primary-500 shadow-sm"
           : "bg-[var(--card-bg)] text-[var(--muted)] border-[var(--card-border)] hover:border-primary-500/50 hover:text-primary-500",
@@ -229,8 +229,8 @@ function TypePill({
       type="button"
       onClick={onClick}
       className={[
-        "px-3 py-2.5 rounded-full text-xs font-semibold transition-all duration-150 border",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60",
+        "px-3 py-2.5 rounded-full text-xs font-semibold transition-colors duration-150 border",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60",
         active
           ? `${colorClass} border-transparent`
           : "bg-[var(--card-bg)] text-[var(--muted)] border-[var(--card-border)] hover:border-surface-400",
@@ -967,21 +967,21 @@ function BlockFormFields({
             label="Available"
             value="AVAILABLE"
             current={form.type}
-            colorClass="bg-green-500/15 text-green-600 dark:text-green-400"
+            colorClass="bg-success-500/15 text-success-600 dark:text-success-400"
             onClick={() => onChange({ ...form, type: "AVAILABLE" })}
           />
           <TypePill
             label="Unavailable"
             value="UNAVAILABLE"
             current={form.type}
-            colorClass="bg-red-500/15 text-red-600 dark:text-red-400"
+            colorClass="bg-danger-500/15 text-danger-600 dark:text-danger-400"
             onClick={() => onChange({ ...form, type: "UNAVAILABLE" })}
           />
           <TypePill
             label="Conditional"
             value="CONDITIONAL"
             current={form.type}
-            colorClass="bg-amber-500/15 text-amber-600 dark:text-amber-400"
+            colorClass="bg-primary-500/15 text-primary-600 dark:text-primary-400"
             onClick={() => onChange({ ...form, type: "CONDITIONAL" })}
           />
         </div>
@@ -1048,14 +1048,14 @@ function OverrideForm({
             label="Available"
             value="AVAILABLE"
             current={form.type}
-            colorClass="bg-green-500/15 text-green-600 dark:text-green-400"
+            colorClass="bg-success-500/15 text-success-600 dark:text-success-400"
             onClick={() => onChange({ ...form, type: "AVAILABLE" })}
           />
           <TypePill
             label="Unavailable"
             value="UNAVAILABLE"
             current={form.type}
-            colorClass="bg-red-500/15 text-red-600 dark:text-red-400"
+            colorClass="bg-danger-500/15 text-danger-600 dark:text-danger-400"
             onClick={() => onChange({ ...form, type: "UNAVAILABLE" })}
           />
         </div>
@@ -1070,7 +1070,7 @@ function OverrideForm({
           onClick={() => onChange({ ...form, allDay: !form.allDay })}
           className={[
             "relative inline-flex h-6 w-11 items-center rounded-full transition-colors duration-200",
-            "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60",
             form.allDay ? "bg-primary-500" : "bg-surface-300 dark:bg-surface-600",
           ].join(" ")}
         >

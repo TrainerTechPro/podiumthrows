@@ -25,7 +25,7 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
 
         const data = await res.json().catch(() => null);
         if (!res.ok || !data?.success) {
-          setError(data?.error ?? `Something went wrong (${res.status}).`);
+          setError(data?.error ?? `Couldn't complete session (${res.status}). Try again.`);
           return;
         }
 
@@ -85,7 +85,7 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
           />
         </div>
 
-        {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+        {error && <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>}
 
         <div className="flex gap-3">
           <button

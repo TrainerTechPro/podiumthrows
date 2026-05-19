@@ -215,7 +215,7 @@ export default async function AthleteAchievementsPage() {
         </div>
         {earnedCount > 0 && (
           <div className="text-right">
-            <div className="text-3xl font-bold text-amber-500 tabular-nums leading-none">
+            <div className="text-3xl font-bold text-primary-500 tabular-nums leading-none">
               <AnimatedNumber value={earnedCount} />
             </div>
             <div className="text-nano text-muted uppercase tracking-wider mt-0.5">Earned</div>

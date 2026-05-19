@@ -65,23 +65,23 @@ const STATUS_CONFIG: Record<
 const FEELING_CONFIG: Record<string, { label: string; colorClass: string }> = {
   GREAT: {
     label: "Great",
-    colorClass: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+    colorClass: "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400",
   },
   GOOD: {
     label: "Good",
-    colorClass: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+    colorClass: "bg-info-100 text-info-700 dark:bg-info-900/30 dark:text-info-400",
   },
   AVERAGE: {
     label: "Average",
-    colorClass: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+    colorClass: "bg-primary-100 text-primary-700 dark:bg-primary-900/30 dark:text-primary-400",
   },
   POOR: {
     label: "Poor",
-    colorClass: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
+    colorClass: "bg-warning-100 text-warning-700 dark:bg-warning-900/30 dark:text-warning-400",
   },
   VERY_POOR: {
     label: "Very Poor",
-    colorClass: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+    colorClass: "bg-danger-100 text-danger-700 dark:bg-danger-900/30 dark:text-danger-400",
   },
 };
 
@@ -91,19 +91,19 @@ const BLOCK_ICON_MAP: Record<
 > = {
   WARMUP: {
     icon: Flame,
-    color: "text-amber-500",
+    color: "text-primary-500",
     label: "Warm-Up",
     borderColor: "var(--amber-500, #f59e0b)",
   },
   THROWING: {
     icon: Target,
-    color: "text-orange-500",
+    color: "text-warning-500",
     label: "Throwing",
     borderColor: "var(--orange-500, #f97316)",
   },
   STRENGTH: {
     icon: Dumbbell,
-    color: "text-blue-500",
+    color: "text-info-500",
     label: "Strength",
     borderColor: "var(--blue-500, #3b82f6)",
   },
@@ -115,7 +115,7 @@ const BLOCK_ICON_MAP: Record<
   },
   COOLDOWN: {
     icon: Snowflake,
-    color: "text-cyan-500",
+    color: "text-info-500",
     label: "Cool-Down",
     borderColor: "var(--cyan-500, #06b6d4)",
   },
@@ -155,15 +155,15 @@ function ThrowingBlockResults({
   const completionColor =
     prescribedCount > 0
       ? actualCount >= prescribedCount
-        ? "text-emerald-600 dark:text-emerald-400"
-        : "text-amber-600 dark:text-amber-400"
+        ? "text-success-600 dark:text-success-400"
+        : "text-primary-600 dark:text-primary-400"
       : "";
 
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center gap-3 text-sm">
         {weight && (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 font-medium">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-warning-100 dark:bg-warning-900/20 text-warning-700 dark:text-warning-400 font-medium">
             {String(weight)}
           </span>
         )}
@@ -186,52 +186,89 @@ function ThrowingBlockResults({
       )}
 
       {throwLogs.length > 0 ? (
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[var(--card-border)]">
-                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
-                  #
-                </th>
-                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
-                  Distance
-                </th>
-                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
-                  Implement
-                </th>
-                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2">
-                  Notes
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {throwLogs.map((log) => {
-                const isBest = log.distance != null && log.distance === bestMark;
-                return (
-                  <tr
-                    key={log.throwNumber}
-                    className="border-b border-[var(--card-border)] last:border-0"
-                  >
-                    <td className="py-2 pr-4 tabular-nums text-muted">{log.throwNumber}</td>
-                    <td
+        <>
+          {/* Desktop: table */}
+          <div className="hidden md:block overflow-x-auto custom-scrollbar">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--card-border)]">
+                  <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
+                    #
+                  </th>
+                  <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
+                    Distance
+                  </th>
+                  <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
+                    Implement
+                  </th>
+                  <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2">
+                    Notes
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {throwLogs.map((log) => {
+                  const isBest = log.distance != null && log.distance === bestMark;
+                  return (
+                    <tr
+                      key={log.throwNumber}
+                      className="border-b border-[var(--card-border)] last:border-0"
+                    >
+                      <td className="py-2 pr-4 tabular-nums text-muted">{log.throwNumber}</td>
+                      <td
+                        className={cn(
+                          "py-2 pr-4 tabular-nums font-semibold",
+                          isBest
+                            ? "text-success-600 dark:text-success-400"
+                            : "text-[var(--foreground)]"
+                        )}
+                      >
+                        {log.distance != null ? `${log.distance.toFixed(2)}m` : "—"}
+                        {isBest && (
+                          <span className="ml-1.5 text-nano font-bold uppercase">Best</span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-4 text-muted">{log.implement}</td>
+                      <td className="py-2 text-muted text-xs">{log.notes ?? ""}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile: per-throw cards — throw # + big distance + implement + notes */}
+          <ul className="md:hidden divide-y divide-[var(--card-border)]">
+            {throwLogs.map((log) => {
+              const isBest = log.distance != null && log.distance === bestMark;
+              return (
+                <li
+                  key={log.throwNumber}
+                  className="py-2.5 first:pt-0 last:pb-0 flex items-start gap-3"
+                >
+                  <span className="text-nano text-muted tabular-nums shrink-0 w-6 pt-1">
+                    #{log.throwNumber}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p
                       className={cn(
-                        "py-2 pr-4 tabular-nums font-semibold",
+                        "text-base font-bold tabular-nums",
                         isBest
-                          ? "text-emerald-600 dark:text-emerald-400"
+                          ? "text-success-600 dark:text-success-400"
                           : "text-[var(--foreground)]"
                       )}
                     >
                       {log.distance != null ? `${log.distance.toFixed(2)}m` : "—"}
                       {isBest && <span className="ml-1.5 text-nano font-bold uppercase">Best</span>}
-                    </td>
-                    <td className="py-2 pr-4 text-muted">{log.implement}</td>
-                    <td className="py-2 text-muted text-xs">{log.notes ?? ""}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </p>
+                    <p className="text-nano text-muted mt-0.5">{log.implement}</p>
+                    {log.notes && <p className="text-xs text-muted mt-1">{log.notes}</p>}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </>
       ) : (
         <p className="text-sm text-muted italic">No throws logged for this block</p>
       )}
@@ -240,7 +277,7 @@ function ThrowingBlockResults({
         <div className="flex gap-6 text-xs text-muted pt-1">
           <span>
             Best:{" "}
-            <strong className="text-emerald-600 dark:text-emerald-400 tabular-nums">
+            <strong className="text-success-600 dark:text-success-400 tabular-nums">
               {bestMark!.toFixed(2)}m
             </strong>
           </span>
@@ -266,7 +303,7 @@ function StrengthBlockPrescription({ config }: { config: Record<string, unknown>
   }
   return (
     <div className="space-y-1">
-      <p className="text-xs text-muted italic mb-2">Prescribed (strength logging coming soon)</p>
+      <p className="text-xs text-muted italic mb-2">Prescribed strength block</p>
       <div className="space-y-1.5">
         {exercises.map((ex, i) => {
           const name = (ex.name as string) || "Exercise";

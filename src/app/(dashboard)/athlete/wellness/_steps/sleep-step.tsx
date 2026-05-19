@@ -76,8 +76,8 @@ export function SleepStep({ data, onChange, onNext, whoopData, ouraData }: StepP
 
       {/* ── Header ─────────────────────────────────────────────────────── */}
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center shrink-0">
-          <Moon size={20} strokeWidth={1.75} className="text-amber-500" aria-hidden="true" />
+        <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center shrink-0">
+          <Moon size={20} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
         </div>
         <div>
           <h2 className="text-xl font-bold font-heading text-[var(--foreground)] leading-tight">

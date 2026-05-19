@@ -42,14 +42,14 @@ function PlanLimitBanner({
 
   if (remaining === 0) {
     return (
-      <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2.5 flex items-start gap-2">
+      <div className="rounded-lg border border-danger-500/30 bg-danger-500/10 px-3 py-2.5 flex items-start gap-2">
         <AlertTriangle
-          className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5"
+          className="w-4 h-4 text-danger-600 dark:text-danger-400 shrink-0 mt-0.5"
           strokeWidth={1.75}
           aria-hidden="true"
         />
         <div className="flex-1">
-          <p className="text-xs font-semibold text-red-700 dark:text-red-400">
+          <p className="text-xs font-semibold text-danger-700 dark:text-danger-400">
             Plan limit reached ({athleteCount}/{planLimit})
           </p>
           <button
@@ -67,14 +67,14 @@ function PlanLimitBanner({
 
   if (remaining <= 2) {
     return (
-      <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2.5 flex items-start gap-2">
+      <div className="rounded-lg border border-primary-500/30 bg-primary-500/10 px-3 py-2.5 flex items-start gap-2">
         <AlertTriangle
-          className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0 mt-0.5"
+          className="w-4 h-4 text-primary-600 dark:text-primary-400 shrink-0 mt-0.5"
           strokeWidth={1.75}
           aria-hidden="true"
         />
         <div className="flex-1">
-          <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">
+          <p className="text-xs font-semibold text-primary-700 dark:text-primary-400">
             {remaining} slot{remaining === 1 ? "" : "s"} remaining on your {planLabel} plan
           </p>
           <button
@@ -467,7 +467,7 @@ export function AddAthleteButton({
                       type="button"
                       onClick={() => setGender(g.id)}
                       className={cn(
-                        "flex-1 text-sm font-medium py-2 rounded-lg transition-all",
+                        "flex-1 text-sm font-medium py-2 rounded-lg transition-colors",
                         gender === g.id
                           ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm"
                           : "text-muted hover:text-[var(--foreground)]"
@@ -494,7 +494,7 @@ export function AddAthleteButton({
                         type="button"
                         onClick={() => toggleEvent(ev.id)}
                         className={cn(
-                          "px-3.5 py-2 rounded-full text-sm font-medium border transition-all min-h-[36px]",
+                          "px-3.5 py-2 rounded-full text-sm font-medium border transition-colors min-h-[36px]",
                           selected
                             ? "bg-primary-500 text-white border-primary-500 shadow-sm"
                             : "bg-[var(--card-bg)] text-[var(--foreground)] border-[var(--card-border)] hover:border-primary-500/50"
@@ -532,9 +532,9 @@ export function AddAthleteButton({
                 <div className="text-center py-2">
                   {emailDeliveryFailed ? (
                     <>
-                      <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center mx-auto mb-2">
+                      <div className="w-12 h-12 rounded-full bg-primary-500/10 flex items-center justify-center mx-auto mb-2">
                         <AlertTriangle
-                          className="w-6 h-6 text-amber-600 dark:text-amber-400"
+                          className="w-6 h-6 text-primary-600 dark:text-primary-400"
                           strokeWidth={1.75}
                           aria-hidden="true"
                         />
@@ -548,7 +548,7 @@ export function AddAthleteButton({
                     </>
                   ) : (
                     <>
-                      <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mx-auto mb-2">
+                      <div className="w-12 h-12 rounded-full bg-success-500/10 flex items-center justify-center mx-auto mb-2">
                         <svg
                           width="24"
                           height="24"
@@ -605,9 +605,9 @@ export function AddAthleteButton({
 
                   <button
                     onClick={copyLink}
-                    className={`w-full flex items-center justify-center gap-2 rounded-xl font-semibold text-sm py-3.5 transition-all min-h-[48px] border ${
+                    className={`w-full flex items-center justify-center gap-2 rounded-xl font-semibold text-sm py-3.5 transition-colors min-h-[48px] border ${
                       copied
-                        ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+                        ? "bg-success-500/10 text-success-600 dark:text-success-400 border-success-500/20"
                         : "bg-[var(--surface)] text-[var(--foreground)] border-[var(--border)] hover:bg-[var(--surface-raised)] active:bg-[var(--surface-hover)]"
                     }`}
                   >
@@ -682,7 +682,7 @@ export function AddAthleteButton({
                       setError("");
                     }}
                     className={cn(
-                      "flex-1 text-sm font-medium py-2 rounded-lg transition-all",
+                      "flex-1 text-sm font-medium py-2 rounded-lg transition-colors",
                       mode === "email"
                         ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm"
                         : "text-muted hover:text-[var(--foreground)]"
@@ -697,7 +697,7 @@ export function AddAthleteButton({
                       setError("");
                     }}
                     className={cn(
-                      "flex-1 text-sm font-medium py-2 rounded-lg transition-all",
+                      "flex-1 text-sm font-medium py-2 rounded-lg transition-colors",
                       mode === "link"
                         ? "bg-[var(--card-bg)] text-[var(--foreground)] shadow-sm"
                         : "text-muted hover:text-[var(--foreground)]"

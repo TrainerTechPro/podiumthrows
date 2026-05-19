@@ -52,11 +52,11 @@ const STATUS_CONFIG: Record<
 };
 
 const BLOCK_ICON_MAP: Record<string, { icon: typeof Target; color: string; label: string }> = {
-  WARMUP: { icon: Flame, color: "text-amber-500", label: "Warm-Up" },
-  THROWING: { icon: Target, color: "text-orange-500", label: "Throwing" },
-  STRENGTH: { icon: Dumbbell, color: "text-blue-500", label: "Strength" },
+  WARMUP: { icon: Flame, color: "text-primary-500", label: "Warm-Up" },
+  THROWING: { icon: Target, color: "text-warning-500", label: "Throwing" },
+  STRENGTH: { icon: Dumbbell, color: "text-info-500", label: "Strength" },
   PLYOMETRIC: { icon: Flame, color: "text-purple-500", label: "Plyometric" },
-  COOLDOWN: { icon: Snowflake, color: "text-cyan-500", label: "Cool-Down" },
+  COOLDOWN: { icon: Snowflake, color: "text-info-500", label: "Cool-Down" },
   NOTES: { icon: StickyNote, color: "text-surface-400", label: "Notes" },
 };
 
@@ -72,7 +72,7 @@ function ThrowingBlockDetail({ config }: { config: Record<string, unknown> }) {
     <div className="space-y-2">
       <div className="flex flex-wrap gap-3 text-sm">
         {weight && (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-orange-100 dark:bg-orange-900/20 text-orange-700 dark:text-orange-400 font-medium">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-warning-100 dark:bg-warning-900/20 text-warning-700 dark:text-warning-400 font-medium">
             {String(weight)}
           </span>
         )}

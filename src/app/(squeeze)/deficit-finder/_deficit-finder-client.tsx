@@ -692,7 +692,7 @@ export function DeficitFinderClient() {
                     color: "#0d0c09",
                   }}
                 >
-                  {submitting ? "Saving..." : "Send My Report"}
+                  {submitting ? "Sending report…" : "Send My Report"}
                 </button>
               </div>
 

@@ -691,8 +691,8 @@ export function LogSessionForm({
   if (queued) {
     return (
       <div className="max-w-lg mx-auto py-24 text-center space-y-5">
-        <div className="w-14 h-14 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center">
-          <WifiOff size={28} strokeWidth={1.75} className="text-amber-500" aria-hidden="true" />
+        <div className="w-14 h-14 mx-auto rounded-full bg-primary-500/10 flex items-center justify-center">
+          <WifiOff size={28} strokeWidth={1.75} className="text-primary-500" aria-hidden="true" />
         </div>
         <div className="space-y-1">
           <h3 className="text-lg font-bold font-heading text-[var(--color-text-primary)]">

@@ -284,7 +284,7 @@ export function DistanceTrend({ throws }: { throws: ThrowLogItem[] }) {
               key={event}
               onClick={() => toggleEvent(event)}
               className={cn(
-                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-all",
+                "inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium transition-colors",
                 active
                   ? "text-white shadow-sm"
                   : "text-muted bg-surface-100 dark:bg-surface-800 hover:text-[var(--foreground)]"
@@ -345,7 +345,7 @@ export function DistanceTrend({ throws }: { throws: ThrowLogItem[] }) {
                 </p>
                 <p className="text-muted">{formatImplementWeight(hovered.meta.implementWeight)}</p>
                 {hovered.meta.isPersonalBest && (
-                  <p className="text-amber-500 font-semibold">◆ Personal Record</p>
+                  <p className="text-primary-500 font-semibold">◆ Personal Record</p>
                 )}
               </div>
             </div>
@@ -354,7 +354,7 @@ export function DistanceTrend({ throws }: { throws: ThrowLogItem[] }) {
           {/* PR legend */}
           {prLookup.size > 0 && (
             <div className="flex items-center gap-1.5 mt-2 ml-1">
-              <span className="text-amber-500 text-xs">◆</span>
+              <span className="text-primary-500 text-xs">◆</span>
               <span className="text-micro text-muted">Personal Record</span>
             </div>
           )}

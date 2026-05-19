@@ -230,7 +230,7 @@ export default async function AthletesPage({
                 : "/coach/athletes/print"
             }
             target="_blank"
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-[var(--foreground)] border border-[var(--card-border)] hover:border-primary-500/40 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-muted hover:text-[var(--foreground)] border border-[var(--card-border)] hover:border-primary-500/40 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50"
             aria-label="Open print view of roster"
           >
             <Printer size={14} strokeWidth={1.75} aria-hidden="true" />
@@ -323,13 +323,13 @@ export default async function AthletesPage({
       {tab === "roster" && (
         <>
           {rosterLoadFailed && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-3 animate-fade-slide-in">
+            <div className="rounded-xl border border-danger-500/30 bg-danger-500/10 px-4 py-3 flex items-start gap-3 animate-fade-slide-in">
               <AlertTriangle
-                className="w-4 h-4 text-red-500 shrink-0 mt-0.5"
+                className="w-4 h-4 text-danger-500 shrink-0 mt-0.5"
                 strokeWidth={1.75}
                 aria-hidden="true"
               />
-              <div className="text-sm text-red-700 dark:text-red-400 leading-snug">
+              <div className="text-sm text-danger-700 dark:text-danger-400 leading-snug">
                 <p className="font-semibold">Couldn&apos;t load your roster</p>
                 <p className="text-xs mt-0.5 opacity-80">
                   Refresh to retry. If this keeps happening, contact support.
@@ -359,13 +359,13 @@ export default async function AthletesPage({
             </div>
           )}
           {!rosterFilter && needsAttention > 0 && (
-            <div className="rounded-xl border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-3 animate-fade-slide-in">
+            <div className="rounded-xl border border-danger-500/30 bg-danger-500/10 px-4 py-3 flex items-start gap-3 animate-fade-slide-in">
               <AlertTriangle
-                className="w-4 h-4 text-red-500 shrink-0 mt-0.5"
+                className="w-4 h-4 text-danger-500 shrink-0 mt-0.5"
                 strokeWidth={1.75}
                 aria-hidden="true"
               />
-              <p className="text-sm text-red-700 dark:text-red-400 leading-snug">
+              <p className="text-sm text-danger-700 dark:text-danger-400 leading-snug">
                 {lowCount > 0 && noCheckInCount > 0 ? (
                   <>
                     <strong>{lowCount}</strong> {lowCount === 1 ? "athlete has" : "athletes have"}{" "}

@@ -78,7 +78,7 @@ export const Checkbox = forwardRef<HTMLInputElement, CheckboxProps>(function Che
     <span
       className={cn(
         "relative inline-flex items-center justify-center shrink-0",
-        "w-[18px] h-[18px] rounded border transition-all duration-150",
+        "w-[18px] h-[18px] rounded border transition-[background-color,border-color,box-shadow] duration-150",
         // Unchecked
         !checked && !indeterminate && "bg-transparent border-surface-300 dark:border-surface-600",
         // Checked or indeterminate — amber fill

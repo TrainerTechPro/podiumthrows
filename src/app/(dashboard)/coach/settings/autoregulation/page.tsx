@@ -305,7 +305,7 @@ export default function AutoregulationSettingsPage() {
     return (
       <div className="max-w-2xl">
         <div className="card p-8 text-center space-y-3">
-          <p className="text-sm text-red-500 dark:text-red-400">
+          <p className="text-sm text-danger-500 dark:text-danger-400">
             Failed to load autoregulation settings.
           </p>
           <button onClick={() => fetchSettings()} className="btn-secondary text-xs px-4 py-1.5">
@@ -530,7 +530,7 @@ function ModeSelector({
               compact ? "px-2 py-1.5" : "px-3 py-2.5"
             } ${
               isActive
-                ? "border-amber-500/60 bg-amber-50 dark:bg-amber-900/20 text-[var(--foreground)]"
+                ? "border-primary-500/60 bg-primary-50 dark:bg-primary-900/20 text-[var(--foreground)]"
                 : "border-[var(--card-border)] hover:border-surface-400 dark:hover:border-surface-500 text-muted"
             }`}
           >
@@ -567,7 +567,7 @@ function TimescaleToggles({
             aria-checked={values[key]}
             onClick={() => onChange({ ...values, [key]: !values[key] })}
             className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full transition-colors ${
-              values[key] ? "bg-amber-500" : "bg-surface-300 dark:bg-surface-600"
+              values[key] ? "bg-primary-500" : "bg-surface-300 dark:bg-surface-600"
             }`}
           >
             <span
@@ -605,17 +605,19 @@ function SaveRow({
       </button>
 
       {isDirty && !saving && status === null && (
-        <span className="text-micro text-amber-600 dark:text-amber-400 font-medium">
+        <span className="text-micro text-primary-600 dark:text-primary-400 font-medium">
           Unsaved changes
         </span>
       )}
 
       {status === "saved" && (
-        <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Saved</span>
+        <span className="text-sm text-success-600 dark:text-success-400 font-medium">Saved</span>
       )}
 
       {status === "error" && (
-        <span className="text-sm text-red-500 dark:text-red-400">Save failed — try again</span>
+        <span className="text-sm text-danger-500 dark:text-danger-400">
+          Save failed — try again
+        </span>
       )}
     </div>
   );

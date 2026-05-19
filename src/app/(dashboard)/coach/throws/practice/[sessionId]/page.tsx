@@ -372,7 +372,7 @@ function LogAttemptPanel({
               <select
                 value={event}
                 onChange={(e) => handleEventChange(e.target.value)}
-                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
               >
                 {EVENT_OPTIONS.map((ev) => (
                   <option key={ev} value={ev}>
@@ -391,7 +391,7 @@ function LogAttemptPanel({
                 onChange={(e) => setImplement(e.target.value)}
                 required
                 placeholder="e.g. 7.26kg"
-                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
               />
             </div>
           </div>
@@ -427,10 +427,10 @@ function LogAttemptPanel({
                 value={distance}
                 onChange={(e) => setDistance(e.target.value)}
                 placeholder={distanceUnit === "meters" ? "e.g. 18.45" : "e.g. 60.53"}
-                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 pr-10 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+                className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 pr-10 text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
               />
               {wouldBePR && (
-                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-amber-600 dark:text-amber-400">
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-primary-600 dark:text-primary-400">
                   PR!
                 </span>
               )}
@@ -458,7 +458,7 @@ function LogAttemptPanel({
             <select
               value={drillType}
               onChange={(e) => setDrillType(e.target.value)}
-              className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
+              className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)]"
             >
               <option value="">— Select drill —</option>
               {DRILL_TYPES.map((d) => (
@@ -478,7 +478,7 @@ function LogAttemptPanel({
               value={coachNote}
               onChange={(e) => setCoachNote(e.target.value)}
               rows={2}
-              className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)] resize-none"
+              className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] px-3 py-2 text-sm text-[var(--foreground)] focus-visible:outline-none focus:ring-2 focus:ring-[rgba(212,168,67,0.35)] resize-none"
               placeholder="Observations, technique cues, feedback…"
             />
           </div>
@@ -520,9 +520,9 @@ function LogAttemptPanel({
                   onChange={handleVideoSelect}
                 />
                 {videoFile ? (
-                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-800">
+                  <div className="flex items-center gap-2 p-2.5 rounded-xl bg-success-50 dark:bg-success-900/20 border border-success-200 dark:border-success-800">
                     <svg
-                      className="w-4 h-4 text-emerald-600 dark:text-emerald-400 flex-shrink-0"
+                      className="w-4 h-4 text-success-600 dark:text-success-400 flex-shrink-0"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -534,10 +534,10 @@ function LogAttemptPanel({
                         d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.361a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                       />
                     </svg>
-                    <span className="text-xs text-emerald-700 dark:text-emerald-300 font-medium truncate flex-1">
+                    <span className="text-xs text-success-700 dark:text-success-300 font-medium truncate flex-1">
                       {videoFile.name}
                       {videoDuration !== null && (
-                        <span className="text-emerald-600/70 dark:text-emerald-400/70 ml-1">
+                        <span className="text-success-600/70 dark:text-success-400/70 ml-1">
                           ({videoDuration.toFixed(1)}s)
                         </span>
                       )}
@@ -550,7 +550,7 @@ function LogAttemptPanel({
                         setVideoError("");
                         if (fileInputRef.current) fileInputRef.current.value = "";
                       }}
-                      className="text-emerald-600 dark:text-emerald-400 hover:text-emerald-800 dark:hover:text-emerald-200 p-0.5 rounded"
+                      className="text-success-600 dark:text-success-400 hover:text-success-800 dark:hover:text-success-200 p-0.5 rounded"
                     >
                       <svg
                         className="w-3.5 h-3.5"
@@ -585,9 +585,9 @@ function LogAttemptPanel({
                   </button>
                 )}
                 {videoError && (
-                  <div className="mt-2 flex items-start gap-2 p-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+                  <div className="mt-2 flex items-start gap-2 p-2.5 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-200 dark:border-primary-800">
                     <svg
-                      className="w-4 h-4 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5"
+                      className="w-4 h-4 text-primary-600 dark:text-primary-400 flex-shrink-0 mt-0.5"
                       fill="none"
                       stroke="currentColor"
                       viewBox="0 0 24 24"
@@ -599,14 +599,14 @@ function LogAttemptPanel({
                         d="M12 9v2m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                       />
                     </svg>
-                    <p className="text-xs text-amber-700 dark:text-amber-300">{videoError}</p>
+                    <p className="text-xs text-primary-700 dark:text-primary-300">{videoError}</p>
                   </div>
                 )}
               </>
             )}
           </div>
 
-          {saveError && <p className="text-xs text-red-600 dark:text-red-400">{saveError}</p>}
+          {saveError && <p className="text-xs text-danger-600 dark:text-danger-400">{saveError}</p>}
 
           <div className="flex gap-3 pt-1 pb-safe">
             <button
@@ -680,7 +680,7 @@ function AttemptCard({
           </span>
           <span className="text-nano text-muted flex-shrink-0">{attempt.implement}</span>
           {attempt.isPR && (
-            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-nano font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 flex-shrink-0">
+            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-nano font-bold bg-primary-100 dark:bg-primary-900/30 text-primary-700 dark:text-primary-400 flex-shrink-0">
               ★ PR
             </span>
           )}
@@ -740,7 +740,7 @@ function AttemptCard({
               <button
                 onClick={handleDelete}
                 disabled={deleting}
-                className="text-micro px-2 py-1 rounded-lg bg-red-600 text-white hover:bg-red-700 disabled:opacity-60"
+                className="text-micro px-2 py-1 rounded-lg bg-danger-600 text-white hover:bg-danger-700 disabled:opacity-60"
               >
                 {deleting ? "…" : "Yes"}
               </button>
@@ -754,7 +754,7 @@ function AttemptCard({
           ) : (
             <button
               onClick={() => setConfirmDelete(true)}
-              className="p-1 text-[var(--color-border-strong)] hover:text-red-500 dark:hover:text-red-400 rounded transition-colors"
+              className="p-1 text-[var(--color-border-strong)] hover:text-danger-500 dark:hover:text-danger-400 rounded transition-colors"
               title="Remove attempt"
             >
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -988,8 +988,8 @@ export default function LiveSessionPage() {
                 Closed
               </span>
             ) : (
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-xs font-semibold bg-success-100 dark:bg-success-900/30 text-success-700 dark:text-success-400">
+                <span className="w-1.5 h-1.5 rounded-full bg-success-500 animate-pulse" />
                 Live
               </span>
             )}
@@ -1014,7 +1014,7 @@ export default function LiveSessionPage() {
                 <button
                   onClick={handleCloseSession}
                   disabled={closing}
-                  className="text-xs px-3 py-1.5 rounded-xl bg-red-600 text-white hover:bg-red-700 disabled:opacity-60 font-medium"
+                  className="text-xs px-3 py-1.5 rounded-xl bg-danger-600 text-white hover:bg-danger-700 disabled:opacity-60 font-medium"
                 >
                   {closing ? "…" : "Yes, close"}
                 </button>
@@ -1028,7 +1028,7 @@ export default function LiveSessionPage() {
             ) : (
               <button
                 onClick={() => setConfirmClose(true)}
-                className="btn-secondary text-sm px-3 py-1.5 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 border-red-200 dark:border-red-800"
+                className="btn-secondary text-sm px-3 py-1.5 text-danger-600 dark:text-danger-400 hover:bg-danger-50 dark:hover:bg-danger-900/20 border-danger-200 dark:border-danger-800"
               >
                 Close Session
               </button>
@@ -1038,8 +1038,8 @@ export default function LiveSessionPage() {
 
       {/* Session notes */}
       {session.notes && (
-        <div className="px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-100 dark:border-amber-800">
-          <p className="text-xs text-amber-700 dark:text-amber-300">{session.notes}</p>
+        <div className="px-4 py-2.5 rounded-xl bg-primary-50 dark:bg-primary-900/20 border border-primary-100 dark:border-primary-800">
+          <p className="text-xs text-primary-700 dark:text-primary-300">{session.notes}</p>
         </div>
       )}
 
@@ -1078,7 +1078,7 @@ export default function LiveSessionPage() {
                     if (!isClosed) setSelectedAthlete(athlete);
                   }}
                   disabled={isClosed}
-                  className={`w-full card !p-3 flex items-center gap-3 text-left transition-all ${
+                  className={`w-full card !p-3 flex items-center gap-3 text-left transition-colors ${
                     isClosed
                       ? "opacity-60 cursor-not-allowed"
                       : "hover:shadow-md hover:border-[rgba(212,168,67,0.2)] active:scale-[0.98] cursor-pointer"

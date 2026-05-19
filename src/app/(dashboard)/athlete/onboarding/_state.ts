@@ -203,6 +203,27 @@ export function canAdvance(state: OnboardingState): boolean {
   }
 }
 
+/**
+ * One-line hint explaining what the current step still needs in order to
+ * advance. Returns null when the step is ready (or always-advanceable).
+ *
+ * Surfaces alongside the disabled primary CTA so users don't have to guess
+ * why the button is greyed out. Keep these short — "Pick an event" beats
+ * "Please select an event from the options above to continue".
+ */
+export function missingForStep(state: OnboardingState): string | null {
+  if (canAdvance(state)) return null;
+  const step = currentStepNumber(state);
+  switch (step) {
+    case 1:
+      return "Pick an event to continue";
+    case 4:
+      return "Enter your throw distance to log it";
+    default:
+      return null;
+  }
+}
+
 /** Convert distance to meters for API submission. */
 export function distanceToMeters(value: string, unit: DistanceUnit): number | null {
   if (value === "" || value == null) return null;

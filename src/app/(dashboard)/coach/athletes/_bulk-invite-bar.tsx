@@ -142,7 +142,7 @@ export function BulkInviteBar({ data }: { data: AthleteRosterItem[] }) {
 
   return (
     <>
-      <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-3 flex items-center gap-3 flex-wrap">
+      <div className="rounded-xl border border-primary-500/30 bg-primary-500/5 p-3 flex items-center gap-3 flex-wrap">
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-[var(--foreground)]">
             {proxies.length} athlete{proxies.length === 1 ? "" : "s"} haven&apos;t been invited yet

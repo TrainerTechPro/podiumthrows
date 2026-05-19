@@ -263,7 +263,7 @@ export function QuestionnaireBuilder({ initialData }: Props) {
             <div key={q.id} className="space-y-2">
               <label className="block text-sm font-medium text-[var(--foreground)]">
                 {i + 1}. {q.text || "Untitled question"}
-                {q.required && <span className="text-red-500 ml-1">*</span>}
+                {q.required && <span className="text-danger-500 ml-1">*</span>}
               </label>
 
               {q.type === "short_text" && (
@@ -339,7 +339,7 @@ export function QuestionnaireBuilder({ initialData }: Props) {
   return (
     <div className="space-y-6">
       {error && (
-        <div className="px-3 py-2 rounded-lg bg-red-500/10 border border-red-500/20 text-sm text-red-600 dark:text-red-400">
+        <div className="px-3 py-2 rounded-lg bg-danger-500/10 border border-danger-500/20 text-sm text-danger-600 dark:text-danger-400">
           {error}
         </div>
       )}
@@ -356,7 +356,7 @@ export function QuestionnaireBuilder({ initialData }: Props) {
         <div className="space-y-1.5">
           <label className="block text-sm font-medium text-[var(--foreground)]">Description</label>
           <textarea
-            className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-y min-h-[60px]"
+            className="w-full px-3 py-2 rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] text-sm text-[var(--foreground)] placeholder:text-muted focus-visible:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 resize-y min-h-[60px]"
             value={form.description}
             onChange={(e) => setForm((p) => ({ ...p, description: e.target.value }))}
             placeholder="Brief description of this questionnaire…"
@@ -439,7 +439,7 @@ export function QuestionnaireBuilder({ initialData }: Props) {
                           <button
                             type="button"
                             onClick={() => removeOption(qIdx, oIdx)}
-                            className="px-2 text-muted hover:text-red-500 transition-colors shrink-0"
+                            className="px-2 text-muted hover:text-danger-500 transition-colors shrink-0"
                           >
                             ✕
                           </button>
@@ -503,7 +503,7 @@ export function QuestionnaireBuilder({ initialData }: Props) {
                   <button
                     type="button"
                     onClick={() => removeQuestion(qIdx)}
-                    className="p-1 text-muted hover:text-red-500 transition-colors"
+                    className="p-1 text-muted hover:text-danger-500 transition-colors"
                     title="Delete question"
                   >
                     <svg

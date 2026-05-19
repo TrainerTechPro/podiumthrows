@@ -44,9 +44,9 @@ export function CompetitionCountdown({ competitions }: CompetitionCountdownProps
                 className={cn(
                   "text-3xl font-bold tabular-nums",
                   comp.daysOut <= 7
-                    ? "text-red-600 dark:text-red-400"
+                    ? "text-danger-600 dark:text-danger-400"
                     : comp.daysOut <= 21
-                      ? "text-amber-600 dark:text-amber-400"
+                      ? "text-primary-600 dark:text-primary-400"
                       : "text-[var(--foreground)]"
                 )}
               >

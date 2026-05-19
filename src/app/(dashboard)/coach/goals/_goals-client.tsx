@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useCallback, useMemo, useTransition } from "react";
+import { useUrlStateMany } from "@/lib/hooks/useUrlState";
 import {
   Badge,
   Button,
@@ -467,10 +468,17 @@ export function CoachGoalsClient({ initialGoals, athletes }: CoachGoalsClientPro
   const [addError, setAddError] = useState<string | null>(null);
   const [isAdding, startAddTransition] = useTransition();
 
-  /* ── Filters ── */
-  const [athleteFilter, setAthleteFilter] = useState("");
-  const [eventFilter, setEventFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("ALL");
+  /* ── Filters — URL-persisted so refresh/back/share preserves coach state ── */
+  const url = useUrlStateMany();
+  const athleteFilter = url.get("athlete", "");
+  const setAthleteFilter = (next: string) => url.set({ athlete: next || null });
+  const eventFilter = url.get("event", "");
+  const setEventFilter = (next: string) => url.set({ event: next || null });
+  const statusFilterRaw = url.get("status", "ALL");
+  const statusFilter = (
+    ["ALL", "ACTIVE", "ACHIEVED", "ABANDONED"].includes(statusFilterRaw) ? statusFilterRaw : "ALL"
+  ) as StatusFilter;
+  const setStatusFilter = (next: StatusFilter) => url.set({ status: next === "ALL" ? null : next });
 
   const filtered = useMemo(() => {
     let list = goals;

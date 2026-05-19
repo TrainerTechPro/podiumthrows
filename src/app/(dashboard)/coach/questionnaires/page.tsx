@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Plus, ChevronRight, HelpCircle } from "lucide-react";
 import { requireCoachSession, getCoachQuestionnaires } from "@/lib/data/coach";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -35,10 +36,10 @@ function CompletionPill({
   const allDone = completed >= total;
   const tone =
     overdue > 0
-      ? "border-red-500/30 bg-red-500/10 text-red-700 dark:text-red-400"
+      ? "border-danger-500/30 bg-danger-500/10 text-danger-700 dark:text-danger-400"
       : allDone
         ? "border-[var(--card-border)] bg-surface-100 dark:bg-surface-800 text-muted"
-        : "border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400";
+        : "border-primary-500/30 bg-primary-500/10 text-primary-700 dark:text-primary-400";
 
   return (
     <div
@@ -97,19 +98,7 @@ export default async function QuestionnairesPage() {
           href="/coach/questionnaires/new"
           className="inline-flex items-center gap-2 px-4 py-3 rounded-xl bg-primary-500 text-white font-medium text-sm hover:bg-primary-600 transition-colors shrink-0 min-h-[44px]"
         >
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
+          <Plus size={16} strokeWidth={1.75} aria-hidden="true" />
           Create Form
         </Link>
       </div>
@@ -117,23 +106,7 @@ export default async function QuestionnairesPage() {
       {/* List */}
       {questionnaires.length === 0 ? (
         <EmptyState
-          icon={
-            <svg
-              width="48"
-              height="48"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-muted"
-            >
-              <circle cx="12" cy="12" r="10" />
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
-              <line x1="12" y1="17" x2="12.01" y2="17" />
-            </svg>
-          }
+          icon={<HelpCircle size={48} strokeWidth={1.5} aria-hidden="true" />}
           title="No questionnaires yet"
           description="Create your first questionnaire to gather health screenings, readiness data, and more from your athletes."
           action={
@@ -155,7 +128,7 @@ export default async function QuestionnairesPage() {
               <Link
                 key={q.id}
                 href={`/coach/questionnaires/${q.id}`}
-                className="card card-interactive p-4 flex items-center gap-4 hover:ring-2 hover:ring-primary-500/30 transition-all group"
+                className="card card-interactive p-4 flex items-center gap-4 hover:ring-2 hover:ring-primary-500/30 transition-colors group"
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1 flex-wrap">
@@ -175,11 +148,15 @@ export default async function QuestionnairesPage() {
 
                 <div className="flex items-center gap-6 text-sm text-muted shrink-0">
                   <div className="text-center hidden sm:block">
-                    <div className="font-semibold text-[var(--foreground)]">{itemCount}</div>
+                    <div className="font-semibold text-[var(--foreground)] tabular-nums">
+                      {itemCount}
+                    </div>
                     <div className="text-nano">{itemLabel}</div>
                   </div>
                   <div className="text-center">
-                    <div className="font-semibold text-[var(--foreground)]">{q.responseCount}</div>
+                    <div className="font-semibold text-[var(--foreground)] tabular-nums">
+                      {q.responseCount}
+                    </div>
                     <div className="text-nano">responses</div>
                   </div>
                   {q.assignmentCount > 0 ? (
@@ -190,25 +167,18 @@ export default async function QuestionnairesPage() {
                     />
                   ) : (
                     <div className="text-center hidden sm:block">
-                      <div className="font-semibold text-[var(--foreground)]">0</div>
+                      <div className="font-semibold text-[var(--foreground)] tabular-nums">0</div>
                       <div className="text-nano">assigned</div>
                     </div>
                   )}
                 </div>
 
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
+                <ChevronRight
+                  size={16}
+                  strokeWidth={1.75}
                   className="text-muted shrink-0"
-                >
-                  <polyline points="9 18 15 12 9 6" />
-                </svg>
+                  aria-hidden="true"
+                />
               </Link>
             );
           })}

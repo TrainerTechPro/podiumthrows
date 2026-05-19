@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useUrlState } from "@/lib/hooks/useUrlState";
 import Link from "next/link";
 import Image from "next/image";
 import { AlertTriangle } from "lucide-react";
@@ -29,15 +29,15 @@ const CATEGORY_LABELS: Record<string, string> = {
 /* ─── Helpers ────────────────────────────────────────────────────── */
 
 function scoreColor(score: number): string {
-  if (score >= 7) return "text-emerald-500";
-  if (score >= 5) return "text-amber-500";
-  return "text-red-500";
+  if (score >= 7) return "text-success-500";
+  if (score >= 5) return "text-primary-500";
+  return "text-danger-500";
 }
 
 function categoryBadgeColor(value: number): string {
-  if (value >= 7) return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
-  if (value >= 5) return "bg-amber-500/10 text-amber-600 dark:text-amber-400";
-  return "bg-red-500/10 text-red-600 dark:text-red-400";
+  if (value >= 7) return "bg-success-500/10 text-success-600 dark:text-success-400";
+  if (value >= 5) return "bg-primary-500/10 text-primary-600 dark:text-primary-400";
+  return "bg-danger-500/10 text-danger-600 dark:text-danger-400";
 }
 
 function formatEventName(event: string): string {
@@ -87,7 +87,7 @@ function Sparkline({ history }: { history: { date: string; score: number }[] }) 
         }
         const barHeight = Math.max(2, (score / 10) * height);
         const fillClass =
-          score >= 7 ? "fill-emerald-500" : score >= 5 ? "fill-amber-500" : "fill-red-500";
+          score >= 7 ? "fill-success-500" : score >= 5 ? "fill-primary-500" : "fill-danger-500";
         return (
           <rect
             key={i}
@@ -107,7 +107,7 @@ function Sparkline({ history }: { history: { date: string; score: number }[] }) 
 /* ─── Main Component ─────────────────────────────────────────────── */
 
 export function ReadinessGrid({ athletes }: { athletes: TeamReadinessDetail[] }) {
-  const [eventFilter, setEventFilter] = useState("ALL");
+  const [eventFilter, setEventFilter] = useUrlState("event", "ALL");
 
   const filtered =
     eventFilter === "ALL" ? athletes : athletes.filter((a) => a.events.includes(eventFilter));
@@ -118,18 +118,18 @@ export function ReadinessGrid({ athletes }: { athletes: TeamReadinessDetail[] })
     <>
       {/* Alert Banner */}
       {flagged.length > 0 && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/10 p-4 flex items-start gap-3">
+        <div className="rounded-xl border border-danger-500/20 bg-danger-500/10 p-4 flex items-start gap-3">
           <AlertTriangle
             size={18}
             strokeWidth={1.75}
-            className="text-red-500 shrink-0 mt-0.5"
+            className="text-danger-500 shrink-0 mt-0.5"
             aria-hidden="true"
           />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-red-600 dark:text-red-400">
+            <p className="text-sm font-semibold text-danger-600 dark:text-danger-400">
               {flagged.length} athlete{flagged.length !== 1 ? "s" : ""} below readiness threshold
             </p>
-            <p className="text-xs text-red-600/80 dark:text-red-400/80 mt-0.5 truncate">
+            <p className="text-xs text-danger-600/80 dark:text-danger-400/80 mt-0.5 truncate">
               {flagged.map((a) => `${a.athleteName} (${a.latestScore?.toFixed(1)})`).join(" · ")}
             </p>
           </div>

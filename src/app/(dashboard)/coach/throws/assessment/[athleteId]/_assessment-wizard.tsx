@@ -446,7 +446,7 @@ export function AssessmentWizard({
                 type="button"
                 onClick={() => setSelectedType(type.value)}
                 className={[
-                  "text-left p-4 rounded-xl border-2 transition-all",
+                  "text-left p-4 rounded-xl border-2 transition-colors",
                   selectedType === type.value
                     ? "border-primary-500 bg-primary-500/5 shadow-sm"
                     : "border-[var(--card-border)] hover:border-primary-500/30",
@@ -547,10 +547,10 @@ export function AssessmentWizard({
                       className={[
                         "font-bold tabular-nums",
                         c.score >= 0.7
-                          ? "text-green-500"
+                          ? "text-success-500"
                           : c.score >= 0.4
-                            ? "text-amber-500"
-                            : "text-red-500",
+                            ? "text-primary-500"
+                            : "text-danger-500",
                       ].join(" ")}
                     >
                       {c.score.toFixed(2)}
@@ -590,7 +590,7 @@ export function AssessmentWizard({
               disabled={isPending}
               className="btn btn-primary text-sm"
             >
-              {isPending ? "Saving..." : "Save Assessment"}
+              {isPending ? "Saving assessment…" : "Save Assessment"}
             </button>
           </div>
         </div>

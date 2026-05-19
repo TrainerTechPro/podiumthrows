@@ -40,7 +40,15 @@ export function InstallPrompt() {
 
   // Athlete-only. Coaches install rarely and from desktop; per CLAUDE.md
   // §Dual Product Identity, the athlete app is the install target.
+  //
+  // Auto-open is restricted to /athlete/dashboard — the "between-actions"
+  // moment when the athlete just landed on home. Action routes (log-session,
+  // quick-start, wellness, onboarding, the live training session) are mid-
+  // task; popping a modal there steals focus from the primary action. The
+  // browser-volunteered prompt still gets captured everywhere on /athlete,
+  // so users who DO want to install via the address-bar icon are unaffected.
   const isAthleteRoute = pathname?.startsWith("/athlete/") ?? false;
+  const isAutoOpenRoute = pathname === "/athlete/dashboard";
 
   useEffect(() => {
     if (!isAthleteRoute) return;
@@ -50,9 +58,9 @@ export function InstallPrompt() {
     setPlatform(detected);
 
     // iOS Safari has no `beforeinstallprompt` — show the share-button guide
-    // directly when the gates pass.
+    // directly when the gates pass AND we're on the landing/home route.
     if (detected === "ios-safari") {
-      if (shouldShowInstallPrompt()) setOpen(true);
+      if (isAutoOpenRoute && shouldShowInstallPrompt()) setOpen(true);
       return;
     }
 
@@ -62,7 +70,7 @@ export function InstallPrompt() {
       e.preventDefault();
       deferredPromptRef.current = e as BeforeInstallPromptEvent;
       setCanInstall(true);
-      if (shouldShowInstallPrompt()) setOpen(true);
+      if (isAutoOpenRoute && shouldShowInstallPrompt()) setOpen(true);
     };
     window.addEventListener("beforeinstallprompt", handler);
 
@@ -79,7 +87,7 @@ export function InstallPrompt() {
       window.removeEventListener("beforeinstallprompt", handler);
       window.removeEventListener("appinstalled", installedHandler);
     };
-  }, [isAthleteRoute]);
+  }, [isAthleteRoute, isAutoOpenRoute]);
 
   const handleInstall = useCallback(async () => {
     const deferred = deferredPromptRef.current;

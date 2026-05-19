@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { ChevronRight } from "lucide-react";
+import { useUrlStateMany } from "@/lib/hooks/useUrlState";
 import { formatImplementWeight } from "@/lib/throws";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 
@@ -38,10 +39,10 @@ interface AthleteLog {
 }
 
 const EVENT_DOT: Record<string, string> = {
-  SHOT_PUT: "bg-blue-500",
+  SHOT_PUT: "bg-info-500",
   DISCUS: "bg-purple-500",
-  HAMMER: "bg-red-500",
-  JAVELIN: "bg-green-500",
+  HAMMER: "bg-danger-500",
+  JAVELIN: "bg-success-500",
 };
 
 const EVENT_LABELS: Record<string, string> = {
@@ -250,9 +251,19 @@ function LogDetail({ session }: { session: AthleteLog }) {
 /* ─── Main List ────────────────────────────────────────────────────────────── */
 
 export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
-  const [expandedId, setExpandedId] = useState<string | null>(null);
-  const [filterEvent, setFilterEvent] = useState("");
-  const [filterAthlete, setFilterAthlete] = useState("");
+  const url = useUrlStateMany();
+
+  /* Filter + expansion in URL so refresh + back-button + share-link land
+     back on the same session. CLAUDE.md "strip before adding" — no
+     separate detail route; the in-line expansion IS the detail view, and
+     the URL persists which one is open. */
+  const filterEvent = url.get("event", "");
+  const setFilterEvent = (next: string) => url.set({ event: next || null });
+  const filterAthlete = url.get("athlete", "");
+  const setFilterAthlete = (next: string) => url.set({ athlete: next || null });
+  const expandedIdRaw = url.get("expand", "");
+  const expandedId = expandedIdRaw || null;
+  const setExpandedId = (next: string | null) => url.set({ expand: next });
 
   // Unique athletes for filter
   const athletes = [...new Map(sessions.map((s) => [s.athlete.id, s.athlete])).values()].sort(
@@ -264,6 +275,8 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
     if (filterAthlete && s.athlete.id !== filterAthlete) return false;
     return true;
   });
+
+  const isFilterActive = filterEvent !== "" || filterAthlete !== "";
 
   if (sessions.length === 0) {
     return (
@@ -389,21 +402,12 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
                     </p>
                   </div>
 
-                  {/* Chevron */}
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
+                  <ChevronRight
+                    size={14}
+                    strokeWidth={1.75}
                     className={`text-muted shrink-0 transition-transform duration-200 ${isExpanded ? "rotate-90" : ""}`}
                     aria-hidden="true"
-                  >
-                    <polyline points="9 18 15 12 9 6" />
-                  </svg>
+                  />
                 </div>
               </button>
 
@@ -413,8 +417,20 @@ export function AthleteLogsList({ sessions }: { sessions: AthleteLog[] }) {
         })}
 
         {filtered.length === 0 && (
-          <div className="py-8 text-center text-sm text-muted">
-            No sessions match the current filters.
+          <div className="py-10 text-center text-sm text-muted">
+            <p>No sessions match the current filters.</p>
+            {isFilterActive && (
+              <button
+                type="button"
+                onClick={() => {
+                  setFilterAthlete("");
+                  setFilterEvent("");
+                }}
+                className="mt-2 text-xs font-semibold text-primary-600 dark:text-primary-400 hover:underline"
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         )}
       </div>

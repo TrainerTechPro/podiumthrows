@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, Fragment } from "react";
+import { useState, useMemo, Fragment } from "react";
 import Link from "next/link";
 import UserAvatar from "@/components/user-avatar";
+import { DataTable, type Column } from "@/components/ui/DataTable";
+import { useUrlStateMany } from "@/lib/hooks/useUrlState";
 import {
   EVENTS,
   PHASE_CONFIGS,
@@ -17,6 +19,19 @@ import {
   type EventCode,
   CODE_EVENT_MAP,
 } from "@/lib/throws/constants";
+import {
+  EVENT_COLORS,
+  EVENT_COLOR_FALLBACK,
+  EVENT_LABELS_SHORT,
+  PHASE_COLORS as PHASE_COLOR_TOKENS,
+  PHASE_LABELS_SHORT,
+  IMPLEMENT_TIER_COLORS,
+  PRIMARY_AMBER,
+  MUTED_NEUTRAL,
+  MUTED_NEUTRAL_DARK,
+  wellnessTierColor,
+  wellnessTierColorForPct,
+} from "@/lib/throws/colors";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -39,7 +54,7 @@ export interface ThrowsSessionSummary {
   }[];
 }
 
-export interface PulseRow {
+export type PulseRow = {
   id: string;
   athleteId: string;
   event: string;
@@ -72,40 +87,17 @@ export interface PulseRow {
     sorenessGeneral: number | null;
   } | null;
   recentBestMark: { distance: number; date: string } | null;
-}
+};
 
 type SortKey = "urgency" | "name" | "event" | "throws" | "days";
 
 // ─── Constants ──────────────────────────────────────────────────────────────
-
-const EVENT_COLORS_MAP: Record<string, string> = {
-  SP: "#f59e0b",
-  DT: "#3b82f6",
-  HT: "#10b981",
-  JT: "#ef4444",
-};
-
-const EVENT_LABELS_MAP: Record<string, string> = {
-  SP: "Shot",
-  DT: "Disc",
-  HT: "Hamm",
-  JT: "Jav",
-};
-
-const PHASE_COLORS: Record<TrainingPhase, string> = {
-  ACCUMULATION: "#f59e0b",
-  TRANSMUTATION: "#10b981",
-  REALIZATION: "#f97316",
-  COMPETITION: "#ef4444",
-  CLEANSE: "#8b5cf6",
-};
-
-const PHASE_SHORT: Record<string, string> = {
-  ACCUMULATION: "Accum",
-  TRANSMUTATION: "Trans",
-  REALIZATION: "Real",
-  COMPETITION: "Comp",
-};
+// Color tokens moved to `src/lib/throws/colors.ts`. Reference EVENT_COLORS,
+// PHASE_COLOR_TOKENS, IMPLEMENT_TIER_COLORS — never inline a hex here.
+const EVENT_COLORS_MAP = EVENT_COLORS;
+const EVENT_LABELS_MAP = EVENT_LABELS_SHORT;
+const PHASE_COLORS = PHASE_COLOR_TOKENS;
+const PHASE_SHORT = PHASE_LABELS_SHORT;
 
 const TEST_STATUS_CONFIG: Record<
   PulseRow["testStatus"],
@@ -113,23 +105,23 @@ const TEST_STATUS_CONFIG: Record<
 > = {
   never: {
     label: "Never",
-    bg: "bg-red-50 dark:bg-red-900/20",
-    text: "text-red-600 dark:text-red-400",
+    bg: "bg-danger-50 dark:bg-danger-900/20",
+    text: "text-danger-600 dark:text-danger-400",
   },
   overdue: {
     label: "Overdue",
-    bg: "bg-red-50 dark:bg-red-900/20",
-    text: "text-red-600 dark:text-red-400",
+    bg: "bg-danger-50 dark:bg-danger-900/20",
+    text: "text-danger-600 dark:text-danger-400",
   },
   "due-soon": {
     label: "Due Soon",
-    bg: "bg-amber-50 dark:bg-amber-900/20",
-    text: "text-amber-600 dark:text-amber-400",
+    bg: "bg-primary-50 dark:bg-primary-900/20",
+    text: "text-primary-600 dark:text-primary-400",
   },
   ok: {
     label: "OK",
-    bg: "bg-emerald-50 dark:bg-emerald-900/20",
-    text: "text-emerald-600 dark:text-emerald-400",
+    bg: "bg-success-50 dark:bg-success-900/20",
+    text: "text-success-600 dark:text-success-400",
   },
 };
 
@@ -142,52 +134,6 @@ function phaseThrowsTarget(phase: string | null): number {
 }
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
-
-function SortHeader({
-  label,
-  sortKey,
-  currentSort,
-  currentDir,
-  onSort,
-  className,
-}: {
-  label: string;
-  sortKey: SortKey;
-  currentSort: SortKey;
-  currentDir: "asc" | "desc";
-  onSort: (key: SortKey) => void;
-  className?: string;
-}) {
-  const active = currentSort === sortKey;
-  return (
-    <th
-      className={`text-left cursor-pointer select-none py-2 px-2 ${className ?? ""}`}
-      onClick={() => onSort(sortKey)}
-    >
-      <span
-        className={`inline-flex items-center gap-1 text-nano font-semibold uppercase tracking-wider ${
-          active ? "text-primary-600 dark:text-primary-300" : "text-muted"
-        }`}
-      >
-        {label}
-        <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          {active && currentDir === "asc" ? (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-          ) : active && currentDir === "desc" ? (
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-          ) : (
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M8 9l4-4 4 4M16 15l-4 4-4-4"
-            />
-          )}
-        </svg>
-      </span>
-    </th>
-  );
-}
 
 function ImplementSplitBar({
   split,
@@ -207,7 +153,7 @@ function ImplementSplitBar({
         {heavyPct > 0 && (
           <div
             className="flex items-center justify-center text-nano font-bold text-white"
-            style={{ width: `${heavyPct}%`, backgroundColor: "#ef4444" }}
+            style={{ width: `${heavyPct}%`, backgroundColor: IMPLEMENT_TIER_COLORS.heavy }}
             title={`Heavy: ${heavyPct}%`}
           >
             {heavyPct >= 20 ? `${heavyPct}%` : ""}
@@ -216,7 +162,7 @@ function ImplementSplitBar({
         {compPct > 0 && (
           <div
             className="flex items-center justify-center text-nano font-bold text-white"
-            style={{ width: `${compPct}%`, backgroundColor: "#22c55e" }}
+            style={{ width: `${compPct}%`, backgroundColor: IMPLEMENT_TIER_COLORS.competition }}
             title={`Comp: ${compPct}%`}
           >
             {compPct >= 20 ? `${compPct}%` : ""}
@@ -225,7 +171,7 @@ function ImplementSplitBar({
         {lightPct > 0 && (
           <div
             className="flex items-center justify-center text-nano font-bold text-white"
-            style={{ width: `${lightPct}%`, backgroundColor: "#a78bfa" }}
+            style={{ width: `${lightPct}%`, backgroundColor: IMPLEMENT_TIER_COLORS.light }}
             title={`Light: ${lightPct}%`}
           >
             {lightPct >= 20 ? `${lightPct}%` : ""}
@@ -253,7 +199,7 @@ function WellnessBar({
   // invert=true for soreness: high soreness = bad → short red bar
   const effectiveValue = invert ? 11 - value : value;
   const pct = ((effectiveValue - 1) / 9) * 100;
-  const color = effectiveValue >= 7 ? "#5BB88A" : effectiveValue >= 4 ? "#D4915A" : "#D46A6A";
+  const color = wellnessTierColor(effectiveValue);
   return (
     <div className="flex items-center gap-2">
       <span className="text-nano text-muted w-16 flex-shrink-0">{label}</span>
@@ -274,17 +220,28 @@ export function ThrowsView({
   sessions: ThrowsSessionSummary[];
   pulse: PulseRow[];
 }) {
+  const url = useUrlStateMany();
   const [selectedPhase, setSelectedPhase] = useState<TrainingPhase>("ACCUMULATION");
-  const [sortBy, setSortBy] = useState<SortKey>("urgency");
-  const [sortDir, setSortDir] = useState<"asc" | "desc">("asc");
+
+  /* Pulse-table sort lives in the URL — coaches share their analysis with
+     other staff, and back-button shouldn't reset which column they sorted by. */
+  const sortBy = ((): SortKey => {
+    const v = url.get("sort", "urgency");
+    return (["urgency", "name", "event", "throws", "days"] as SortKey[]).includes(v as SortKey)
+      ? (v as SortKey)
+      : "urgency";
+  })();
+  const sortDir = ((): "asc" | "desc" => {
+    const v = url.get("dir", "asc");
+    return v === "desc" ? "desc" : "asc";
+  })();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   function toggleSort(key: SortKey) {
     if (sortBy === key) {
-      setSortDir((d) => (d === "asc" ? "desc" : "asc"));
+      url.set({ dir: sortDir === "asc" ? "desc" : "asc" });
     } else {
-      setSortBy(key);
-      setSortDir("asc");
+      url.set({ sort: key === "urgency" ? null : key, dir: null });
     }
   }
 
@@ -296,6 +253,287 @@ export function ThrowsView({
       return next;
     });
   }
+
+  /* DataTable columns for the desktop pulse table. Defined here (closure
+     over render state) and memoized to keep the column array identity
+     stable across re-renders. */
+  const pulseColumns = useMemo<Column<PulseRow>[]>(
+    () => [
+      {
+        key: "name",
+        header: "Athlete",
+        sortable: true,
+        className: "px-4 w-44",
+        sortValue: (row) => `${row.athlete.firstName} ${row.athlete.lastName}`.toLowerCase(),
+        cell: (row) => (
+          <div className="flex items-center gap-2">
+            <UserAvatar
+              src={row.athlete.avatarUrl}
+              firstName={row.athlete.firstName}
+              lastName={row.athlete.lastName}
+              size="sm"
+            />
+            <span className="text-xs font-semibold text-[var(--foreground)] truncate max-w-[80px]">
+              {row.athlete.firstName} {row.athlete.lastName}
+            </span>
+          </div>
+        ),
+      },
+      {
+        key: "event",
+        header: "Event",
+        sortable: true,
+        sortValue: (row) => row.event,
+        cell: (row) => {
+          const eventColor = EVENT_COLORS_MAP[row.event] ?? EVENT_COLOR_FALLBACK;
+          const eventLabel = EVENT_LABELS_MAP[row.event] ?? row.event;
+          return (
+            <span
+              className="text-nano font-bold px-1.5 py-0.5 rounded-full text-white whitespace-nowrap"
+              style={{ backgroundColor: eventColor }}
+            >
+              {eventLabel} {row.gender === "M" ? "♂" : "♀"}
+            </span>
+          );
+        },
+      },
+      {
+        key: "deficit",
+        header: "Deficit",
+        cell: (row) =>
+          row.deficitPrimary && row.deficitPrimary !== "none" ? (
+            <span className="text-nano text-surface-700 dark:text-surface-300 max-w-[72px] truncate block">
+              {row.deficitPrimary}
+            </span>
+          ) : row.overPowered ? (
+            <span className="text-nano font-semibold text-primary-600 dark:text-primary-400">
+              OverPwrd
+            </span>
+          ) : (
+            <span className="text-nano text-muted">—</span>
+          ),
+      },
+      {
+        key: "trainingPhase",
+        header: "Phase",
+        cell: (row) =>
+          row.trainingPhase ? (
+            <span
+              className="text-nano font-semibold px-1.5 py-0.5 rounded whitespace-nowrap"
+              style={{
+                color: PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? MUTED_NEUTRAL,
+                backgroundColor: `${
+                  PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? MUTED_NEUTRAL
+                }20`,
+              }}
+            >
+              {PHASE_SHORT[row.trainingPhase] ?? row.trainingPhase.slice(0, 5)}
+            </span>
+          ) : (
+            <span className="text-nano text-muted">—</span>
+          ),
+      },
+      {
+        key: "urgency",
+        header: "Test",
+        sortable: true,
+        sortValue: (row) =>
+          (
+            ({ never: 0, overdue: 1, "due-soon": 2, ok: 3 }) as Record<
+              PulseRow["testStatus"],
+              number
+            >
+          )[row.testStatus],
+        cell: (row) => {
+          const testCfg = TEST_STATUS_CONFIG[row.testStatus];
+          return (
+            <span
+              className={`text-nano font-semibold px-1.5 py-0.5 rounded whitespace-nowrap ${testCfg.bg} ${testCfg.text}`}
+            >
+              {row.testStatus === "overdue" && row.daysSinceTest != null
+                ? `${row.daysSinceTest}d ago`
+                : row.testStatus === "due-soon" && row.daysSinceTest != null
+                  ? `${row.daysSinceTest}d ago`
+                  : testCfg.label}
+            </span>
+          );
+        },
+      },
+      {
+        key: "throws",
+        header: "Throws/Wk",
+        sortable: true,
+        className: "w-36",
+        sortValue: (row) => row.throwsThisWeek,
+        cell: (row) => {
+          const target = phaseThrowsTarget(row.trainingPhase);
+          const throwsPct = Math.min(100, (row.throwsThisWeek / target) * 100);
+          const throwsColor = wellnessTierColorForPct(throwsPct);
+          return (
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-bold text-[var(--foreground)] w-6 text-right tabular-nums">
+                {row.throwsThisWeek}
+              </span>
+              <div className="w-14 h-1.5 bg-[var(--muted-bg)] rounded-full overflow-hidden flex-shrink-0">
+                <div
+                  className="h-full rounded-full transition-colors"
+                  style={{ width: `${throwsPct}%`, backgroundColor: throwsColor }}
+                />
+              </div>
+              <span className="text-nano text-muted tabular-nums">/{target}</span>
+            </div>
+          );
+        },
+      },
+      {
+        key: "days",
+        header: "Days Off",
+        sortable: true,
+        sortValue: (row) => row.daysSincePractice ?? 999,
+        cell: (row) => {
+          const daysClass =
+            row.daysSincePractice == null
+              ? "text-muted"
+              : row.daysSincePractice > 5
+                ? "text-danger-600 dark:text-danger-400 font-semibold"
+                : row.daysSincePractice > 2
+                  ? "text-primary-600 dark:text-primary-400"
+                  : "text-success-600 dark:text-success-400";
+          return (
+            <span className={`text-xs tabular-nums ${daysClass}`}>
+              {row.daysSincePractice == null
+                ? "—"
+                : row.daysSincePractice === 0
+                  ? "Today"
+                  : `${row.daysSincePractice}d`}
+            </span>
+          );
+        },
+      },
+      {
+        key: "strength",
+        header: "Str",
+        cell: () => <span className="text-nano text-muted">—</span>,
+      },
+      {
+        key: "recentBestMark",
+        header: "Recent Mark",
+        cell: (row) =>
+          row.recentBestMark ? (
+            <span className="text-xs font-semibold text-[var(--foreground)] tabular-nums">
+              {row.recentBestMark.distance.toFixed(2)}m
+            </span>
+          ) : (
+            <span className="text-nano text-muted">—</span>
+          ),
+      },
+    ],
+    []
+  );
+
+  /* Detail panel for an expanded pulse row. */
+  const renderPulseExpanded = (row: PulseRow) => {
+    const eventLong = CODE_EVENT_MAP[row.event as EventCode] ?? row.event;
+    const prForEvent = row.athlete.throwsPRs?.find((pr) => pr.event === eventLong);
+    const prGap =
+      row.competitionPb != null && prForEvent != null
+        ? row.competitionPb - prForEvent.distance
+        : null;
+
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+        {/* Implement Split */}
+        <div className="space-y-2">
+          <p className="text-nano font-semibold uppercase tracking-wider text-muted">
+            Implement Split (7d)
+          </p>
+          <ImplementSplitBar split={row.implementSplit} />
+          {prGap != null && (
+            <div className="mt-2 pt-2 border-t border-[var(--card-border)]/50">
+              <p className="text-nano text-muted">Training → Comp gap</p>
+              <span
+                className={`text-xs font-bold tabular-nums ${
+                  prGap > 2
+                    ? "text-danger-600 dark:text-danger-400"
+                    : prGap > 0.5
+                      ? "text-primary-600 dark:text-primary-400"
+                      : "text-success-600 dark:text-success-400"
+                }`}
+              >
+                {prGap > 0
+                  ? `−${prGap.toFixed(2)}m deficit`
+                  : `+${Math.abs(prGap).toFixed(2)}m above comp PB`}
+              </span>
+              <p className="text-nano text-muted mt-0.5 tabular-nums">
+                {prForEvent?.distance.toFixed(2)}m training vs {row.competitionPb?.toFixed(2)}m comp
+                PB
+              </p>
+            </div>
+          )}
+        </div>
+        {/* Wellness */}
+        <div className="space-y-2">
+          <p className="text-nano font-semibold uppercase tracking-wider text-muted">Wellness</p>
+          {row.latestCheckIn ? (
+            <div className="space-y-1.5">
+              <WellnessBar label="Self Feeling" value={row.latestCheckIn.selfFeeling} />
+              {row.latestCheckIn.energy != null && (
+                <WellnessBar label="Energy" value={row.latestCheckIn.energy} />
+              )}
+              {row.latestCheckIn.sorenessGeneral != null && (
+                <WellnessBar label="Soreness" value={row.latestCheckIn.sorenessGeneral} invert />
+              )}
+              <p className="text-nano text-muted mt-0.5">
+                Checked in{" "}
+                {new Date(row.latestCheckIn.date).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+          ) : (
+            <p className="text-nano text-muted">No recent check-in</p>
+          )}
+        </div>
+        {/* Quick Actions + Mark */}
+        <div className="space-y-2">
+          <p className="text-nano font-semibold uppercase tracking-wider text-muted">
+            Quick Actions
+          </p>
+          <div className="flex flex-col gap-2">
+            <Link
+              href={`/coach/throws/profile?athleteId=${row.athleteId}`}
+              className="btn-secondary text-xs py-1.5 text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              View Profile →
+            </Link>
+            <Link
+              href={`/coach/throws/builder?athleteId=${row.athleteId}`}
+              className="btn-secondary text-xs py-1.5 text-center"
+              onClick={(e) => e.stopPropagation()}
+            >
+              Assign Session →
+            </Link>
+          </div>
+          {row.recentBestMark && (
+            <div className="mt-1 pt-2 border-t border-[var(--card-border)]/50">
+              <p className="text-nano text-muted">Recent best mark</p>
+              <p className="text-sm font-bold text-[var(--foreground)] tabular-nums">
+                {row.recentBestMark.distance.toFixed(2)}m
+              </p>
+              <p className="text-nano text-muted">
+                {new Date(row.recentBestMark.date).toLocaleDateString("en-US", {
+                  month: "short",
+                  day: "numeric",
+                })}
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const sortedPulse = [...pulse].sort((a, b) => {
     const dir = sortDir === "asc" ? 1 : -1;
@@ -385,9 +623,9 @@ export function ThrowsView({
           href="/coach/throws/practice"
           className="card card-interactive !p-4 flex items-center gap-3 group"
         >
-          <div className="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-success-100 dark:bg-success-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
             <svg
-              className="w-5 h-5 text-emerald-600 dark:text-emerald-400"
+              className="w-5 h-5 text-success-600 dark:text-success-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -411,9 +649,9 @@ export function ThrowsView({
           href="/coach/throws/invite"
           className="card card-interactive !p-4 flex items-center gap-3 group"
         >
-          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
             <svg
-              className="w-5 h-5 text-amber-600 dark:text-amber-400"
+              className="w-5 h-5 text-primary-600 dark:text-primary-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -467,9 +705,9 @@ export function ThrowsView({
           href="/coach/plans/generate"
           className="card card-interactive !p-4 flex items-center gap-3 group"
         >
-          <div className="w-10 h-10 rounded-xl bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
             <svg
-              className="w-5 h-5 text-amber-600 dark:text-amber-400"
+              className="w-5 h-5 text-primary-600 dark:text-primary-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -499,7 +737,7 @@ export function ThrowsView({
             <h2 className="text-sm font-semibold text-[var(--foreground)]">Roster Pulse</h2>
             <span className="text-sm text-muted">{pulse.length} enrolled</span>
             {needsAttention > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-micro font-semibold bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-micro font-semibold bg-danger-100 dark:bg-danger-900/30 text-danger-700 dark:text-danger-400">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
                     strokeLinecap="round"
@@ -587,20 +825,19 @@ export function ThrowsView({
               {sortedPulse.map((row) => {
                 const expanded = expandedRows.has(row.athleteId);
                 const testCfg = TEST_STATUS_CONFIG[row.testStatus];
-                const eventColor = EVENT_COLORS_MAP[row.event] ?? "#d4a843";
+                const eventColor = EVENT_COLORS_MAP[row.event] ?? EVENT_COLOR_FALLBACK;
                 const eventLabel = EVENT_LABELS_MAP[row.event] ?? row.event;
                 const target = phaseThrowsTarget(row.trainingPhase);
                 const throwsPct = Math.min(100, (row.throwsThisWeek / target) * 100);
-                const throwsColor =
-                  throwsPct >= 80 ? "#5BB88A" : throwsPct >= 40 ? "#D4915A" : "#D46A6A";
+                const throwsColor = wellnessTierColorForPct(throwsPct);
                 const daysClass =
                   row.daysSincePractice == null
                     ? "text-muted"
                     : row.daysSincePractice > 5
-                      ? "text-red-600 dark:text-red-400 font-semibold"
+                      ? "text-danger-600 dark:text-danger-400 font-semibold"
                       : row.daysSincePractice > 2
-                        ? "text-amber-600 dark:text-amber-400"
-                        : "text-emerald-600 dark:text-emerald-400";
+                        ? "text-primary-600 dark:text-primary-400"
+                        : "text-success-600 dark:text-success-400";
                 return (
                   <Fragment key={`mob-${row.id}`}>
                     <div
@@ -638,8 +875,10 @@ export function ThrowsView({
                               <span
                                 className="text-nano font-semibold px-1.5 py-0.5 rounded"
                                 style={{
-                                  color: PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? "#888",
-                                  backgroundColor: `${PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? "#888"}20`,
+                                  color:
+                                    PHASE_COLORS[row.trainingPhase as TrainingPhase] ??
+                                    MUTED_NEUTRAL,
+                                  backgroundColor: `${PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? MUTED_NEUTRAL}20`,
                                 }}
                               >
                                 {PHASE_SHORT[row.trainingPhase] ?? row.trainingPhase.slice(0, 5)}
@@ -729,341 +968,22 @@ export function ThrowsView({
                 );
               })}
             </div>
-            {/* Desktop table */}
-            <div className="hidden sm:block overflow-x-auto custom-scrollbar">
-              <table className="w-full min-w-[760px]">
-                <thead>
-                  <tr className="border-b border-[var(--card-border)] bg-[var(--muted-bg)]/30">
-                    <SortHeader
-                      label="Athlete"
-                      sortKey="name"
-                      currentSort={sortBy}
-                      currentDir={sortDir}
-                      onSort={toggleSort}
-                      className="px-4 w-44"
-                    />
-                    <SortHeader
-                      label="Event"
-                      sortKey="event"
-                      currentSort={sortBy}
-                      currentDir={sortDir}
-                      onSort={toggleSort}
-                    />
-                    <th className="py-2 px-2 text-left text-nano font-semibold uppercase tracking-wider text-muted">
-                      Deficit
-                    </th>
-                    <th className="py-2 px-2 text-left text-nano font-semibold uppercase tracking-wider text-muted">
-                      Phase
-                    </th>
-                    <SortHeader
-                      label="Test"
-                      sortKey="urgency"
-                      currentSort={sortBy}
-                      currentDir={sortDir}
-                      onSort={toggleSort}
-                    />
-                    <SortHeader
-                      label="Throws/Wk"
-                      sortKey="throws"
-                      currentSort={sortBy}
-                      currentDir={sortDir}
-                      onSort={toggleSort}
-                      className="w-36"
-                    />
-                    <SortHeader
-                      label="Days Off"
-                      sortKey="days"
-                      currentSort={sortBy}
-                      currentDir={sortDir}
-                      onSort={toggleSort}
-                    />
-                    <th className="py-2 px-2 text-left text-nano font-semibold uppercase tracking-wider text-muted">
-                      Str
-                    </th>
-                    <th className="py-2 px-2 text-left text-nano font-semibold uppercase tracking-wider text-muted">
-                      Recent Mark
-                    </th>
-                    <th className="py-2 px-3 w-8" />
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedPulse.map((row) => {
-                    const expanded = expandedRows.has(row.athleteId);
-                    const testCfg = TEST_STATUS_CONFIG[row.testStatus];
-                    const eventColor = EVENT_COLORS_MAP[row.event] ?? "#d4a843";
-                    const eventLabel = EVENT_LABELS_MAP[row.event] ?? row.event;
-                    const target = phaseThrowsTarget(row.trainingPhase);
-                    const throwsPct = Math.min(100, (row.throwsThisWeek / target) * 100);
-                    const throwsColor =
-                      throwsPct >= 80 ? "#5BB88A" : throwsPct >= 40 ? "#D4915A" : "#D46A6A";
-                    const daysClass =
-                      row.daysSincePractice == null
-                        ? "text-muted"
-                        : row.daysSincePractice > 5
-                          ? "text-red-600 dark:text-red-400 font-semibold"
-                          : row.daysSincePractice > 2
-                            ? "text-amber-600 dark:text-amber-400"
-                            : "text-emerald-600 dark:text-emerald-400";
-                    // For expanded row: training→comp gap
-                    const eventLong = CODE_EVENT_MAP[row.event as EventCode] ?? row.event;
-                    const prForEvent = row.athlete.throwsPRs?.find((pr) => pr.event === eventLong);
-                    const prGap =
-                      row.competitionPb != null && prForEvent != null
-                        ? row.competitionPb - prForEvent.distance
-                        : null;
-
-                    return (
-                      <Fragment key={row.id}>
-                        <tr
-                          className={`border-b border-[var(--card-border)]/50 hover:bg-[var(--muted-bg)]/40 cursor-pointer transition-colors ${
-                            expanded ? "bg-[var(--muted-bg)]/20" : ""
-                          }`}
-                          onClick={() => toggleExpand(row.athleteId)}
-                        >
-                          {/* Athlete */}
-                          <td className="py-2.5 px-4">
-                            <div className="flex items-center gap-2">
-                              <UserAvatar
-                                src={row.athlete.avatarUrl}
-                                firstName={row.athlete.firstName}
-                                lastName={row.athlete.lastName}
-                                size="sm"
-                              />
-                              <span className="text-xs font-semibold text-[var(--foreground)] truncate max-w-[80px]">
-                                {row.athlete.firstName} {row.athlete.lastName}
-                              </span>
-                            </div>
-                          </td>
-                          {/* Event */}
-                          <td className="py-2.5 px-2">
-                            <span
-                              className="text-nano font-bold px-1.5 py-0.5 rounded-full text-white whitespace-nowrap"
-                              style={{ backgroundColor: eventColor }}
-                            >
-                              {eventLabel} {row.gender === "M" ? "♂" : "♀"}
-                            </span>
-                          </td>
-                          {/* Deficit */}
-                          <td className="py-2.5 px-2">
-                            {row.deficitPrimary && row.deficitPrimary !== "none" ? (
-                              <span className="text-nano text-surface-700 dark:text-surface-300 max-w-[72px] truncate block">
-                                {row.deficitPrimary}
-                              </span>
-                            ) : row.overPowered ? (
-                              <span className="text-nano font-semibold text-amber-600 dark:text-amber-400">
-                                OverPwrd
-                              </span>
-                            ) : (
-                              <span className="text-nano text-muted">—</span>
-                            )}
-                          </td>
-                          {/* Phase */}
-                          <td className="py-2.5 px-2">
-                            {row.trainingPhase ? (
-                              <span
-                                className="text-nano font-semibold px-1.5 py-0.5 rounded whitespace-nowrap"
-                                style={{
-                                  color: PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? "#888",
-                                  backgroundColor: `${PHASE_COLORS[row.trainingPhase as TrainingPhase] ?? "#888"}20`,
-                                }}
-                              >
-                                {PHASE_SHORT[row.trainingPhase] ?? row.trainingPhase.slice(0, 5)}
-                              </span>
-                            ) : (
-                              <span className="text-nano text-muted">—</span>
-                            )}
-                          </td>
-                          {/* Test Status */}
-                          <td className="py-2.5 px-2">
-                            <span
-                              className={`text-nano font-semibold px-1.5 py-0.5 rounded whitespace-nowrap ${testCfg.bg} ${testCfg.text}`}
-                            >
-                              {row.testStatus === "overdue" && row.daysSinceTest != null
-                                ? `${row.daysSinceTest}d ago`
-                                : row.testStatus === "due-soon" && row.daysSinceTest != null
-                                  ? `${row.daysSinceTest}d ago`
-                                  : testCfg.label}
-                            </span>
-                          </td>
-                          {/* Throws/Wk */}
-                          <td className="py-2.5 px-2">
-                            <div className="flex items-center gap-1.5">
-                              <span className="text-xs font-bold text-[var(--foreground)] w-6 text-right">
-                                {row.throwsThisWeek}
-                              </span>
-                              <div className="w-14 h-1.5 bg-[var(--muted-bg)] rounded-full overflow-hidden flex-shrink-0">
-                                <div
-                                  className="h-full rounded-full transition-all"
-                                  style={{ width: `${throwsPct}%`, backgroundColor: throwsColor }}
-                                />
-                              </div>
-                              <span className="text-nano text-muted">/{target}</span>
-                            </div>
-                          </td>
-                          {/* Days Off */}
-                          <td className="py-2.5 px-2">
-                            <span className={`text-xs ${daysClass}`}>
-                              {row.daysSincePractice == null
-                                ? "—"
-                                : row.daysSincePractice === 0
-                                  ? "Today"
-                                  : `${row.daysSincePractice}d`}
-                            </span>
-                          </td>
-                          {/* Strength */}
-                          <td className="py-2.5 px-2">
-                            <span className="text-nano text-muted">—</span>
-                          </td>
-                          {/* Recent Mark */}
-                          <td className="py-2.5 px-2">
-                            {row.recentBestMark ? (
-                              <span className="text-xs font-semibold text-[var(--foreground)]">
-                                {row.recentBestMark.distance.toFixed(2)}m
-                              </span>
-                            ) : (
-                              <span className="text-nano text-muted">—</span>
-                            )}
-                          </td>
-                          {/* Chevron */}
-                          <td className="py-2.5 px-3">
-                            <svg
-                              className={`w-4 h-4 text-muted transition-transform duration-200 ${
-                                expanded ? "rotate-180" : ""
-                              }`}
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M19 9l-7 7-7-7"
-                              />
-                            </svg>
-                          </td>
-                        </tr>
-                        {/* Expanded detail panel */}
-                        {expanded && (
-                          <tr className="bg-[var(--muted-bg)]/15 border-b border-[var(--card-border)]/50">
-                            <td colSpan={10} className="px-4 py-4">
-                              <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
-                                {/* Implement Split */}
-                                <div className="space-y-2">
-                                  <p className="text-nano font-semibold uppercase tracking-wider text-muted">
-                                    Implement Split (7d)
-                                  </p>
-                                  <ImplementSplitBar split={row.implementSplit} />
-                                  {prGap != null && (
-                                    <div className="mt-2 pt-2 border-t border-[var(--card-border)]/50">
-                                      <p className="text-nano text-muted">Training → Comp gap</p>
-                                      <span
-                                        className={`text-xs font-bold ${
-                                          prGap > 2
-                                            ? "text-red-600 dark:text-red-400"
-                                            : prGap > 0.5
-                                              ? "text-amber-600 dark:text-amber-400"
-                                              : "text-emerald-600 dark:text-emerald-400"
-                                        }`}
-                                      >
-                                        {prGap > 0
-                                          ? `−${prGap.toFixed(2)}m deficit`
-                                          : `+${Math.abs(prGap).toFixed(2)}m above comp PB`}
-                                      </span>
-                                      <p className="text-nano text-muted mt-0.5">
-                                        {prForEvent?.distance.toFixed(2)}m training vs{" "}
-                                        {row.competitionPb?.toFixed(2)}m comp PB
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                                {/* Wellness */}
-                                <div className="space-y-2">
-                                  <p className="text-nano font-semibold uppercase tracking-wider text-muted">
-                                    Wellness
-                                  </p>
-                                  {row.latestCheckIn ? (
-                                    <div className="space-y-1.5">
-                                      <WellnessBar
-                                        label="Self Feeling"
-                                        value={row.latestCheckIn.selfFeeling}
-                                      />
-                                      {row.latestCheckIn.energy != null && (
-                                        <WellnessBar
-                                          label="Energy"
-                                          value={row.latestCheckIn.energy}
-                                        />
-                                      )}
-                                      {row.latestCheckIn.sorenessGeneral != null && (
-                                        <WellnessBar
-                                          label="Soreness"
-                                          value={row.latestCheckIn.sorenessGeneral}
-                                          invert
-                                        />
-                                      )}
-                                      <p className="text-nano text-muted mt-0.5">
-                                        Checked in{" "}
-                                        {new Date(row.latestCheckIn.date).toLocaleDateString(
-                                          "en-US",
-                                          {
-                                            month: "short",
-                                            day: "numeric",
-                                          }
-                                        )}
-                                      </p>
-                                    </div>
-                                  ) : (
-                                    <p className="text-nano text-muted">No recent check-in</p>
-                                  )}
-                                </div>
-                                {/* Quick Actions + Mark */}
-                                <div className="space-y-2">
-                                  <p className="text-nano font-semibold uppercase tracking-wider text-muted">
-                                    Quick Actions
-                                  </p>
-                                  <div className="flex flex-col gap-2">
-                                    <Link
-                                      href={`/coach/throws/profile?athleteId=${row.athleteId}`}
-                                      className="btn-secondary text-xs py-1.5 text-center"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      View Profile →
-                                    </Link>
-                                    <Link
-                                      href={`/coach/throws/builder?athleteId=${row.athleteId}`}
-                                      className="btn-secondary text-xs py-1.5 text-center"
-                                      onClick={(e) => e.stopPropagation()}
-                                    >
-                                      Assign Session →
-                                    </Link>
-                                  </div>
-                                  {row.recentBestMark && (
-                                    <div className="mt-1 pt-2 border-t border-[var(--card-border)]/50">
-                                      <p className="text-nano text-muted">Recent best mark</p>
-                                      <p className="text-sm font-bold text-[var(--foreground)]">
-                                        {row.recentBestMark.distance.toFixed(2)}m
-                                      </p>
-                                      <p className="text-nano text-muted">
-                                        {new Date(row.recentBestMark.date).toLocaleDateString(
-                                          "en-US",
-                                          {
-                                            month: "short",
-                                            day: "numeric",
-                                          }
-                                        )}
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
-                              </div>
-                            </td>
-                          </tr>
-                        )}
-                      </Fragment>
-                    );
-                  })}
-                </tbody>
-              </table>
+            {/* Desktop table — DataTable with expandable rows. Expanded
+                set is mirrored to `?expand=athleteId1,athleteId2` so coaches
+                share a deep link with the same row(s) open. */}
+            <div className="hidden sm:block">
+              <DataTable<PulseRow>
+                data={pulse}
+                columns={pulseColumns}
+                rowKey="athleteId"
+                pageSize={0}
+                urlStateKey=""
+                defaultSort={{ key: "urgency", dir: "asc" }}
+                renderExpanded={renderPulseExpanded}
+                expandedUrlKey="expand"
+                emptyTitle="No athletes enrolled yet"
+                emptyDescription="Invite athletes to populate the pulse."
+              />
             </div>
           </>
         )}
@@ -1089,7 +1009,7 @@ export function ThrowsView({
           <p className="text-sm font-medium text-surface-700 dark:text-surface-300 uppercase tracking-wider">
             Completed
           </p>
-          <p className="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">
+          <p className="text-2xl font-bold text-success-600 dark:text-success-400 mt-1">
             {completedAssignments}
           </p>
           <p className="text-sm text-muted mt-0.5">
@@ -1107,7 +1027,7 @@ export function ThrowsView({
               <span
                 key={ev}
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium text-white"
-                style={{ backgroundColor: EVENTS[ev as ThrowEvent]?.color || "#666" }}
+                style={{ backgroundColor: EVENTS[ev as ThrowEvent]?.color || MUTED_NEUTRAL_DARK }}
               >
                 {EVENTS[ev as ThrowEvent]?.label || ev} ({count})
               </span>
@@ -1159,7 +1079,7 @@ export function ThrowsView({
                   </span>
                   <div className="flex-1 h-3 bg-[var(--muted-bg)] rounded-full overflow-hidden">
                     <div
-                      className="h-full rounded-full transition-all"
+                      className="h-full rounded-full transition-colors"
                       style={{
                         width: `${phaseRatios[cls]}%`,
                         backgroundColor: PHASE_COLORS[selectedPhase],
@@ -1212,21 +1132,30 @@ export function ThrowsView({
             <div className="flex h-6 rounded-full overflow-hidden">
               <div
                 className="flex items-center justify-center text-nano font-bold text-white"
-                style={{ width: `${phaseDist.heavyPercent}%`, backgroundColor: "#ef4444" }}
+                style={{
+                  width: `${phaseDist.heavyPercent}%`,
+                  backgroundColor: IMPLEMENT_TIER_COLORS.heavy,
+                }}
                 title={`Heavy: ${phaseDist.heavyPercent}%`}
               >
                 {phaseDist.heavyPercent}%
               </div>
               <div
                 className="flex items-center justify-center text-nano font-bold text-white"
-                style={{ width: `${phaseDist.compPercent}%`, backgroundColor: "#22c55e" }}
+                style={{
+                  width: `${phaseDist.compPercent}%`,
+                  backgroundColor: IMPLEMENT_TIER_COLORS.competition,
+                }}
                 title={`Comp: ${phaseDist.compPercent}%`}
               >
                 {phaseDist.compPercent}%
               </div>
               <div
                 className="flex items-center justify-center text-nano font-bold text-white"
-                style={{ width: `${phaseDist.lightPercent}%`, backgroundColor: "#a78bfa" }}
+                style={{
+                  width: `${phaseDist.lightPercent}%`,
+                  backgroundColor: IMPLEMENT_TIER_COLORS.light,
+                }}
                 title={`Light: ${phaseDist.lightPercent}%`}
               >
                 {phaseDist.lightPercent}%
@@ -1279,10 +1208,10 @@ export function ThrowsView({
           {TAPER_PROTOCOL.map((entry) => (
             <div key={entry.daysOut} className="flex-1 flex flex-col items-center gap-1">
               <div
-                className="w-full rounded-t-md transition-all"
+                className="w-full rounded-t-md transition-colors"
                 style={{
                   height: `${entry.volumeMultiplier * 100}%`,
-                  backgroundColor: "#f59e0b",
+                  backgroundColor: PRIMARY_AMBER,
                   opacity: 0.3 + entry.volumeMultiplier * 0.7,
                 }}
               />
@@ -1346,7 +1275,7 @@ export function ThrowsView({
                             <span
                               key={ev}
                               className="inline-flex items-center px-2 py-0.5 rounded-full text-nano font-bold text-white"
-                              style={{ backgroundColor: meta?.color || "#666" }}
+                              style={{ backgroundColor: meta?.color || MUTED_NEUTRAL_DARK }}
                             >
                               {meta?.label || ev}
                             </span>
@@ -1359,8 +1288,10 @@ export function ThrowsView({
                           <span
                             className="text-nano font-semibold px-1.5 py-0.5 rounded"
                             style={{
-                              color: PHASE_COLORS[session.targetPhase as TrainingPhase] || "#666",
-                              backgroundColor: `${PHASE_COLORS[session.targetPhase as TrainingPhase] || "#666"}15`,
+                              color:
+                                PHASE_COLORS[session.targetPhase as TrainingPhase] ||
+                                MUTED_NEUTRAL_DARK,
+                              backgroundColor: `${PHASE_COLORS[session.targetPhase as TrainingPhase] || MUTED_NEUTRAL_DARK}15`,
                             }}
                           >
                             {session.targetPhase.slice(0, 3)}

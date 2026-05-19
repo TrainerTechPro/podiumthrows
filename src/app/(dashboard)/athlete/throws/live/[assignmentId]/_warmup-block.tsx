@@ -69,7 +69,7 @@ export function WarmupCooldownView({
               <button
                 key={i}
                 onClick={() => onToggleDrill(i)}
-                className="w-full flex items-center gap-3 px-3 py-3 text-left transition-all min-h-[52px]"
+                className="w-full flex items-center gap-3 px-3 py-3 text-left transition-colors min-h-[52px]"
                 style={{
                   backgroundColor: checked ? `${accent}11` : "#08080a",
                   border: `1px solid ${checked ? `${accent}33` : "#ffffff08"}`,
@@ -78,7 +78,7 @@ export function WarmupCooldownView({
               >
                 {/* Checkbox */}
                 <div
-                  className="w-5 h-5 flex items-center justify-center shrink-0 transition-all"
+                  className="w-5 h-5 flex items-center justify-center shrink-0 transition-colors"
                   style={{
                     backgroundColor: checked ? accent : "transparent",
                     border: `2px solid ${checked ? accent : `${accent}33`}`,
@@ -97,7 +97,7 @@ export function WarmupCooldownView({
                 {/* Drill text */}
                 <div className="flex-1 min-w-0">
                   <span
-                    className="text-sm font-medium transition-all block"
+                    className="text-sm font-medium transition-colors block"
                     style={{
                       color: checked ? `${accent}55` : "#E8E8E8",
                       textDecoration: checked ? "line-through" : "none",

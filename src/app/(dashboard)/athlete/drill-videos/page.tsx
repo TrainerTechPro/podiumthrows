@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useUrlStateMany } from "@/lib/hooks/useUrlState";
 import { Video, Search } from "lucide-react";
 import { useToast } from "@/components/toast";
 import DrillVideoUpload from "@/components/drill-video-upload";
@@ -12,6 +13,7 @@ import {
   WatchNextOverlay,
   type WatchNextRecommendation,
 } from "@/components/video/WatchNextOverlay";
+import { DrillVideoPlayer } from "@/components/video/DrillVideoPlayer";
 
 interface DrillVideo {
   id: string;
@@ -45,10 +47,10 @@ const EVENT_LABELS: Record<string, string> = {
 };
 
 const EVENT_COLORS: Record<string, string> = {
-  SHOT_PUT: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  SHOT_PUT: "bg-info-100 text-info-700 dark:bg-info-900/30 dark:text-info-400",
   DISCUS: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
-  HAMMER: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-  JAVELIN: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  HAMMER: "bg-danger-100 text-danger-700 dark:bg-danger-900/30 dark:text-danger-400",
+  JAVELIN: "bg-success-100 text-success-700 dark:bg-success-900/30 dark:text-success-400",
   OTHER: "bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300 ",
 };
 
@@ -69,8 +71,11 @@ export default function AthleteDrillVideosPage() {
   const [showUpload, setShowUpload] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
-  const [filterEvent, setFilterEvent] = useState("");
-  const [filterDrill, setFilterDrill] = useState("");
+  const url = useUrlStateMany();
+  const filterEvent = url.get("event", "");
+  const setFilterEvent = (next: string) => url.set({ event: next || null });
+  const filterDrill = url.get("drill", "");
+  const setFilterDrill = (next: string) => url.set({ drill: next || null });
   const _videoRef = useRef<HTMLVideoElement>(null);
 
   // Watch-next: when a clip ends, fetch 3 recommendations and overlay them
@@ -323,12 +328,9 @@ export default function AthleteDrillVideosPage() {
               {/* Video player */}
               <div className="relative bg-black aspect-video">
                 {playingId === video.id ? (
-                  <video
+                  <DrillVideoPlayer
                     src={video.videoUrl}
-                    className="w-full h-full object-contain"
                     autoPlay
-                    controls
-                    playsInline
                     onPlay={() => {
                       // Best-effort manual-source view ping. Source defaults
                       // to "manual"; recommendation source is logged from
@@ -385,8 +387,8 @@ export default function AthleteDrillVideosPage() {
                     disabled={deletingId === video.id}
                     className={`shrink-0 transition-colors rounded-lg flex items-center justify-center gap-1.5 min-w-[44px] min-h-[44px] ${
                       confirmDeleteId === video.id
-                        ? "text-red-500 bg-red-500/10 px-3"
-                        : "text-muted hover:text-red-500 dark:hover:text-red-400"
+                        ? "text-danger-500 bg-danger-500/10 px-3"
+                        : "text-muted hover:text-danger-500 dark:hover:text-danger-400"
                     }`}
                     aria-label={
                       confirmDeleteId === video.id

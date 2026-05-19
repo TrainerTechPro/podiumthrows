@@ -45,7 +45,10 @@ export function DeleteAccountSection({ role }: Props) {
       } | null;
 
       if (!res.ok || !payload?.success) {
-        toast.error(payload?.error || "Could not delete account");
+        toast.error(
+          payload?.error ||
+            "We couldn't delete your account. Refresh and try again — if the issue continues, email support."
+        );
         setLoading(false);
         return;
       }
@@ -54,7 +57,9 @@ export function DeleteAccountSection({ role }: Props) {
       // /goodbye is unauthenticated.
       window.location.assign("/goodbye");
     } catch {
-      toast.error("Network error — try again in a moment");
+      toast.error(
+        "We couldn't reach the server. Check your connection and try again — nothing has been deleted yet."
+      );
       setLoading(false);
     }
   }

@@ -1,11 +1,20 @@
 import type { NotificationItem } from "@/lib/notifications";
 
-export type NotificationCategory = "all" | "feedback" | "prs" | "team" | "system";
+/**
+ * Six-way filter for the notifications page. "unread" is read-state-based
+ * (no type filter); the four type-backed categories partition the
+ * notification type space.
+ *
+ * Filter strip order: all | unread | comments | sessions | PRs | system
+ */
+export type NotificationCategory = "all" | "unread" | "comments" | "sessions" | "prs" | "system";
 
-const ATHLETE_CATEGORY_MAP: Record<Exclude<NotificationCategory, "all">, string[]> = {
-  feedback: ["COMMENT_ADDED"],
+type TypeBackedCategory = "comments" | "sessions" | "prs" | "system";
+
+const ATHLETE_CATEGORY_MAP: Record<TypeBackedCategory, string[]> = {
+  comments: ["COMMENT_ADDED"],
   prs: ["PR_ALERT", "COMPETITION_PR"],
-  team: [
+  sessions: [
     "WORKOUT_ASSIGNED",
     "WORKOUT_COMPLETED",
     "WORKOUT_SKIPPED",
@@ -14,6 +23,8 @@ const ATHLETE_CATEGORY_MAP: Record<Exclude<NotificationCategory, "all">, string[
     "COMPETITION_REMINDER",
     "COMPETITION_LOGGED",
     "PROGRAMMING_REQUESTED",
+    "PROGRAM_CHECKPOINT",
+    "COMPLEX_ROTATED",
   ],
   system: [
     "QUESTIONNAIRE_ASSIGNED",
@@ -21,46 +32,51 @@ const ATHLETE_CATEGORY_MAP: Record<Exclude<NotificationCategory, "all">, string[
     "VIDEO_SHARED",
     "INSIGHT_NEW",
     "INVITATION_EXPIRED",
-    "PROGRAM_CHECKPOINT",
-    "COMPLEX_ROTATED",
     "LOW_READINESS",
     "ATHLETE_JOINED",
     "WEEKLY_RECAP",
   ],
 };
 
-const COACH_CATEGORY_MAP: Record<Exclude<NotificationCategory, "all">, string[]> = {
-  feedback: ["COMMENT_ADDED"],
+const COACH_CATEGORY_MAP: Record<TypeBackedCategory, string[]> = {
+  comments: ["COMMENT_ADDED"],
   prs: ["PR_ALERT", "COMPETITION_PR"],
-  team: [
-    "ATHLETE_JOINED",
-    "INVITATION_EXPIRED",
-    "PROGRAMMING_REQUESTED",
-    "LOW_READINESS",
-    "STREAK_BROKEN",
-    "COMPETITION_LOGGED",
-  ],
-  system: [
+  sessions: [
     "WORKOUT_ASSIGNED",
     "WORKOUT_COMPLETED",
     "WORKOUT_SKIPPED",
-    "QUESTIONNAIRE_ASSIGNED",
-    "QUESTIONNAIRE_COMPLETE",
     "PROGRAM_CHECKPOINT",
     "COMPLEX_ROTATED",
+    "COMPETITION_REMINDER",
+    "COMPETITION_LOGGED",
+    "PROGRAMMING_REQUESTED",
+    "ATHLETE_JOINED",
+    "STREAK_BROKEN",
+  ],
+  system: [
+    "QUESTIONNAIRE_ASSIGNED",
+    "QUESTIONNAIRE_COMPLETE",
     "VIDEO_SHARED",
     "INSIGHT_NEW",
-    "COMPETITION_REMINDER",
+    "INVITATION_EXPIRED",
+    "LOW_READINESS",
+    "WEEKLY_RECAP",
   ],
 };
 
+/** Type filter for a category, or `null` for "all"/"unread". "unread" sets
+ *  `unreadOnly=true` at the API layer via `categoryIsUnread`. */
 export function categoryToTypes(
   category: NotificationCategory,
   role: "COACH" | "ATHLETE"
 ): string[] | null {
-  if (category === "all") return null;
+  if (category === "all" || category === "unread") return null;
   const map = role === "COACH" ? COACH_CATEGORY_MAP : ATHLETE_CATEGORY_MAP;
   return map[category];
+}
+
+export function categoryIsUnread(category: NotificationCategory): boolean {
+  return category === "unread";
 }
 
 function asString(v: unknown): string | undefined {

@@ -7,7 +7,7 @@ import {
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Video } from "lucide-react";
+import { Video, Upload, Search as SearchIcon } from "lucide-react";
 import { VideoGrid } from "@/components/video/VideoGrid";
 
 export const metadata = { title: "Video Library — Podium Throws" };
@@ -62,21 +62,7 @@ export default async function VideoLibraryPage({ searchParams }: { searchParams:
           </p>
         </div>
         <Link href="/coach/videos/upload" className="btn-primary">
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-1.5"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="17 8 12 3 7 8" />
-            <line x1="12" y1="3" x2="12" y2="15" />
-          </svg>
+          <Upload size={16} strokeWidth={1.75} className="mr-1.5" aria-hidden="true" />
           Upload Video
         </Link>
       </div>
@@ -122,20 +108,12 @@ export default async function VideoLibraryPage({ searchParams }: { searchParams:
             placeholder="Search videos…"
             className="input text-sm pl-8 w-48 sm:w-56"
           />
-          <svg
-            width="14"
-            height="14"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+          <SearchIcon
+            size={14}
+            strokeWidth={1.75}
             className="absolute left-2.5 top-1/2 -translate-y-1/2 text-surface-400"
-          >
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
-          </svg>
+            aria-hidden="true"
+          />
         </form>
       </div>
 

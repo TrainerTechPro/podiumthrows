@@ -365,10 +365,10 @@ export function RecapClient({
         {recap.streak.current > 0 && (
           <motion.div variants={sectionVariants} className="card p-5 flex items-center gap-4">
             <div
-              className="h-12 w-12 rounded-full flex items-center justify-center bg-amber-500/10"
+              className="h-12 w-12 rounded-full flex items-center justify-center bg-primary-500/10"
               aria-hidden="true"
             >
-              <Flame className="h-6 w-6 text-amber-500" strokeWidth={1.75} aria-hidden="true" />
+              <Flame className="h-6 w-6 text-primary-500" strokeWidth={1.75} aria-hidden="true" />
             </div>
             <div className="flex-1">
               <p className="text-xs font-semibold uppercase tracking-wider text-muted">
@@ -382,7 +382,7 @@ export function RecapClient({
               </p>
             </div>
             {recap.streak.current === recap.streak.longest && recap.streak.current > 1 && (
-              <span className="text-xs font-semibold text-amber-500 uppercase tracking-wider">
+              <span className="text-xs font-semibold text-primary-500 uppercase tracking-wider">
                 Longest ever
               </span>
             )}
@@ -394,7 +394,7 @@ export function RecapClient({
           <motion.div variants={sectionVariants} className="card p-5">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-muted mb-3 flex items-center gap-1.5">
               <Trophy
-                className="h-3.5 w-3.5 text-amber-500"
+                className="h-3.5 w-3.5 text-primary-500"
                 strokeWidth={1.75}
                 aria-hidden="true"
               />
@@ -443,7 +443,7 @@ export function RecapClient({
               How do you feel?
             </h2>
             {wellnessSaved && (
-              <span className="text-xs font-medium text-emerald-500 flex items-center gap-1">
+              <span className="text-xs font-medium text-success-500 flex items-center gap-1">
                 <Check className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
                 Saved
               </span>
@@ -468,7 +468,7 @@ export function RecapClient({
                         disabled={wellnessSaved && !wellnessSaving}
                         aria-label={`${q.prompt}: ${opt.label}`}
                         aria-pressed={active}
-                        className={`rounded-lg px-2 py-2.5 flex items-center justify-center gap-1.5 text-sm border transition-all ${
+                        className={`rounded-lg px-2 py-2.5 flex items-center justify-center gap-1.5 text-sm border transition-colors ${
                           active
                             ? "border-primary-500 bg-primary-500/10 text-[var(--foreground)] shadow-sm"
                             : "border-[var(--card-border)] bg-surface-50 dark:bg-surface-900/50 text-muted hover:text-[var(--foreground)] active:scale-[0.97]"
@@ -486,7 +486,7 @@ export function RecapClient({
             ))}
           </div>
 
-          {wellnessError && <p className="mt-3 text-xs text-red-500">{wellnessError}</p>}
+          {wellnessError && <p className="mt-3 text-xs text-danger-500">{wellnessError}</p>}
 
           {!wellnessSaved && (
             <button
@@ -522,7 +522,7 @@ export function RecapClient({
               </>
             )}
           </button>
-          {notifyError && <p className="text-xs text-red-500">{notifyError}</p>}
+          {notifyError && <p className="text-xs text-danger-500">{notifyError}</p>}
           <Link
             href="/athlete/dashboard"
             className="btn btn-secondary w-full inline-flex items-center justify-center"
@@ -559,7 +559,7 @@ function HeroStat({
       </p>
       <p
         className={`mt-1 text-2xl sm:text-3xl font-bold font-mono tabular-nums ${
-          emphasized ? "text-amber-500" : muted ? "text-muted" : "text-[var(--foreground)]"
+          emphasized ? "text-primary-500" : muted ? "text-muted" : "text-[var(--foreground)]"
         }`}
       >
         {muted && value === 0 ? (
@@ -584,17 +584,17 @@ function PRCard({ pr }: { pr: SessionRecap["personalRecords"][number] }) {
         initial={prefersReducedMotion ? undefined : { opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         transition={{ type: "spring", stiffness: 260, damping: 22 }}
-        className="relative overflow-hidden rounded-2xl p-5 border-2 border-amber-500/40 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent"
+        className="relative overflow-hidden rounded-2xl p-5 border-2 border-primary-500/40 bg-gradient-to-br from-primary-500/10 via-primary-500/5 to-transparent"
       >
         {/* Corner glow */}
         <div
-          className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-amber-500/20 blur-3xl pointer-events-none"
+          className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary-500/20 blur-3xl pointer-events-none"
           aria-hidden="true"
         />
         <div className="relative">
           <div className="flex items-center gap-2">
-            <Trophy className="h-4 w-4 text-amber-500" strokeWidth={1.75} aria-hidden="true" />
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-amber-500">
+            <Trophy className="h-4 w-4 text-primary-500" strokeWidth={1.75} aria-hidden="true" />
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary-500">
               New Personal Best
             </p>
           </div>
@@ -614,10 +614,10 @@ function PRCard({ pr }: { pr: SessionRecap["personalRecords"][number] }) {
           ) : pr.previousDistance != null && pr.delta != null ? (
             <div className="mt-3 flex items-baseline gap-2 flex-wrap">
               <span className="text-xs text-muted">Previous:</span>
-              <span className="text-sm font-mono tabular-nums line-through text-muted decoration-red-500/70 decoration-[1.5px]">
+              <span className="text-sm font-mono tabular-nums line-through text-muted decoration-danger-500/70 decoration-[1.5px]">
                 {pr.previousDistance.toFixed(2)}m
               </span>
-              <span className="text-xs font-bold text-emerald-500 font-mono tabular-nums">
+              <span className="text-xs font-bold text-success-500 font-mono tabular-nums">
                 +{pr.delta.toFixed(2)}m
               </span>
             </div>
@@ -644,7 +644,11 @@ function ComparisonStat({
   const isNeutral = delta == null || delta === 0;
 
   const Icon = isPositive ? TrendingUp : isNegative ? TrendingDown : Minus;
-  const colorClass = isPositive ? "text-emerald-500" : isNegative ? "text-red-500" : "text-muted";
+  const colorClass = isPositive
+    ? "text-success-500"
+    : isNegative
+      ? "text-danger-500"
+      : "text-muted";
 
   return (
     <div>

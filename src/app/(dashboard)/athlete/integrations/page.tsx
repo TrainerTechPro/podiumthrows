@@ -1,5 +1,4 @@
 import { redirect } from "next/navigation";
-import { Activity, Heart } from "lucide-react";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { StaggeredList } from "@/components";
@@ -87,34 +86,6 @@ export default async function AthleteIntegrationsPage() {
               lastSyncErrorAt={health.oura?.lastSyncErrorAt ?? null}
             />
           </div>
-        </StaggeredList>
-      </section>
-
-      {/* Coming Soon — specific devices */}
-      <section className="space-y-3">
-        <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Coming Soon</h2>
-        <StaggeredList className="grid grid-cols-2 gap-3" staggerDelay={60}>
-          {[
-            { name: "Garmin", icon: Activity, desc: "Running & GPS data" },
-            { name: "Apple Health", icon: Heart, desc: "Unified health metrics" },
-          ].map((device) => (
-            <div key={device.name} className="card p-4 opacity-50 cursor-default select-none">
-              <div className="flex items-center gap-3">
-                <div className="w-9 h-9 rounded-lg bg-[var(--muted-bg)] flex items-center justify-center">
-                  <device.icon
-                    size={18}
-                    strokeWidth={1.75}
-                    className="text-muted"
-                    aria-hidden="true"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-[var(--foreground)]">{device.name}</p>
-                  <p className="text-xs text-muted">{device.desc}</p>
-                </div>
-              </div>
-            </div>
-          ))}
         </StaggeredList>
       </section>
     </div>

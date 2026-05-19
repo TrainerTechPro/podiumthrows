@@ -1,12 +1,7 @@
 import { describe, it } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
-import {
-  ATHLETE_NAV_SECTIONS,
-  COACH_NAV_SECTIONS,
-  type NavItem,
-  type NavSection,
-} from "@/components/ui/Sidebar";
+import { getCoachNavSections, type NavItem, type NavSection } from "@/components/ui/Sidebar";
 
 const APP_ROOT = path.join(process.cwd(), "src", "app", "(dashboard)");
 const NEXT_CONFIG_PATH = path.join(process.cwd(), "next.config.mjs");
@@ -84,11 +79,16 @@ function checkSidebar(name: string, sections: NavSection[]) {
 }
 
 describe("sidebar href resolution (regression guard)", () => {
-  it("every athlete nav href resolves to an existing page.tsx", () => {
-    checkSidebar("ATHLETE_NAV_SECTIONS", ATHLETE_NAV_SECTIONS);
+  // Athlete nav is BottomTabBar.tsx (mobile-native, no sidebar). The five
+  // tab hrefs are hand-coded and asserted by sibling tab tests.
+  it("every coach nav href resolves to an existing page.tsx (video flag off)", () => {
+    checkSidebar("COACH_NAV_SECTIONS", getCoachNavSections({ videoAnalysisEnabled: false }));
   });
 
-  it("every coach nav href resolves to an existing page.tsx", () => {
-    checkSidebar("COACH_NAV_SECTIONS", COACH_NAV_SECTIONS);
+  it("every coach nav href resolves to an existing page.tsx (video flag on)", () => {
+    checkSidebar(
+      "COACH_NAV_SECTIONS (+video)",
+      getCoachNavSections({ videoAnalysisEnabled: true })
+    );
   });
 });

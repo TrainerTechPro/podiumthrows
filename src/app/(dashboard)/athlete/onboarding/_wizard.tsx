@@ -14,6 +14,7 @@ import {
   onboardingReducer,
   currentStepNumber,
   canAdvance,
+  missingForStep,
   distanceToMeters,
   weightToKg,
   type OnboardingMode,
@@ -150,7 +151,9 @@ export function OnboardingWizard({
       });
       const profileData = await profileRes.json().catch(() => null);
       if (!profileRes.ok || !profileData?.success) {
-        const msg = profileData?.error ?? `Couldn't save profile (${profileRes.status}).`;
+        const msg =
+          profileData?.error ??
+          `We couldn't save your profile (${profileRes.status}). Try “Log it” again — your inputs are still here.`;
         dispatch({ type: "SUBMIT_ERROR", error: msg });
         toast.error(msg);
         return;
@@ -199,8 +202,12 @@ export function OnboardingWizard({
         context: "athlete/onboarding",
         error: err,
       });
-      dispatch({ type: "SUBMIT_ERROR", error: "Network error. Please try again." });
-      toast.error("Network error. Please try again.");
+      dispatch({
+        type: "SUBMIT_ERROR",
+        error:
+          "We couldn't reach the server. Check your connection and tap “Log it” again — your inputs are still here.",
+      });
+      toast.error("We couldn't reach the server. Check your connection and try again.");
     }
   }, [state, toast]);
 
@@ -254,7 +261,7 @@ export function OnboardingWizard({
           ? state.submitting
             ? "Logging…"
             : "Log it"
-          : "Continue";
+          : "Next →";
 
   const showSecondarySkip = step === 2 || step === 3 || step === 4;
   const secondaryLabel =
@@ -357,6 +364,11 @@ export function OnboardingWizard({
           className="sticky bottom-0 bg-[var(--surface-overlay)] border-t border-[var(--card-border)] px-0 py-3 space-y-2"
           style={{ paddingBottom: "calc(0.75rem + env(safe-area-inset-bottom, 0px))" }}
         >
+          {showPrimaryButton && primaryDisabled && missingForStep(state) && (
+            <p aria-live="polite" className="text-center text-xs text-muted -mt-1 mb-1">
+              {missingForStep(state)}
+            </p>
+          )}
           {showPrimaryButton && (
             <Button
               type="button"

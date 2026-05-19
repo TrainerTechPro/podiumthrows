@@ -57,8 +57,8 @@ export function Step1Event({ firstName, event, mode, onPick }: Step1EventProps) 
                 onClick={() => onPick(value)}
                 aria-pressed={isSelected}
                 className={cn(
-                  "w-full aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 transition-all duration-150",
-                  "border focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
+                  "w-full aspect-square rounded-2xl flex flex-col items-center justify-center gap-2 transition-colors duration-150",
+                  "border focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
                   "active:scale-[0.97]",
                   isSelected
                     ? "bg-primary-500/12 border-primary-500/50 ring-1 ring-primary-500/30 text-[var(--foreground)]"

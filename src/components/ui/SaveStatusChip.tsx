@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils";
    Compact status indicator for forms with draft persistence + outbox-on-
    network-failure. Three primary states + one auth-needed state:
 
-     - "Saving..."   — submit in flight (caller-controlled `isSaving`)
+     - "Saving…"   — submit in flight (caller-controlled `isSaving`)
      - "Saved"       — last submit succeeded (online, no pending in outbox)
      - "Saved locally" — offline OR items pending in outbox
      - "Sign in to sync" — auth expired, queue parked (rare path)

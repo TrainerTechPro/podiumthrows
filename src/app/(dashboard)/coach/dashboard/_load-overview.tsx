@@ -11,9 +11,9 @@ interface LoadOverviewProps {
 
 function acwrColor(acwr: number | null): string {
   if (acwr == null) return "text-muted";
-  if (acwr > 1.3) return "text-red-600 dark:text-red-400";
-  if (acwr > 1.0) return "text-amber-600 dark:text-amber-400";
-  return "text-emerald-600 dark:text-emerald-400";
+  if (acwr > 1.3) return "text-danger-600 dark:text-danger-400";
+  if (acwr > 1.0) return "text-primary-600 dark:text-primary-400";
+  return "text-success-600 dark:text-success-400";
 }
 
 function riskBadgeVariant(

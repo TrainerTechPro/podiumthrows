@@ -221,7 +221,7 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
                 type="button"
                 onClick={() => toggleEvent(ev.value)}
                 className={cn(
-                  "px-4 py-3 rounded-xl border-2 text-left transition-all",
+                  "px-4 py-3 rounded-xl border-2 text-left transition-colors",
                   active
                     ? "border-primary-500 bg-primary-500/8 text-primary-700 dark:text-primary-300"
                     : "border-[var(--card-border)] bg-[var(--card-bg)] hover:border-primary-300 dark:hover:border-primary-700"
@@ -237,9 +237,9 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
       </div>
 
       {/* Feedback */}
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>}
       {success && (
-        <p className="text-sm text-emerald-600 dark:text-emerald-400">
+        <p className="text-sm text-success-600 dark:text-success-400">
           Profile updated successfully.
         </p>
       )}

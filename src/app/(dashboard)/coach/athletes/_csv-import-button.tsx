@@ -373,7 +373,7 @@ Priya,Patel,FEMALE,JAVELIN`;
                   <Check
                     size={16}
                     strokeWidth={1.75}
-                    className="text-emerald-600 dark:text-emerald-400 shrink-0"
+                    className="text-success-600 dark:text-success-400 shrink-0"
                     aria-hidden="true"
                   />
                 ) : (
@@ -412,7 +412,7 @@ Priya,Patel,FEMALE,JAVELIN`;
                 rows={8}
                 placeholder={SAMPLE}
                 spellCheck={false}
-                className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-xs font-mono focus:outline-none focus:ring-2 focus:ring-primary-500/50 resize-y"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--card-border)] bg-[var(--card-bg)] text-xs font-mono focus-visible:outline-none focus:ring-2 focus:ring-primary-500/50 resize-y"
               />
               <p className="text-xs text-muted mt-1.5">
                 Events can be combined with semicolons or pipes:{" "}
@@ -423,14 +423,14 @@ Priya,Patel,FEMALE,JAVELIN`;
 
             {/* Preview + validation summary */}
             {parsed && parsed.missingColumns.length > 0 && (
-              <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-3 py-2.5 flex items-start gap-2">
+              <div className="rounded-lg border border-danger-500/30 bg-danger-500/5 px-3 py-2.5 flex items-start gap-2">
                 <AlertCircle
-                  className="w-4 h-4 text-red-600 dark:text-red-400 shrink-0 mt-0.5"
+                  className="w-4 h-4 text-danger-600 dark:text-danger-400 shrink-0 mt-0.5"
                   strokeWidth={1.75}
                   aria-hidden="true"
                 />
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-red-700 dark:text-red-400">
+                  <p className="text-xs font-semibold text-danger-700 dark:text-danger-400">
                     Missing required columns: {parsed.missingColumns.join(", ")}
                   </p>
                   <p className="text-xs text-muted mt-0.5">
@@ -443,7 +443,7 @@ Priya,Patel,FEMALE,JAVELIN`;
             {parsed && parsed.missingColumns.length === 0 && parsed.rows.length > 0 && (
               <>
                 <div className="flex items-center gap-4 text-xs">
-                  <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                  <span className="text-success-600 dark:text-success-400 font-semibold">
                     {validRows.length} valid
                   </span>
                   {invalidCount > 0 && (
@@ -452,7 +452,7 @@ Priya,Patel,FEMALE,JAVELIN`;
                     </span>
                   )}
                   {willExceedLimit && (
-                    <span className="text-amber-600 dark:text-amber-400 font-semibold">
+                    <span className="text-primary-600 dark:text-primary-400 font-semibold">
                       Exceeds plan limit ({validRows.length} rows vs {remainingSlots} slots)
                     </span>
                   )}
@@ -476,7 +476,7 @@ Priya,Patel,FEMALE,JAVELIN`;
                         <tr
                           key={r.rowNumber}
                           className={`border-t border-[var(--card-border)] ${
-                            r.errors.length > 0 ? "bg-red-500/5" : ""
+                            r.errors.length > 0 ? "bg-danger-500/5" : ""
                           }`}
                         >
                           <td className="px-2 py-1.5 text-muted font-mono tabular-nums">
@@ -493,7 +493,7 @@ Priya,Patel,FEMALE,JAVELIN`;
                                 {r.errors.join("; ")}
                               </span>
                             ) : (
-                              <span className="text-emerald-600 dark:text-emerald-400">OK</span>
+                              <span className="text-success-600 dark:text-success-400">OK</span>
                             )}
                           </td>
                         </tr>

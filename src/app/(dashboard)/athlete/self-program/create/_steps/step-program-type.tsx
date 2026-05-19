@@ -46,7 +46,7 @@ export function StepProgramType({ form, update, errors }: StepProgramTypeProps) 
               key={type.value}
               type="button"
               onClick={() => update("programType", type.value)}
-              className={`card card-interactive p-5 text-left transition-all ${
+              className={`card card-interactive p-5 text-left transition-colors ${
                 isSelected
                   ? "border-primary-500 bg-primary-50/50 dark:bg-primary-950/20"
                   : "border-[var(--card-border)]"
@@ -96,7 +96,7 @@ export function StepProgramType({ form, update, errors }: StepProgramTypeProps) 
       </div>
 
       {errors.programType && (
-        <p className="text-sm text-red-600 dark:text-red-400">{errors.programType}</p>
+        <p className="text-sm text-danger-600 dark:text-danger-400">{errors.programType}</p>
       )}
     </div>
   );

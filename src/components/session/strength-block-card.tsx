@@ -65,7 +65,7 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
   const allDone = setsLogged >= block.sets;
   const categoryColor =
     CLASSIFICATION_COLORS[block.classification] ??
-    "bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400";
+    "bg-surface-100 dark:bg-surface-800 text-surface-600 dark:text-surface-400";
 
   function handleLog() {
     const w = parseFloat(weight);
@@ -94,13 +94,13 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
         <span className={`text-xs px-2 py-0.5 rounded-md font-semibold ${categoryColor}`}>
           {block.classification}
         </span>
-        <span className="text-sm font-semibold text-gray-900 dark:text-white">
+        <span className="text-sm font-semibold text-surface-900 dark:text-white">
           {block.exerciseName}
         </span>
       </div>
 
       {/* Prescription info */}
-      <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">
+      <p className="text-xs text-surface-500 dark:text-surface-400 mb-3">
         {block.sets} sets &times; {block.reps} reps
         {block.loadKg ? ` @ ${block.loadKg}kg` : ""}
         {block.intensityPercent ? ` (${block.intensityPercent}%)` : ""}
@@ -113,14 +113,14 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
           {logged.map((lift, i) => (
             <div
               key={i}
-              className="flex items-center justify-between text-sm py-1.5 px-2 rounded-lg bg-gray-50 dark:bg-gray-800/50"
+              className="flex items-center justify-between text-sm py-1.5 px-2 rounded-lg bg-surface-50 dark:bg-surface-800/50"
             >
-              <span className="text-gray-500 dark:text-gray-400">Set {lift.setNumber}</span>
-              <span className="font-semibold text-gray-900 dark:text-white tabular-nums">
+              <span className="text-surface-500 dark:text-surface-400">Set {lift.setNumber}</span>
+              <span className="font-semibold text-surface-900 dark:text-white tabular-nums">
                 {lift.weight}kg &times; {lift.reps}
                 {lift.rpe ? ` @ RPE ${lift.rpe}` : ""}
               </span>
-              {!lift.synced && <span className="text-xs text-gray-400">...</span>}
+              {!lift.synced && <span className="text-xs text-surface-400">...</span>}
             </div>
           ))}
         </div>
@@ -131,16 +131,16 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
         {Array.from({ length: block.sets }).map((_, i) => (
           <div
             key={i}
-            className={`h-1.5 flex-1 rounded-full transition-all ${
+            className={`h-1.5 flex-1 rounded-full transition-colors ${
               i < setsLogged
                 ? "bg-primary-500"
                 : i === setsLogged && !allDone
                   ? "bg-primary-300 dark:bg-primary-700"
-                  : "bg-gray-200 dark:bg-gray-700"
+                  : "bg-surface-200 dark:bg-surface-700"
             }`}
           />
         ))}
-        <span className="text-xs text-gray-500 ml-1 tabular-nums">
+        <span className="text-xs text-surface-500 ml-1 tabular-nums">
           {setsLogged}/{block.sets}
         </span>
       </div>
@@ -150,7 +150,7 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
         <div className="space-y-2">
           <div className="flex gap-2">
             <div className="flex-1">
-              <label className="text-nano uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-0.5 block">
+              <label className="text-nano uppercase tracking-wide text-surface-500 dark:text-surface-400 mb-0.5 block">
                 kg
               </label>
               <input
@@ -166,7 +166,7 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
               />
             </div>
             <div className="flex-1">
-              <label className="text-nano uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-0.5 block">
+              <label className="text-nano uppercase tracking-wide text-surface-500 dark:text-surface-400 mb-0.5 block">
                 Reps
               </label>
               <input
@@ -181,7 +181,7 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
               />
             </div>
             <div className="w-16">
-              <label className="text-nano uppercase tracking-wide text-gray-500 dark:text-gray-400 mb-0.5 block">
+              <label className="text-nano uppercase tracking-wide text-surface-500 dark:text-surface-400 mb-0.5 block">
                 RPE
               </label>
               <input
@@ -208,7 +208,7 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
       )}
 
       {allDone && (
-        <p className="text-center text-xs font-medium text-emerald-600 dark:text-emerald-400">
+        <p className="text-center text-xs font-medium text-success-600 dark:text-success-400">
           All sets complete
         </p>
       )}

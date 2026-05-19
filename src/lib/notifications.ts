@@ -149,7 +149,7 @@ export async function getNotifications(
   };
 
   // unreadCount honors the same `types` filter as the listing query — so
-  // filtered views (e.g. category=feedback) report unread count for that
+  // filtered views (e.g. category=comments) report unread count for that
   // view, not the global total. The "all" view (types=null) still gets
   // the total. `unreadOnly` and the cursor are intentionally excluded —
   // unreadOnly would always equal items.length, and the cursor scopes a

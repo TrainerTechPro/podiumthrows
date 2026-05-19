@@ -164,7 +164,10 @@ export default async function PrintProgramPage({
               {coach.firstName} {coach.lastName}
             </span>
             {coach.organization && (
-              <span className="text-muted print:text-gray-600"> &mdash; {coach.organization}</span>
+              <span className="text-muted print:text-surface-600">
+                {" "}
+                &mdash; {coach.organization}
+              </span>
             )}
             {focusedAthlete && (
               <>
@@ -188,7 +191,7 @@ export default async function PrintProgramPage({
           {days.map((day) => (
             <div key={day.date}>
               {/* Day header */}
-              <h2 className="text-sm font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-gray-400 print:text-black print:border-gray-400">
+              <h2 className="text-sm font-heading font-bold uppercase tracking-wider mb-2 pb-1 border-b border-surface-400 print:text-black print:border-surface-400">
                 {day.label}
               </h2>
 
@@ -218,13 +221,13 @@ export default async function PrintProgramPage({
       )}
 
       {/* Notes section — blank lines for handwriting */}
-      <div className="mt-8 pt-4 border-t border-gray-300 print:border-gray-400">
+      <div className="mt-8 pt-4 border-t border-surface-300 print:border-surface-400">
         <h3 className="text-xs font-heading font-bold uppercase tracking-wider mb-2 print:text-black">
           Notes
         </h3>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="border-b border-gray-200 print:border-gray-300 h-6" />
+            <div key={i} className="border-b border-surface-200 print:border-surface-300 h-6" />
           ))}
         </div>
       </div>
@@ -264,16 +267,16 @@ function SessionBlock({
   const assignee = athleteName ?? groupName ?? (tier === "TEAM" ? "All Athletes" : null);
 
   return (
-    <div className="print-block border border-gray-300 dark:border-surface-700 rounded-lg p-3 print:border-gray-400 print:rounded-none">
+    <div className="print-block border border-surface-300 dark:border-surface-700 rounded-lg p-3 print:border-surface-400 print:rounded-none">
       {/* Session header */}
       <div className="flex items-baseline justify-between gap-2 mb-2">
         <div>
           <span className="text-sm font-semibold print:text-black">{title}</span>
           {sessionName !== title && (
-            <span className="text-xs text-muted print:text-gray-500 ml-2">({sessionName})</span>
+            <span className="text-xs text-muted print:text-surface-500 ml-2">({sessionName})</span>
           )}
         </div>
-        <div className="flex items-center gap-2 text-xs text-muted print:text-gray-500 shrink-0">
+        <div className="flex items-center gap-2 text-xs text-muted print:text-surface-500 shrink-0">
           <span>{formatEventType(event)}</span>
           {assignee && <span>&middot; {assignee}</span>}
         </div>
@@ -282,12 +285,12 @@ function SessionBlock({
       {/* Throwing blocks */}
       {throwingBlocks.length > 0 && (
         <div className="mb-2">
-          <h4 className="text-nano font-bold uppercase tracking-wider text-muted print:text-gray-500 mb-1">
+          <h4 className="text-nano font-bold uppercase tracking-wider text-muted print:text-surface-500 mb-1">
             Throwing
           </h4>
           <table className="w-full text-xs print:text-black">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-surface-700 print:border-gray-300">
+              <tr className="border-b border-surface-200 dark:border-surface-700 print:border-surface-300">
                 <th className="text-left py-0.5 font-semibold">Implement</th>
                 <th className="text-right py-0.5 font-semibold w-20">Throws</th>
                 <th className="text-right py-0.5 font-semibold w-24">Intensity</th>
@@ -300,7 +303,7 @@ function SessionBlock({
                 return (
                   <tr
                     key={b.id}
-                    className="border-b border-gray-100 dark:border-surface-800 print:border-gray-200"
+                    className="border-b border-surface-100 dark:border-surface-800 print:border-surface-200"
                   >
                     <td className="py-1 font-mono">{cfg?.implementWeight || "\u2014"}</td>
                     <td className="py-1 text-right font-mono">{cfg?.throwCount ?? "\u2014"}</td>
@@ -309,7 +312,7 @@ function SessionBlock({
                         ? `${cfg.intensityMin}\u2013${cfg.intensityMax}%`
                         : "\u2014"}
                     </td>
-                    <td className="py-1 pl-3 text-muted print:text-gray-500 capitalize">
+                    <td className="py-1 pl-3 text-muted print:text-surface-500 capitalize">
                       {cfg?.techniqueFocus?.replace(/_/g, " ").toLowerCase() ?? ""}
                     </td>
                   </tr>
@@ -323,12 +326,12 @@ function SessionBlock({
       {/* Strength blocks */}
       {strengthBlocks.length > 0 && (
         <div className="mb-2">
-          <h4 className="text-nano font-bold uppercase tracking-wider text-muted print:text-gray-500 mb-1">
+          <h4 className="text-nano font-bold uppercase tracking-wider text-muted print:text-surface-500 mb-1">
             Strength
           </h4>
           <table className="w-full text-xs print:text-black">
             <thead>
-              <tr className="border-b border-gray-200 dark:border-surface-700 print:border-gray-300">
+              <tr className="border-b border-surface-200 dark:border-surface-700 print:border-surface-300">
                 <th className="text-left py-0.5 font-semibold">Exercise</th>
                 <th className="text-right py-0.5 font-semibold w-24">Sets x Reps</th>
                 <th className="text-right py-0.5 font-semibold w-16">Load</th>
@@ -341,7 +344,7 @@ function SessionBlock({
                 return cfg.exercises.map((ex, i) => (
                   <tr
                     key={`${b.id}-${i}`}
-                    className="border-b border-gray-100 dark:border-surface-800 print:border-gray-200"
+                    className="border-b border-surface-100 dark:border-surface-800 print:border-surface-200"
                   >
                     <td className="py-1">{ex.name || "\u2014"}</td>
                     <td className="py-1 text-right font-mono">
@@ -360,7 +363,7 @@ function SessionBlock({
 
       {/* Other blocks (warmup, cooldown, plyometric, notes) */}
       {otherBlocks.length > 0 && (
-        <div className="text-xs text-muted print:text-gray-500">
+        <div className="text-xs text-muted print:text-surface-500">
           {otherBlocks.map((b) => {
             const cfg = parseConfig<Record<string, unknown>>(b.config);
             const note = cfg?.notes ?? cfg?.description;
@@ -375,7 +378,7 @@ function SessionBlock({
       )}
 
       {/* Session notes */}
-      {notes && <p className="text-xs text-muted print:text-gray-500 mt-1 italic">{notes}</p>}
+      {notes && <p className="text-xs text-muted print:text-surface-500 mt-1 italic">{notes}</p>}
     </div>
   );
 }

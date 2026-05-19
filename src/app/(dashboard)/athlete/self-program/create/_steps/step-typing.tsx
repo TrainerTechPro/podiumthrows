@@ -62,7 +62,8 @@ const RECOVERY_PROFILES = [
   {
     value: "SLOW",
     label: "Slow Recovery",
-    description: "Need 48-72 hours between hard sessions. Better with lower frequency, higher quality.",
+    description:
+      "Need 48-72 hours between hard sessions. Better with lower frequency, higher quality.",
   },
 ];
 
@@ -80,8 +81,8 @@ export function StepTyping({ form, update, errors: _errors }: StepTypingProps) {
           Athlete Typing
         </h2>
         <p className="text-body text-surface-700 dark:text-surface-300">
-          Help us understand how your body responds to training. This personalizes your
-          program based on Bondarchuk&apos;s athlete classification system.
+          Help us understand how your body responds to training. This personalizes your program
+          based on Bondarchuk&apos;s athlete classification system.
         </p>
       </div>
 
@@ -99,7 +100,7 @@ export function StepTyping({ form, update, errors: _errors }: StepTypingProps) {
                 key={option.value}
                 type="button"
                 onClick={() => update("adaptationSpeed", option.value)}
-                className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-colors text-left ${
                   isSelected
                     ? "border-primary-500 bg-primary-50/50 dark:bg-primary-950/20"
                     : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
@@ -139,7 +140,7 @@ export function StepTyping({ form, update, errors: _errors }: StepTypingProps) {
                 key={option.value}
                 type="button"
                 onClick={() => update("transferType", option.value)}
-                className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-colors text-left ${
                   isSelected
                     ? "border-primary-500 bg-primary-50/50 dark:bg-primary-950/20"
                     : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
@@ -177,7 +178,7 @@ export function StepTyping({ form, update, errors: _errors }: StepTypingProps) {
                 key={option.value}
                 type="button"
                 onClick={() => update("recoveryProfile", option.value)}
-                className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-all text-left ${
+                className={`w-full flex items-start gap-3 p-3 rounded-xl border-2 transition-colors text-left ${
                   isSelected
                     ? "border-primary-500 bg-primary-50/50 dark:bg-primary-950/20"
                     : "border-[var(--card-border)] hover:border-[var(--color-border-strong)]"

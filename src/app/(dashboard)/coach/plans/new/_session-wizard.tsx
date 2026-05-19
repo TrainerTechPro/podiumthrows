@@ -387,7 +387,7 @@ export function SessionWizard({
       </div>
 
       {/* Error */}
-      {error && <p className="text-sm text-red-600 dark:text-red-400">{error}</p>}
+      {error && <p className="text-sm text-danger-600 dark:text-danger-400">{error}</p>}
 
       {/* Navigation */}
       <div className="flex items-center justify-between">

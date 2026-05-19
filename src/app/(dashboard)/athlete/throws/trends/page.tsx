@@ -170,7 +170,7 @@ export default function ThrowAnalysisPage() {
         <div className="card">
           <EmptyState
             title="Unable to load analysis"
-            description="Something went wrong fetching your throw data. Please try again."
+            description="Couldn't load your throws. Pull to refresh, or try again in a moment."
             action={
               <button className="btn-primary" onClick={() => window.location.reload()}>
                 Retry
@@ -279,7 +279,9 @@ export default function ThrowAnalysisPage() {
                           >
                             {meta?.label ?? pr.event}
                           </span>
-                          <span className="text-xs text-muted font-mono">{pr.implement}</span>
+                          <span className="text-xs text-muted font-mono tabular-nums">
+                            {pr.implement}
+                          </span>
                           <span className="text-nano px-1.5 py-0.5 rounded bg-[var(--muted-bg)] text-muted font-medium">
                             {pr.source === "COMPETITION" ? "Competition" : "Training"}
                           </span>
@@ -288,7 +290,7 @@ export default function ThrowAnalysisPage() {
                           {fmtDateLong(pr.date)}
                         </p>
                       </div>
-                      <span className="text-lg font-bold font-mono text-primary-600 dark:text-primary-300 whitespace-nowrap">
+                      <span className="text-lg font-bold font-mono tabular-nums text-primary-600 dark:text-primary-300 whitespace-nowrap">
                         {formatDist(pr.distance)}
                       </span>
                     </div>
@@ -316,13 +318,13 @@ export default function ThrowAnalysisPage() {
         <div className="grid grid-cols-2 gap-4">
           <div className="rounded-xl border border-[var(--card-border)] p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+              <div className="w-2.5 h-2.5 rounded-full bg-primary-500" />
               <span className="text-xs font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
                 Competition
               </span>
             </div>
             <div>
-              <p className="text-2xl font-bold font-mono text-[var(--foreground)]">
+              <p className="text-2xl font-bold font-mono tabular-nums text-[var(--foreground)]">
                 {totalComp.count}
               </p>
               <p className="text-xs text-muted">throws</p>
@@ -336,7 +338,7 @@ export default function ThrowAnalysisPage() {
             )}
             <div className="w-full h-2 bg-[var(--muted-bg)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-amber-500 rounded-full transition-all duration-700"
+                className="h-full bg-primary-500 rounded-full transition-colors duration-700"
                 style={{ width: `${(totalComp.count / maxCount) * 100}%` }}
               />
             </div>
@@ -344,27 +346,27 @@ export default function ThrowAnalysisPage() {
 
           <div className="rounded-xl border border-[var(--card-border)] p-4 space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-blue-500" />
+              <div className="w-2.5 h-2.5 rounded-full bg-info-500" />
               <span className="text-xs font-semibold text-surface-700 dark:text-surface-300 uppercase tracking-wider">
                 Practice
               </span>
             </div>
             <div>
-              <p className="text-2xl font-bold font-mono text-[var(--foreground)]">
+              <p className="text-2xl font-bold font-mono tabular-nums text-[var(--foreground)]">
                 {totalPract.count}
               </p>
               <p className="text-xs text-muted">throws</p>
             </div>
             {totalPract.avgDistance > 0 && (
               <div>
-                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                <p className="text-sm font-semibold text-info-600 dark:text-info-400">
                   {formatDist(totalPract.avgDistance)} avg
                 </p>
               </div>
             )}
             <div className="w-full h-2 bg-[var(--muted-bg)] rounded-full overflow-hidden">
               <div
-                className="h-full bg-blue-500 rounded-full transition-all duration-700"
+                className="h-full bg-info-500 rounded-full transition-colors duration-700"
                 style={{ width: `${(totalPract.count / maxCount) * 100}%` }}
               />
             </div>
@@ -403,7 +405,7 @@ export default function ThrowAnalysisPage() {
                         className="py-3 flex items-center justify-between gap-4"
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold font-mono text-[var(--foreground)]">
+                          <p className="text-sm font-semibold font-mono tabular-nums text-[var(--foreground)]">
                             {row.implement}
                           </p>
                           <p className="text-xs text-surface-700 dark:text-surface-300">
@@ -412,7 +414,7 @@ export default function ThrowAnalysisPage() {
                             {formatDist(row.avgDistance)}
                           </p>
                         </div>
-                        <span className="text-base font-bold font-mono text-orange-600 dark:text-orange-400 whitespace-nowrap">
+                        <span className="text-base font-bold font-mono tabular-nums text-warning-600 dark:text-warning-400 whitespace-nowrap">
                           {formatDist(row.bestDistance)}
                         </span>
                       </div>
@@ -559,7 +561,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
           <select
             value={settings.dateRange}
             onChange={(e) => setDateRange(e.target.value as DateRangeKey)}
-            className="text-xs px-3 min-h-[44px] rounded-md bg-[var(--muted-bg)] border border-[var(--card-border)] text-surface-700 dark:text-surface-300 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="text-xs px-3 min-h-[44px] rounded-md bg-[var(--muted-bg)] border border-[var(--card-border)] text-surface-700 dark:text-surface-300 focus-visible:outline-none focus:ring-1 focus:ring-primary-500"
             aria-label="Date range"
           >
             {(Object.keys(DATE_RANGE_LABELS) as DateRangeKey[]).map((key) => (
@@ -580,7 +582,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
             <button
               key={label}
               onClick={() => toggleWeight(label)}
-              className={`text-micro font-mono font-semibold px-3 min-h-[44px] rounded-md border transition-colors ${
+              className={`text-micro font-mono tabular-nums font-semibold px-3 min-h-[44px] rounded-md border transition-colors ${
                 isVisible
                   ? isComp
                     ? "bg-primary-500 border-primary-500 text-white"

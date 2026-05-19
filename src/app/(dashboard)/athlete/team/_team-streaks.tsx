@@ -18,10 +18,10 @@ type StreakStanding = {
 };
 
 function intensityColor(streak: number): string {
-  if (streak >= 30) return "text-rose-500";
-  if (streak >= 14) return "text-amber-500";
-  if (streak >= 7) return "text-orange-400";
-  return "text-emerald-400";
+  if (streak >= 30) return "text-danger-500";
+  if (streak >= 14) return "text-primary-500";
+  if (streak >= 7) return "text-warning-400";
+  return "text-success-400";
 }
 
 function Avatar({ entry }: { entry: StreakStanding }) {

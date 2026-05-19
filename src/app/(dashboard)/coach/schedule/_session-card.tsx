@@ -41,7 +41,7 @@ export function SessionCard({ session, onClick }: SessionCardProps) {
       className={cn(
         "w-full text-left px-3 py-2.5 rounded-xl border-l-4 transition-shadow",
         "cursor-pointer hover:ring-1 hover:ring-primary-500/30",
-        "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50",
         style.bg,
         isInherited ? "border-dashed" : "border-solid",
         style.border
