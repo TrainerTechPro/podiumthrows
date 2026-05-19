@@ -23,8 +23,8 @@ export const ATHLETE_STORAGE = path.join(AUTH_DIR, "athlete.json");
 // tight for a from-cold build of /coach/dashboard. We bump the whole-test
 // budget so the waitForURL has room without hiding real regressions. CI
 // is faster since the build is pre-warmed.
-const SETUP_TEST_TIMEOUT_MS = 90_000;
-const AUTH_REDIRECT_TIMEOUT_MS = 60_000;
+const SETUP_TEST_TIMEOUT_MS = 120_000;
+const AUTH_REDIRECT_TIMEOUT_MS = 90_000;
 
 setup("authenticate as coach", async ({ page }) => {
   setup.setTimeout(SETUP_TEST_TIMEOUT_MS);

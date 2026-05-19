@@ -2,7 +2,7 @@ import { redirect } from "next/navigation";
 import { getSession } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { DashboardLayout, type DashboardUser } from "@/components";
-import { getCoachNavSections } from "@/components/ui/Sidebar";
+import { getCoachNavSections } from "@/components/ui/coach-nav-sections";
 import { fetchCoachByUserId } from "@/lib/data/coach";
 import { getUnreadCount } from "@/lib/notifications";
 import { SidelineFAB } from "@/components/coach/SidelineFAB";

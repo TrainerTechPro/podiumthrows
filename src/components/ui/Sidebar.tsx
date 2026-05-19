@@ -4,20 +4,7 @@ import { ReactNode, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import {
-  LayoutDashboard,
-  Users,
-  UsersRound,
-  Target,
-  Settings,
-  CalendarRange,
-  UserPlus,
-  ChevronRight,
-  Library,
-  Wrench,
-  Megaphone,
-  Video,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -243,175 +230,13 @@ export function Sidebar({ sections, header, footer, open, onClose, className }: 
   );
 }
 
-/* ─── Shared icon props for consistent sizing ─────────────────────────── */
-
-const iconSize = { size: 20, strokeWidth: 1.75, "aria-hidden": true as const };
-
 /* ─── Pre-built nav configs ─────────────────────────────────────────────── */
 
-/**
- * Coach sidebar contract — Dashboard, Athletes, Calendar, Builder, Library,
- * (optional) Video, Settings. Anything else is a deep-link or feature-flagged
- * module. See tasks/navigation-contract-2026-05-18.md.
- *
- * Video is conditional: it appears only when the `videoAnalysis` flag is on,
- * because the underlying route is gated by middleware FLAG_GATED_ROUTES — a
- * sidebar entry that immediately redirects is worse than no entry. The coach
- * layout resolves the flag server-side and passes the result here.
- */
-export function getCoachNavSections(
-  { videoAnalysisEnabled }: { videoAnalysisEnabled: boolean } = { videoAnalysisEnabled: false }
-): NavSection[] {
-  const primary: NavItem[] = [
-    {
-      label: "Dashboard",
-      href: "/coach/dashboard",
-      icon: <LayoutDashboard {...iconSize} />,
-      // /coach/wellness redirects to /coach/dashboard?tab=readiness — keep
-      // the matchPath so a deep-link from a coach email still highlights
-      // Dashboard during the redirect hop.
-      matchPaths: ["/coach/dashboard", "/coach/wellness"],
-    },
-
-    // Athletes — Tier-1 (Roster, Self-Logs, Competitions) lives in the page
-    // header. Tier-2 admin surfaces (Throws, Invitations, Groups, Event
-    // Groups, Goals, Announcements) appear as sidebar children.
-    {
-      label: "Athletes",
-      href: "/coach/athletes",
-      icon: <Users {...iconSize} />,
-      matchPaths: [
-        "/coach/athletes",
-        "/coach/invitations",
-        "/coach/competitions",
-        "/coach/team",
-        "/coach/teams",
-        "/coach/event-groups",
-        "/coach/goals",
-        "/coach/athlete-logs",
-        "/coach/hub",
-        "/coach/throws/assessment",
-      ],
-      children: [
-        {
-          label: "Roster",
-          href: "/coach/athletes",
-          icon: <Users {...iconSize} />,
-          matchPaths: ["/coach/athletes"],
-        },
-        {
-          label: "Throws",
-          href: "/coach/athletes/throws",
-          icon: <Target {...iconSize} />,
-          matchPaths: ["/coach/athletes/throws"],
-        },
-        {
-          label: "Invitations",
-          href: "/coach/athletes/invitations",
-          icon: <UserPlus {...iconSize} />,
-          matchPaths: ["/coach/athletes/invitations", "/coach/invitations"],
-        },
-        {
-          label: "Groups",
-          href: "/coach/athletes/groups",
-          icon: <UsersRound {...iconSize} />,
-          matchPaths: ["/coach/athletes/groups", "/coach/teams"],
-        },
-        {
-          label: "Event Groups",
-          href: "/coach/athletes/event-groups",
-          icon: <UsersRound {...iconSize} />,
-          matchPaths: ["/coach/athletes/event-groups", "/coach/event-groups"],
-        },
-        {
-          label: "Goals",
-          href: "/coach/athletes/goals",
-          icon: <Target {...iconSize} />,
-          matchPaths: ["/coach/athletes/goals", "/coach/goals"],
-        },
-        {
-          label: "Announcements",
-          href: "/coach/athletes/announcements",
-          icon: <Megaphone {...iconSize} />,
-          matchPaths: ["/coach/athletes/announcements", "/coach/team"],
-        },
-      ],
-    },
-
-    // Calendar — absorbs schedule, practices, availability, live-practice.
-    {
-      label: "Calendar",
-      href: "/coach/calendar",
-      icon: <CalendarRange {...iconSize} />,
-      matchPaths: [
-        "/coach/calendar",
-        "/coach/schedule",
-        "/coach/practices",
-        "/coach/availability",
-        "/coach/throws/practice",
-      ],
-    },
-
-    // Library — exercises, throws sessions, drills, plans, drill videos.
-    {
-      label: "Library",
-      href: "/coach/library",
-      icon: <Library {...iconSize} />,
-      matchPaths: [
-        "/coach/library",
-        "/coach/exercises",
-        "/coach/plans",
-        "/coach/throws/library",
-        "/coach/throws/drills",
-        "/coach/videos/drills",
-      ],
-    },
-
-    // Builder — session, plan (manual / generate), drill.
-    {
-      label: "Builder",
-      href: "/coach/builder",
-      icon: <Wrench {...iconSize} />,
-      matchPaths: [
-        "/coach/builder",
-        "/coach/throws/builder",
-        "/coach/plans/new",
-        "/coach/plans/generate",
-      ],
-    },
-  ];
-
-  if (videoAnalysisEnabled) {
-    primary.push({
-      label: "Video",
-      href: "/coach/video-analysis",
-      icon: <Video {...iconSize} />,
-      matchPaths: ["/coach/video-analysis", "/coach/videos", "/coach/throws/analyze"],
-    });
-  }
-
-  return [
-    { items: primary },
-    {
-      items: [
-        // Notifications + Feedback Inbox live in the top bar. Settings
-        // absorbs Tools (calculators) and Integrations as tabs.
-        {
-          label: "Settings",
-          href: "/coach/settings",
-          icon: <Settings {...iconSize} />,
-          matchPaths: ["/coach/settings", "/coach/integrations", "/coach/tools"],
-        },
-      ],
-    },
-  ];
-}
-
-/**
- * Static default for callers that can't resolve flags (tests, command palette
- * fallback). Production uses {@link getCoachNavSections} from the coach layout.
- */
-export const COACH_NAV_SECTIONS: NavSection[] = getCoachNavSections();
+// Re-exported from a non-client file (coach-nav-sections.tsx) so server
+// components can import them without webpack stripping non-component
+// exports across the "use client" boundary. See that file for the actual
+// definitions and tasks/navigation-contract-2026-05-18.md for the contract.
+export { getCoachNavSections, COACH_NAV_SECTIONS } from "./coach-nav-sections";
 
 // ATHLETE_NAV_SECTIONS was removed 2026-05-18. The athlete shell is
 // mobile-native (BottomTabBar) on every viewport — desktop is a roomy

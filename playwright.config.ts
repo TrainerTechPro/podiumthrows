@@ -102,13 +102,22 @@ export default defineConfig({
       POSTGRES_PRISMA_URL: LOCAL_DB_URL,
       POSTGRES_URL: LOCAL_DB_URL,
       POSTGRES_URL_NON_POOLING: LOCAL_DB_URL,
-      // Pin a deterministic JWT secret for e2e — without this, the dev
-      // fallback in auth.ts and auth-edge.ts can diverge when the shell
-      // already exports JWT_SECRET from a parent (.env.local in the
-      // non-worktree checkout, shell rc, etc.). With it pinned, sign + verify
-      // always share a key.
-      JWT_SECRET: "e2e-dev-pinned-secret-do-not-use-in-prod",
+      // Disable Upstash rate-limit during e2e — falls back to in-memory
+      // limiter (src/lib/rate-limit.ts) when both vars are empty. Otherwise
+      // .env.local prod Upstash creds leak in and the login POST hangs
+      // waiting on a cross-region Redis it can't reach.
+      UPSTASH_REDIS_REST_URL: "",
+      UPSTASH_REDIS_REST_TOKEN: "",
+      // Sentry: don't ship e2e test traffic to prod Sentry project.
+      SENTRY_DSN: "",
+      NEXT_PUBLIC_SENTRY_DSN: "",
+      // Pin JWT_SECRET so signing (auth.ts, node runtime) and verifying
+      // (auth-edge.ts, edge runtime) agree. The dev fallbacks in those
+      // two files DIFFER ("dev-secret-change-me" vs the edge hash), so
+      // any flow that signs in Node and verifies in middleware would loop
+      // back to /login if .env.local doesn't supply JWT_SECRET.
+      JWT_SECRET: "e2e-fixed-jwt-secret-do-not-use-in-prod-7c4a9e1b3f2d5a8e",
     },
-    timeout: 120_000,
+    timeout: 180_000,
   },
 });
