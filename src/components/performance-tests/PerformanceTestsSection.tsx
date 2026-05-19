@@ -60,7 +60,7 @@ export function PerformanceTestsSection({ athleteId, athleteName }: PerformanceT
       const typesRes = await fetch("/api/performance-tests/types");
       const typesPayload = await typesRes.json();
       if (!typesRes.ok || !typesPayload.success) {
-        throw new Error(typesPayload.error || "Failed to load test types");
+        throw new Error(typesPayload.error || "Couldn’t load test types");
       }
       const typeList = typesPayload.data as PerformanceTestTypeDTO[];
       setTypes(typeList);
@@ -96,7 +96,7 @@ export function PerformanceTestsSection({ athleteId, athleteName }: PerformanceT
         );
         const payload = await res.json();
         if (!res.ok || !payload.success) {
-          throw new Error(payload.error || "Failed to load sessions");
+          throw new Error(payload.error || "Couldn’t load sessions");
         }
         const items = (payload.data?.items ?? []) as PerformanceTestSessionDTO[];
         setActiveSessions(items);

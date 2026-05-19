@@ -74,13 +74,13 @@ export function InvitationsClient({ initialInvitations }: Props) {
             method: "PATCH",
             headers: csrfHeaders(),
           });
-          if (!res.ok) throw new Error("Failed to revoke");
+          if (!res.ok) throw new Error("Couldn’t revoke");
           setInvitations((prev) =>
             prev.map((i) => (i.id === inv.id ? { ...i, status: "REVOKED" } : i))
           );
           toast("Invitation revoked", "success");
         } catch {
-          toast("Failed to revoke invitation. Please try again.", "error");
+          toast("Couldn’t revoke invitation. Please try again.", "error");
         } finally {
           setRevokingId(null);
         }
@@ -161,7 +161,7 @@ export function InvitationsClient({ initialInvitations }: Props) {
                     aria-label={`Revoke invitation${inv.email ? ` for ${inv.email}` : ""}`}
                     className="px-3 py-2.5 sm:py-1.5 rounded-lg text-sm sm:text-xs font-semibold transition-colors border bg-[var(--surface)] text-muted border-[var(--border)] hover:text-danger-600 hover:border-danger-500/30 hover:bg-danger-500/5 active:bg-danger-500/10 disabled:opacity-50 min-h-[44px] sm:min-h-0"
                   >
-                    {revokingId === inv.id ? "Revoking..." : "Revoke"}
+                    {revokingId === inv.id ? "Revoking…" : "Revoke"}
                   </button>
                 </div>
               </div>

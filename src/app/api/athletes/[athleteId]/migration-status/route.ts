@@ -295,7 +295,7 @@ export async function GET(_request: NextRequest, ctx: RouteCtx) {
   } catch (error) {
     logger.error("GET /api/athletes/[athleteId]/migration-status", { context: "throws", error });
     return NextResponse.json(
-      { success: false, error: "Failed to compute migration status" },
+      { success: false, error: "Couldn’t compute migration status" },
       { status: 500 }
     );
   }

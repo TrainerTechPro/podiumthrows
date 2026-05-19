@@ -85,7 +85,7 @@ export function SessionSidebar({
     setAthletesLoading(true);
     try {
       const res = await fetch("/api/coach/athletes");
-      if (!res.ok) throw new Error("Failed to load athletes");
+      if (!res.ok) throw new Error("Couldn’t load athletes");
       const json = await res.json();
       setAthletes(
         (json.data ?? []).map((a: { id: string; firstName: string; lastName: string }) => ({
@@ -128,7 +128,7 @@ export function SessionSidebar({
         });
         if (!res.ok) {
           const json = await res.json().catch(() => ({}));
-          throw new Error(json.error ?? "Failed to create session");
+          throw new Error(json.error ?? "Couldn’t create session");
         }
       } else if (session) {
         const res = await fetch(`/api/coach/programming/${session.id}`, {
@@ -142,7 +142,7 @@ export function SessionSidebar({
         });
         if (!res.ok) {
           const json = await res.json().catch(() => ({}));
-          throw new Error(json.error ?? "Failed to update session");
+          throw new Error(json.error ?? "Couldn’t update session");
         }
       }
 
@@ -199,7 +199,7 @@ export function SessionSidebar({
         });
         if (!res.ok) {
           const json = await res.json().catch(() => ({}));
-          throw new Error(json.error ?? "Failed to create session");
+          throw new Error(json.error ?? "Couldn’t create session");
         }
         const created = await res.json();
         sessionId = created.data?.id;
@@ -215,7 +215,7 @@ export function SessionSidebar({
         });
         if (!res.ok) {
           const json = await res.json().catch(() => ({}));
-          throw new Error(json.error ?? "Failed to update session");
+          throw new Error(json.error ?? "Couldn’t update session");
         }
       }
 
@@ -228,7 +228,7 @@ export function SessionSidebar({
       });
       if (!pubRes.ok) {
         const json = await pubRes.json().catch(() => ({}));
-        throw new Error(json.error ?? "Failed to publish session");
+        throw new Error(json.error ?? "Couldn’t publish session");
       }
 
       const pubJson = await pubRes.json();
@@ -275,7 +275,7 @@ export function SessionSidebar({
       });
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        throw new Error(json.error ?? "Failed to delete session");
+        throw new Error(json.error ?? "Couldn’t delete session");
       }
       toastSuccess("Deleted", "Session has been removed.");
       onSaved();
@@ -336,7 +336,7 @@ export function SessionSidebar({
 
       if (!res.ok) {
         const json = await res.json().catch(() => ({}));
-        throw new Error(json.error ?? "Failed to create override");
+        throw new Error(json.error ?? "Couldn’t create override");
       }
 
       toastSuccess("Override created", "The override has been saved.");
@@ -617,7 +617,7 @@ export function SessionSidebar({
                 disabled={athletesLoading}
               >
                 <option value="">
-                  {athletesLoading ? "Loading athletes..." : "Select an athlete..."}
+                  {athletesLoading ? "Loading athletes…" : "Select an athlete…"}
                 </option>
                 {athletes.map((a) => (
                   <option key={a.id} value={a.id}>

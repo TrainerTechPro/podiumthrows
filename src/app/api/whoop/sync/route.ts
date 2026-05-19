@@ -122,7 +122,7 @@ export async function POST(request: Request) {
     } catch (writeErr) {
       // ok: best-effort error stamp. If we can't update the row, we still
       // want to return the original sync error to the client below.
-      logger.debug("Failed to record whoop lastSyncError", {
+      logger.debug("Couldn’t record whoop lastSyncError", {
         context: "api/whoop/sync",
         metadata: { reason: writeErr instanceof Error ? writeErr.message : "unknown" },
       });

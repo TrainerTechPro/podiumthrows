@@ -216,7 +216,7 @@ export async function POST(request: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to start workout." },
+      { success: false, error: "Couldn’t start workout." },
       { status: 500 }
     );
   }

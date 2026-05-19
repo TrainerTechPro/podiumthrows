@@ -57,7 +57,7 @@ export async function POST(req: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error:"Failed to save audio." },
+      { success: false, error:"Couldn’t save audio." },
       { status: 500 }
     );
   }

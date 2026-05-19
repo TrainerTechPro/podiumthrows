@@ -41,7 +41,7 @@ export async function PATCH(
       return NextResponse.json({ success: false, error: "Team link not found." }, { status: 404 });
     }
     logger.error("PATCH /api/coach/team-links/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update team link." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t update team link." }, { status: 500 });
   }
 }
 
@@ -65,6 +65,6 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: "Team link not found." }, { status: 404 });
     }
     logger.error("DELETE /api/coach/team-links/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to delete team link." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t delete team link." }, { status: 500 });
   }
 }

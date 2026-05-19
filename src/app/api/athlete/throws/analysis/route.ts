@@ -415,7 +415,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/athlete/throws/analysis", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch analysis data." },
+      { success: false, error: "Couldn’t fetch analysis data." },
       { status: 500 }
     );
   }

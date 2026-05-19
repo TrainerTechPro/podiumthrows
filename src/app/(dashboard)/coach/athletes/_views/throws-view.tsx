@@ -161,12 +161,12 @@ export function ThrowsView({ teamId }: { teamId: string | null }) {
       });
       const data = await res.json().catch(() => null);
       if (!res.ok || !data?.success) {
-        throw new Error(data?.error || "Failed to remove athlete");
+        throw new Error(data?.error || "Couldn’t remove athlete");
       }
       refetch();
     } catch (err) {
       setRemoveError(
-        err instanceof Error ? err.message : "Failed to remove athlete. Please try again."
+        err instanceof Error ? err.message : "Couldn’t remove athlete. Please try again."
       );
     } finally {
       setRemovingId(null);
@@ -188,7 +188,7 @@ export function ThrowsView({ teamId }: { teamId: string | null }) {
       setInviteCopied(athleteId);
       setTimeout(() => setInviteCopied(null), 3000);
     } catch (err) {
-      logger.error("Failed to create invite:", {
+      logger.error("Couldn’t create invite:", {
         context: "coach/athletes/_views/throws-view",
         error: err,
       });

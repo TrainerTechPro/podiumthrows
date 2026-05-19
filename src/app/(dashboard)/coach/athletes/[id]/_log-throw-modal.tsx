@@ -148,7 +148,7 @@ export function LogThrowModal({
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        toastError(data.error || "Failed to log throw");
+        toastError(data.error || "Couldn’t log throw");
         setSaving(false);
         return;
       }

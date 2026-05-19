@@ -43,6 +43,6 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     return NextResponse.json({ success: true, data: { savedAt: new Date().toISOString() } });
   } catch (err) {
     logger.error("PUT /api/athlete/questionnaires/[id]/draft", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to save draft." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t save draft." }, { status: 500 });
   }
 }

@@ -221,7 +221,7 @@ export function DataTable<T extends Record<string, unknown>>({
               <EmptyState
                 tone="error"
                 title="Couldn't load data"
-                description={error || "Something went wrong. Try again in a moment."}
+                description={error || "Couldn’t load this data. Try again in a moment."}
                 onRetry={onRetry}
               />
             </div>
@@ -314,7 +314,7 @@ export function DataTable<T extends Record<string, unknown>>({
                     <EmptyState
                       tone="error"
                       title="Couldn't load data"
-                      description={error || "Something went wrong. Try again in a moment."}
+                      description={error || "Couldn’t load this data. Try again in a moment."}
                       onRetry={onRetry}
                     />
                   </td>

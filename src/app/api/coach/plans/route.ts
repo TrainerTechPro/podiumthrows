@@ -71,7 +71,7 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
   } catch (err) {
     logger.error("POST /api/coach/plans", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to create workout plan." },
+      { success: false, error: "Couldn’t create workout plan." },
       { status: 500 }
     );
   }

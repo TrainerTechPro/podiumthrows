@@ -93,11 +93,11 @@ export function OuraCard({
       });
       if (!res.ok) {
         setSyncMode(prev);
-        toastError("Failed to update sync mode");
+        toastError("Couldn’t update sync mode");
       }
     } catch {
       setSyncMode(prev);
-      toastError("Failed to update sync mode");
+      toastError("Couldn’t update sync mode");
     }
   }
 
@@ -147,10 +147,10 @@ export function OuraCard({
         success("Oura Ring Disconnected", "Your Oura Ring integration has been removed.");
         window.location.reload();
       } else {
-        toastError("Failed to disconnect");
+        toastError("Couldn’t disconnect");
       }
     } catch {
-      toastError("Failed to disconnect");
+      toastError("Couldn’t disconnect");
     } finally {
       setDisconnecting(false);
     }

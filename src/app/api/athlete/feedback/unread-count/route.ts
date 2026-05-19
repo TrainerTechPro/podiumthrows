@@ -66,7 +66,7 @@ export async function GET() {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to load unread count." },
+      { success: false, error: "Couldn’t load unread count." },
       { status: 500 }
     );
   }

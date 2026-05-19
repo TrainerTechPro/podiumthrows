@@ -275,7 +275,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to run adaptation check" },
+      { success: false, error: "Couldn’t run adaptation check" },
       { status: 500 }
     );
   }

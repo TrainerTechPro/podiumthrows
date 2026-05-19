@@ -27,7 +27,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/athlete/team-files", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch team files." },
+      { success: false, error: "Couldn’t fetch team files." },
       { status: 500 },
     );
   }

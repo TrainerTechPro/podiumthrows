@@ -49,7 +49,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     logger.error("purge-idempotency-keys cron failed", { context: "cron", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to purge idempotency keys" },
+      { success: false, error: "Couldn’t purge idempotency keys" },
       { status: 500 }
     );
   }

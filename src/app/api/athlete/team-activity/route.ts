@@ -180,7 +180,7 @@ export async function GET(req: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to load team activity." },
+      { success: false, error: "Couldn’t load team activity." },
       { status: 500 }
     );
   }

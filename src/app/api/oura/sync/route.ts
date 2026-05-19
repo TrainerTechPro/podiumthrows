@@ -101,7 +101,7 @@ export async function POST(request: Request) {
       }
     } catch (writeErr) {
       // ok: best-effort error stamp; the original sync error still surfaces below.
-      logger.debug("Failed to record oura lastSyncError", {
+      logger.debug("Couldn’t record oura lastSyncError", {
         context: "api/oura/sync",
         metadata: { reason: writeErr instanceof Error ? writeErr.message : "unknown" },
       });

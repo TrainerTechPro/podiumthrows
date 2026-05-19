@@ -118,7 +118,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error("List drill videos error", { context: "drill-videos", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to list drill videos" },
+      { success: false, error: "Couldn’t list drill videos" },
       { status: 500 }
     );
   }
@@ -280,7 +280,7 @@ export async function POST(request: NextRequest) {
       });
     } catch (err) {
       // Non-fatal — drill video is saved, just not indexed in main library
-      logger.error("Failed to create VideoUpload record for drill video", {
+      logger.error("Couldn’t create VideoUpload record for drill video", {
         context: "drill-videos",
         error: err,
       });
@@ -290,7 +290,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error("Upload drill video error", { context: "drill-videos", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to upload drill video" },
+      { success: false, error: "Couldn’t upload drill video" },
       { status: 500 }
     );
   }

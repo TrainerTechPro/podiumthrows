@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     logger.error("MFA backup verify error", { context: "api", error: e });
     return NextResponse.json(
-      { success: false, error:"An unexpected error occurred" },
+      { success: false, error:"Server error — try again in a moment." },
       { status: 500 }
     );
   }

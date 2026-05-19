@@ -140,7 +140,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   } catch (err) {
     logger.error("PATCH /api/athlete/sessions/[id]/complete", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to complete session." },
+      { success: false, error: "Couldn’t complete session." },
       { status: 500 }
     );
   }

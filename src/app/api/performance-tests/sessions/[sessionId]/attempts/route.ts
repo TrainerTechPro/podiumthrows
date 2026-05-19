@@ -88,7 +88,7 @@ export async function POST(request: NextRequest, ctx: RouteCtx) {
       } catch (error) {
         logger.error("POST performance-tests attempt", { context: "performance-tests", error });
         return NextResponse.json(
-          { success: false, error: "Failed to add attempt" },
+          { success: false, error: "Couldn’t add attempt" },
           { status: 500 }
         );
       }

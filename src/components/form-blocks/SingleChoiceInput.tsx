@@ -81,7 +81,7 @@ export function SingleChoiceInput({
               setOtherText(e.target.value);
               if (e.target.value) onChange(e.target.value);
             }}
-            placeholder="Other..."
+            placeholder="Other…"
             disabled={disabled}
             aria-label="Other answer"
             className="flex-1 px-3 py-2 rounded-lg text-sm border border-[var(--card-border)] bg-[var(--card-bg)] text-[var(--foreground)] placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-primary-500/30 focus:border-primary-500 disabled:opacity-50"

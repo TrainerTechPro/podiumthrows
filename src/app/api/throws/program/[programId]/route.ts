@@ -91,7 +91,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch program" },
+      { success: false, error: "Couldn’t fetch program" },
       { status: 500 },
     );
   }
@@ -171,7 +171,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to update program" },
+      { success: false, error: "Couldn’t update program" },
       { status: 500 },
     );
   }
@@ -239,7 +239,7 @@ export async function DELETE(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to archive program" },
+      { success: false, error: "Couldn’t archive program" },
       { status: 500 },
     );
   }

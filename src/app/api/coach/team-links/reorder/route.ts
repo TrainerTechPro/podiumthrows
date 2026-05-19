@@ -33,6 +33,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "One or more link IDs are invalid." }, { status: 400 });
     }
     logger.error("POST /api/coach/team-links/reorder", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to reorder team links." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t reorder team links." }, { status: 500 });
   }
 }

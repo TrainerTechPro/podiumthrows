@@ -391,12 +391,12 @@ function EditPracticeModal({
       });
       if (!res.ok) {
         const json = await res.json();
-        throw new Error(json.error || "Failed to update practice");
+        throw new Error(json.error || "Couldn’t update practice");
       }
       success("Practice Updated");
       onSaved();
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to update");
+      showError("Couldn’t update practice", err instanceof Error ? err.message : "Try again in a moment.");
     } finally {
       setSaving(false);
     }
@@ -695,7 +695,7 @@ export function AttendanceClient({
         `Marked ${json.data.marked} athlete${json.data.marked !== 1 ? "s" : ""} as present`
       );
     } catch {
-      showError("Error", "Could not mark all present. Please try again.");
+      showError("Couldn’t mark all present", "Try again in a moment.");
       // Refetch to sync
       fetch(`/api/coach/practices/${practiceId}/attendance`)
         .then((r) => r.json())
@@ -726,7 +726,7 @@ export function AttendanceClient({
       setShowCancelConfirm(false);
       router.push("/coach/practices");
     } catch {
-      showError("Error", "Could not cancel practice.");
+      showError("Couldn’t cancel practice", "Try again in a moment.");
     } finally {
       setCancelling(false);
     }

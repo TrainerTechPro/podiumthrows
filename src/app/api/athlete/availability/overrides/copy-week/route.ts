@@ -95,7 +95,7 @@ export async function POST() {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to copy overrides." },
+      { success: false, error: "Couldn’t copy overrides." },
       { status: 500 }
     );
   }

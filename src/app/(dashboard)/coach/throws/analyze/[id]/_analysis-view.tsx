@@ -284,7 +284,7 @@ export function AnalysisView({ initialAnalysis }: { initialAnalysis: AnalysisDat
               disabled={deleting}
               className="btn-secondary text-danger-600 dark:text-danger-400"
             >
-              {deleting ? "Deleting..." : "Delete"}
+              {deleting ? "Deleting…" : "Delete"}
             </button>
           </div>
         </div>

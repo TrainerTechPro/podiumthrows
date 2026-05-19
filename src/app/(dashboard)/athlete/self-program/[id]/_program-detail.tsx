@@ -140,7 +140,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        const msg = data.error || "Failed to regenerate program";
+        const msg = data.error || "Couldn’t regenerate program";
         const details = data.validationErrors;
         throw new Error(details?.length ? `${msg}: ${details.join(", ")}` : msg);
       }
@@ -165,7 +165,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error(data.error || "Failed to generate next phase");
+        throw new Error(data.error || "Couldn’t generate next phase");
       }
       success("Next phase generated", "Your program has been extended with a new training phase.");
       router.refresh();
@@ -225,7 +225,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
               />
             }
           >
-            {regenerating ? "Regenerating..." : "Regenerate"}
+            {regenerating ? "Regenerating…" : "Regenerate"}
           </Button>
         </div>
       </div>
@@ -371,7 +371,7 @@ export function ProgramDetail({ config, program }: ProgramDetailProps) {
                     generating ? undefined : <Zap size={16} strokeWidth={1.75} aria-hidden="true" />
                   }
                 >
-                  {generating ? "Generating..." : "Generate Next Phase"}
+                  {generating ? "Generating…" : "Generate Next Phase"}
                 </Button>
               </div>
             </section>

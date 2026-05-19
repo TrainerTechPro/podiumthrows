@@ -165,7 +165,7 @@ export async function POST(request: NextRequest) {
       `${result.profile.firstName} ${result.profile.lastName}`,
       "proxy-claim"
     ).catch((err) =>
-      logger.error("Failed to create athlete-joined notification", {
+      logger.error("Couldn’t create athlete-joined notification", {
         context: "api",
         error: err,
       })
@@ -188,6 +188,6 @@ export async function POST(request: NextRequest) {
       metadata: { reason: "server_error" },
       ...auditInfo,
     });
-    return NextResponse.json({ success: false, error: "Failed to claim account" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t claim account" }, { status: 500 });
   }
 }

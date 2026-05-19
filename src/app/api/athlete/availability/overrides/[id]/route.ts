@@ -29,7 +29,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/athlete/availability/overrides/[id]", { context: "api", error: err });
-    const message = err instanceof Error ? err.message : "Failed to delete availability override.";
+    const message = err instanceof Error ? err.message : "Couldn’t delete availability override.";
     const status = message.includes("not found") || message === "Not found" ? 404 : 500;
     return NextResponse.json({ success: false, error: message }, { status });
   }

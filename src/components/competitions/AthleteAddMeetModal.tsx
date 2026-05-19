@@ -82,7 +82,7 @@ export function AthleteAddMeetModal({ athleteId, athleteEvents, onClose }: Props
       });
       const json = await res.json();
       if (!res.ok || !json.success) {
-        toast.error(json.error ?? "Failed to create meet");
+        toast.error(json.error ?? "Couldn’t create meet");
         return;
       }
       toast.success("Meet logged");
@@ -114,7 +114,7 @@ export function AthleteAddMeetModal({ athleteId, athleteEvents, onClose }: Props
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit || saving}>
-            {saving ? "Creating..." : "Create Meet"}
+            {saving ? "Creating…" : "Create Meet"}
           </Button>
         </div>
       }

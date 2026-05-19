@@ -68,7 +68,7 @@ export function AssignModal({
         }, 1500);
       }
     } catch {
-      setResult("Failed to assign");
+      setResult("Couldn’t assign");
     } finally {
       setSaving(false);
     }

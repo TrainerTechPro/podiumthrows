@@ -143,7 +143,7 @@ export default function ThrowFlowAnalyzePage() {
       setExtractedFrames(result.frames);
       setVideoDuration(result.duration);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to extract frames";
+      const message = err instanceof Error ? err.message : "Couldn’t extract frames";
       setError(message);
       setStep(2);
     }
@@ -181,7 +181,7 @@ export default function ThrowFlowAnalyzePage() {
       if (data.success) {
         router.push(`/coach/throws/analyze/${data.data.id}`);
       } else {
-        setError(data.error || "Failed to start analysis");
+        setError(data.error || "Couldn’t start analysis");
         setSubmitting(false);
       }
     } catch {
@@ -510,7 +510,7 @@ export default function ThrowFlowAnalyzePage() {
           {extractedFrames.length === 0 && !error && (
             <div className="space-y-3">
               <div className="flex items-center justify-between text-sm">
-                <span className="text-surface-700 dark:text-surface-300">Extracting frames...</span>
+                <span className="text-surface-700 dark:text-surface-300">Extracting frames…</span>
                 <span className="font-medium text-[var(--foreground)]">{extractionProgress}%</span>
               </div>
               <div className="w-full bg-[var(--muted-bg)] rounded-full h-2">
@@ -619,7 +619,7 @@ export default function ThrowFlowAnalyzePage() {
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                         />
                       </svg>
-                      Sending to AI...
+                      Sending to AI…
                     </>
                   ) : (
                     <>

@@ -36,7 +36,7 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ sl
   } catch (err) {
     logger.error("POST /api/releases/[slug]/ack", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to acknowledge release" },
+      { success: false, error: "Couldn’t acknowledge release" },
       { status: 500 }
     );
   }

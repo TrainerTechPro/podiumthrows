@@ -203,7 +203,7 @@ function PendingCard({
       </div>
 
       <span className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-primary-500 text-white text-xs font-medium shrink-0">
-        {q.hasDraft ? "Continue" : "Fill Out"} →
+        {q.hasDraft ? "Resume" : "Start"} →
       </span>
     </Link>
   );

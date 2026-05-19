@@ -45,7 +45,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       metadata: { error: String(err) },
     });
     return NextResponse.json(
-      { success: false, error: "Failed to update notification." },
+      { success: false, error: "Couldn’t update notification." },
       { status: 500 }
     );
   }
@@ -81,7 +81,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
       metadata: { error: String(err) },
     });
     return NextResponse.json(
-      { success: false, error: "Failed to delete notification." },
+      { success: false, error: "Couldn’t delete notification." },
       { status: 500 }
     );
   }

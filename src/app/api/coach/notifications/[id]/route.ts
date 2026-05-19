@@ -70,7 +70,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
   } catch (err) {
     logger.error("PATCH /api/coach/notifications/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to update notification." },
+      { success: false, error: "Couldn’t update notification." },
       { status: 500 }
     );
   }

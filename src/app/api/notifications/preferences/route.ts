@@ -82,7 +82,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/notifications/preferences", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to load preferences" },
+      { success: false, error: "Couldn’t load preferences" },
       { status: 500 }
     );
   }
@@ -132,7 +132,7 @@ export async function PATCH(req: NextRequest) {
   } catch (err) {
     logger.error("PATCH /api/notifications/preferences", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to update preferences" },
+      { success: false, error: "Couldn’t update preferences" },
       { status: 500 }
     );
   }

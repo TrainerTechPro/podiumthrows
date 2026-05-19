@@ -96,7 +96,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
         }),
       });
       const urlData = await urlRes.json();
-      if (!urlRes.ok) throw new Error(urlData.error || "Failed to get upload URL");
+      if (!urlRes.ok) throw new Error(urlData.error || "Couldn’t get upload URL");
 
       const videoUrl = urlData.data.publicUrl as string;
 
@@ -132,7 +132,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
           }),
         });
         const confirmData = await confirmRes.json();
-        if (!confirmRes.ok) throw new Error(confirmData.error || "Failed to save entry");
+        if (!confirmRes.ok) throw new Error(confirmData.error || "Couldn’t save entry");
       } else {
         // Local dev: upload via FormData
         const fd = new FormData();
@@ -266,7 +266,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           className="input"
-          placeholder="Felt smooth, good hip rotation..."
+          placeholder="Felt smooth, good hip rotation…"
         />
       </div>
 
@@ -289,7 +289,7 @@ function UploadForm({ onSuccess }: { onSuccess: () => void }) {
         disabled={uploading || !file || !implement || !distance}
         className="btn-primary w-full sm:w-auto"
       >
-        {uploading ? "Uploading..." : "Upload Throw"}
+        {uploading ? "Uploading…" : "Upload Throw"}
       </button>
     </form>
   );
@@ -310,7 +310,7 @@ function VideoPlayer({ entry, onDelete }: { entry: CodexEntry; onDelete: () => v
       });
       if (res.ok) onDelete();
     } catch {
-      alert("Failed to delete");
+      alert("Couldn’t delete");
     } finally {
       setDeleting(false);
     }
@@ -333,7 +333,7 @@ function VideoPlayer({ entry, onDelete }: { entry: CodexEntry; onDelete: () => v
         disabled={deleting}
         className="text-xs text-muted hover:text-danger-500 transition-colors"
       >
-        {deleting ? "Deleting..." : "Delete throw"}
+        {deleting ? "Deleting…" : "Delete throw"}
       </button>
     </div>
   );
@@ -587,7 +587,7 @@ export function CodexView() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search throws..."
+              placeholder="Search throws…"
               className="input pl-9 text-sm h-8"
             />
           </div>

@@ -81,10 +81,10 @@ export const DrillVideoPlayer = forwardRef<HTMLVideoElement, DrillVideoPlayerPro
             "absolute top-2 right-2 flex items-center justify-center " +
             "min-w-[44px] min-h-[44px] px-2 rounded-full " +
             "text-xs font-mono font-semibold tabular-nums " +
-            "transition-colors backdrop-blur-sm " +
+            "transition-colors ring-1 ring-white/20 " +
             (speed === 1
-              ? "bg-black/55 text-white hover:bg-black/70"
-              : "bg-primary-500 text-surface-950 shadow-[0_2px_10px_rgba(255,200,0,0.45)]")
+              ? "bg-black/85 text-white hover:bg-black/95"
+              : "bg-primary-500 text-surface-950 shadow-[0_2px_10px_rgba(255,200,0,0.45)] ring-0")
           }
         >
           {speedLabel}

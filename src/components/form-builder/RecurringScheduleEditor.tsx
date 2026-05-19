@@ -99,7 +99,7 @@ export function RecurringScheduleEditor({
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Failed to save schedule");
+        setError(data.error || "Couldn’t save schedule");
         return;
       }
 
@@ -120,7 +120,7 @@ export function RecurringScheduleEditor({
       });
       onSaved();
     } catch {
-      setError("Failed to delete schedule");
+      setError("Couldn’t delete schedule");
     } finally {
       setSaving(false);
     }

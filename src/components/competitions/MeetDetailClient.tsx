@@ -101,7 +101,7 @@ export function MeetDetailClient({
     });
     const json = await res.json();
     if (!res.ok || !json.success) {
-      toast.error(json.error ?? "Failed to save meet");
+      toast.error(json.error ?? "Couldn’t save meet");
       throw new Error(json.error ?? "save failed");
     }
     setMeetState((m) => ({ ...m, ...patch }));
@@ -151,7 +151,7 @@ export function MeetDetailClient({
     });
     const json = await res.json();
     if (!res.ok || !json.success) {
-      toast.error(json.error ?? "Failed to save throw");
+      toast.error(json.error ?? "Couldn’t save throw");
       throw new Error(json.error ?? "save failed");
     }
     const updated = json.data.throwLog as CompThrowRow;
@@ -184,7 +184,7 @@ export function MeetDetailClient({
     });
     const json = await res.json();
     if (!res.ok || !json.success) {
-      toast.error(json.error ?? "Failed to delete throw");
+      toast.error(json.error ?? "Couldn’t delete throw");
       return;
     }
     setThrows((prev) => prev.filter((t) => t.id !== id));
@@ -203,7 +203,7 @@ export function MeetDetailClient({
     });
     const json = await res.json();
     if (!res.ok || !json.success) {
-      toast.error(json.error ?? "Failed to promote");
+      toast.error(json.error ?? "Couldn’t promote");
       return;
     }
     toast.success(json.data.promoted ? "Promoted to unified PR" : "Already recorded");

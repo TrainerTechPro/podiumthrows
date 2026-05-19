@@ -56,7 +56,7 @@ export function PerformanceTestsTile({ athleteId }: PerformanceTestsTileProps) {
         const payload = await res.json();
         if (ctrl.signal.aborted) return;
         if (!res.ok || !payload.success) {
-          throw new Error(payload.error || "Failed to load tests");
+          throw new Error(payload.error || "Couldn’t load tests");
         }
         const items = (payload.data?.items ?? []) as PerformanceTestSessionDTO[];
         if (!items.length) {

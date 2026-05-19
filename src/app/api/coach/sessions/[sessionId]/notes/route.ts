@@ -52,6 +52,6 @@ export async function POST(
     );
   } catch (err) {
     logger.error("POST /api/coach/sessions/[sessionId]/notes", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to save note." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t save note." }, { status: 500 });
   }
 }

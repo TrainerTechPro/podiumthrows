@@ -160,7 +160,7 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
   } catch (err) {
     logger.error("POST /api/athlete/readiness", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to save check-in." },
+      { success: false, error: "Couldn’t save check-in." },
       { status: 500 }
     );
   }

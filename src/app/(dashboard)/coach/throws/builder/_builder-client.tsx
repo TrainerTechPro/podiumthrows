@@ -448,7 +448,7 @@ export default function ThrowsBuilderClient({ userId }: ThrowsBuilderClientProps
         await clearDraft();
         router.push("/coach/throws/library");
       } else {
-        toast(data.error || "Failed to save session", "error");
+        toast(data.error || "Couldn’t save session", "error");
       }
     } catch {
       toast("Server error — please try again", "error");

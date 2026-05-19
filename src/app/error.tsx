@@ -39,10 +39,10 @@ export default function RootError({ error, reset }: ErrorProps) {
         {/* Copy */}
         <div className="space-y-2">
           <h1 className="text-xl font-bold font-heading text-[var(--foreground)]">
-            Something went wrong
+            This page didn&rsquo;t load
           </h1>
           <p className="text-sm text-muted">
-            An unexpected error occurred. Please try again.
+            Reload to retry. If it keeps happening, head back to the homepage.
             {error.digest && (
               <span className="block mt-1 font-mono text-xs opacity-60">
                 Error ID: {error.digest}

@@ -166,7 +166,7 @@ export function VideoUploadInput({
             <div className="space-y-3">
               <div className="w-10 h-10 mx-auto border-2 border-primary-300 border-t-primary-500 rounded-full animate-spin" />
               <p className="text-sm font-medium text-[var(--foreground)]">
-                Uploading... {progress}%
+                Uploading… {progress}%
               </p>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5 overflow-hidden">
                 <div

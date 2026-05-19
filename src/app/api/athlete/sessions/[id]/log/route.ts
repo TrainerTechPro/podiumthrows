@@ -171,6 +171,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     );
   } catch (err) {
     logger.error("POST /api/athlete/sessions/[id]/log", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to log exercise." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t log exercise." }, { status: 500 });
   }
 }

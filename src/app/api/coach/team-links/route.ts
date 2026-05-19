@@ -15,7 +15,7 @@ export async function GET() {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/coach/team-links", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch team links." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch team links." }, { status: 500 });
   }
 }
 
@@ -55,6 +55,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("POST /api/coach/team-links", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to create team link." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t create team link." }, { status: 500 });
   }
 }

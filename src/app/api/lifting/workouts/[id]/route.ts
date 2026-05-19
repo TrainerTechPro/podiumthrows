@@ -121,6 +121,6 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       context: "api",
       error: err,
     });
-    return NextResponse.json({ success: false, error: "Failed to save workout." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t save workout." }, { status: 500 });
   }
 }

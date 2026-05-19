@@ -94,12 +94,12 @@ export async function POST(request: NextRequest) {
     try {
       await blacklistToken(mfaSessionToken);
     } catch (err) {
-      logger.error("Failed to consume MFA session token — aborting verify", {
+      logger.error("Couldn’t consume MFA session token â aborting verify", {
         context: "auth",
         error: err,
       });
       return NextResponse.json(
-        { success: false, error: "An unexpected error occurred" },
+        { success: false, error: "Server error — try again in a moment." },
         { status: 500 }
       );
     }
@@ -133,7 +133,7 @@ export async function POST(request: NextRequest) {
   } catch (e) {
     logger.error("MFA verify error", { context: "api", error: e });
     return NextResponse.json(
-      { success: false, error: "An unexpected error occurred" },
+      { success: false, error: "Server error — try again in a moment." },
       { status: 500 }
     );
   }

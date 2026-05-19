@@ -43,7 +43,7 @@ export function DropdownInput({
             open ? "border-primary-500 ring-2 ring-primary-500/30" : "border-[var(--card-border)]"
           } bg-[var(--card-bg)] text-[var(--foreground)]`}
         >
-          <span className={selectedLabel ? "" : "text-muted"}>{selectedLabel ?? "Select..."}</span>
+          <span className={selectedLabel ? "" : "text-muted"}>{selectedLabel ?? "Select…"}</span>
           <svg
             width="16"
             height="16"
@@ -67,7 +67,7 @@ export function DropdownInput({
                   type="text"
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search..."
+                  placeholder="Search…"
                   className="w-full px-2 py-1 rounded-lg text-sm border border-[var(--card-border)] bg-transparent text-[var(--foreground)] placeholder:text-muted focus:outline-none"
                   autoFocus
                 />

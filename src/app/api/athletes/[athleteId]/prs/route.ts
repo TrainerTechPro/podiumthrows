@@ -32,6 +32,6 @@ export async function GET(_request: NextRequest, ctx: RouteCtx) {
     return NextResponse.json({ success: true, data: prs });
   } catch (error) {
     logger.error("GET /api/athletes/[athleteId]/prs", { context: "implements", error });
-    return NextResponse.json({ success: false, error: "Failed to load PRs" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t load PRs" }, { status: 500 });
   }
 }

@@ -214,7 +214,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to regenerate sessions" },
+      { success: false, error: "Couldn’t regenerate sessions" },
       { status: 500 }
     );
   }

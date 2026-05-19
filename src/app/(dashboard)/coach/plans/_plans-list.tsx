@@ -74,7 +74,7 @@ export function PlansList({ plans }: { plans: WorkoutPlanItem[] }) {
         router.refresh();
       } else {
         const data = await res.json().catch(() => ({}));
-        toastError("Delete failed", data.error ?? "Failed to delete plan.");
+        toastError("Delete failed", data.error ?? "Couldn’t delete plan.");
         setDeleteTarget(null);
       }
     } finally {

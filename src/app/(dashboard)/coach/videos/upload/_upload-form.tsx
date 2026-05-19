@@ -340,12 +340,12 @@ export function UploadForm({ athleteOptions }: Props) {
 
       if (!urlRes.ok) {
         const data = await urlRes.json();
-        throw new Error(data?.error ?? "Failed to get upload URL");
+        throw new Error(data?.error ?? "Couldn’t get upload URL");
       }
 
       const urlPayload = await urlRes.json();
       if (!urlPayload?.success) {
-        throw new Error(urlPayload?.error ?? "Failed to get upload URL");
+        throw new Error(urlPayload?.error ?? "Couldn’t get upload URL");
       }
       const { uploadUrl, key, publicUrl, mode } = urlPayload.data as {
         uploadUrl: string;
@@ -424,12 +424,12 @@ export function UploadForm({ athleteOptions }: Props) {
 
       if (!createRes.ok) {
         const data = await createRes.json();
-        throw new Error(data?.error ?? "Failed to create video record");
+        throw new Error(data?.error ?? "Couldn’t create video record");
       }
 
       const createPayload = await createRes.json();
       if (!createPayload?.success) {
-        throw new Error(createPayload?.error ?? "Failed to create video record");
+        throw new Error(createPayload?.error ?? "Couldn’t create video record");
       }
       videoId = createPayload.data.video.id as string;
 
@@ -767,7 +767,7 @@ export function UploadForm({ athleteOptions }: Props) {
           {!isTrimming && (
             <div className="flex items-center gap-3 pt-2 border-t border-surface-100 dark:border-surface-800">
               <button type="button" onClick={handleTrimConfirm} className="btn-primary">
-                {needsTrim ? "Trim & Continue" : "Continue"}
+                {needsTrim ? "Trim & use clip" : "Use clip"}
               </button>
               <button type="button" onClick={handleCancel} className="btn-ghost text-sm">
                 Cancel

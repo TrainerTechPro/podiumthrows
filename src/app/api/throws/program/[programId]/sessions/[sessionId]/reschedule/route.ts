@@ -132,7 +132,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to reschedule session" },
+      { success: false, error: "Couldn’t reschedule session" },
       { status: 500 },
     );
   }

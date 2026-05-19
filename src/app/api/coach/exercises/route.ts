@@ -74,6 +74,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json(exercise, { status: 201 });
   } catch (err) {
     logger.error("POST /api/coach/exercises", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to create exercise." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t create exercise." }, { status: 500 });
   }
 }

@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: typing });
   } catch (error) {
     logger.error("Typing error", { context: "throws/typing", error: error });
-    return NextResponse.json({ success: false, error: "Failed to save typing" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t save typing" }, { status: 500 });
   }
 }
 
@@ -156,7 +156,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true, data: typing });
   } catch (error) {
     logger.error("Manual typing override error", { context: "throws/typing", error: error });
-    return NextResponse.json({ success: false, error: "Failed to save typing override" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t save typing override" }, { status: 500 });
   }
 }
 
@@ -182,6 +182,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: typing });
   } catch (error) {
     logger.error("Get typing error", { context: "throws/typing", error: error });
-    return NextResponse.json({ success: false, error: "Failed to fetch typing" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch typing" }, { status: 500 });
   }
 }

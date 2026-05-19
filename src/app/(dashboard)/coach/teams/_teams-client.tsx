@@ -135,7 +135,7 @@ export function TeamsClient() {
       const res = await fetch("/api/coach/teams");
       const payload = await res.json();
       if (!res.ok || !payload.success) {
-        toast.error(payload.error || "Failed to load groups");
+        toast.error(payload.error || "Couldn’t load groups");
         return;
       }
       setTeams(payload.data);
@@ -149,7 +149,7 @@ export function TeamsClient() {
       const res = await fetch("/api/coach/athletes");
       const payload = await res.json();
       if (!res.ok || !payload.success) {
-        toast.error(payload.error || "Failed to load roster");
+        toast.error(payload.error || "Couldn’t load roster");
         return;
       }
       setRoster(
@@ -229,7 +229,7 @@ export function TeamsClient() {
       const payload = await res.json();
 
       if (!res.ok || !payload.success) {
-        toast.error(payload.error || "Failed to save group");
+        toast.error(payload.error || "Couldn’t save group");
         return;
       }
 
@@ -259,7 +259,7 @@ export function TeamsClient() {
       const payload = await res.json();
 
       if (!res.ok || !payload.success) {
-        toast.error(payload.error || "Failed to delete group");
+        toast.error(payload.error || "Couldn’t delete group");
         return;
       }
 
@@ -368,7 +368,7 @@ export function TeamsClient() {
       const payload = await res.json();
 
       if (!res.ok || !payload.success) {
-        toast.error(payload.error || "Failed to add athletes");
+        toast.error(payload.error || "Couldn’t add athletes");
         return;
       }
 
@@ -421,7 +421,7 @@ export function TeamsClient() {
       const payload = await res.json();
 
       if (!res.ok || !payload.success) {
-        toast.error(payload.error || "Failed to remove athlete");
+        toast.error(payload.error || "Couldn’t remove athlete");
         return;
       }
 
@@ -657,7 +657,7 @@ export function TeamsClient() {
                     disabled={selectedAthleteIds.size === 0 || addingMembers}
                   >
                     <Check size={16} strokeWidth={1.75} aria-hidden="true" />
-                    {addingMembers ? "Adding..." : `Add Selected (${selectedAthleteIds.size})`}
+                    {addingMembers ? "Adding…" : `Add Selected (${selectedAthleteIds.size})`}
                   </button>
                 </div>
               </>

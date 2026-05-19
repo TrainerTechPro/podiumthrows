@@ -369,7 +369,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
     if (ok) {
       success("Analysis saved");
     } else if (!isSavingRef.current) {
-      showError("Failed to save", "Please try again");
+      showError("Couldn’t save", "Please try again");
     }
   }
 
@@ -390,7 +390,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
       });
       if (!res.ok) throw new Error("Save failed");
     } catch {
-      showError("Failed to update title");
+      showError("Couldn’t update title");
       setTitle(analysis.title);
       setDescription(analysis.description || "");
     }
@@ -413,7 +413,7 @@ export function AnalysisWorkspace({ analysis }: Props) {
       success("Analysis deleted");
       router.push("/coach/video-analysis");
     } catch (err) {
-      showError("Failed to delete", err instanceof Error ? err.message : "Please try again");
+      showError("Couldn’t delete", err instanceof Error ? err.message : "Please try again");
       setDeleting(false);
     }
   }

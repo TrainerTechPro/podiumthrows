@@ -78,7 +78,7 @@ export async function GET(_req: NextRequest, ctx: RouteCtx) {
     return NextResponse.json({ success: true, data: sorted });
   } catch (error) {
     logger.error("Get competition throws error", { context: "competitions/throws", error });
-    return NextResponse.json({ success: false, error: "Failed to fetch throws" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch throws" }, { status: 500 });
   }
 }
 
@@ -236,7 +236,7 @@ export async function POST(request: NextRequest, ctx: RouteCtx) {
     return NextResponse.json({ success: true, data: { throwLog, prCelebration } });
   } catch (error) {
     logger.error("Create competition throw error", { context: "competitions/throws", error });
-    return NextResponse.json({ success: false, error: "Failed to create throw" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t create throw" }, { status: 500 });
   }
 }
 
@@ -401,7 +401,7 @@ export async function PATCH(request: NextRequest, ctx: RouteCtx) {
     return NextResponse.json({ success: true, data: { throwLog, prCelebration } });
   } catch (error) {
     logger.error("Update competition throw error", { context: "competitions/throws", error });
-    return NextResponse.json({ success: false, error: "Failed to update throw" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t update throw" }, { status: 500 });
   }
 }
 
@@ -451,6 +451,6 @@ export async function DELETE(request: NextRequest, ctx: RouteCtx) {
     return NextResponse.json({ success: true, data: { id: throwLogId } });
   } catch (error) {
     logger.error("Delete competition throw error", { context: "competitions/throws", error });
-    return NextResponse.json({ success: false, error: "Failed to delete throw" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t delete throw" }, { status: 500 });
   }
 }

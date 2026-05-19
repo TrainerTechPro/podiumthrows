@@ -53,7 +53,7 @@ export async function PATCH(request: NextRequest, ctx: RouteCtx) {
   } catch (error) {
     logger.error("Dismiss insight error", { context: "insights/dismiss", error });
     return NextResponse.json(
-      { success: false, error: "Failed to update dismiss state" },
+      { success: false, error: "Couldn’t update dismiss state" },
       { status: 500 }
     );
   }

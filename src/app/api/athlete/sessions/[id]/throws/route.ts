@@ -155,6 +155,6 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     );
   } catch (err) {
     logger.error("POST /api/athlete/sessions/[id]/throws", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to log throw." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t log throw." }, { status: 500 });
   }
 }

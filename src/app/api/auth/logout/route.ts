@@ -29,7 +29,7 @@ export async function POST(request: NextRequest) {
     try {
       await blacklistToken(rawToken);
     } catch (err) {
-      logger.error("Failed to blacklist token on logout", { context: "auth", error: err });
+      logger.error("Couldn’t blacklist token on logout", { context: "auth", error: err });
       // Continue with logout even if blacklisting fails — cookie will still be cleared
     }
   }

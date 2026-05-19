@@ -57,10 +57,10 @@ export function AthleteInsightsClient({ athleteId, initialInsights, progress }: 
         });
         const json = await res.json();
         if (!res.ok || !json.success) {
-          throw new Error(json.error ?? "Failed to dismiss");
+          throw new Error(json.error ?? "Couldn’t dismiss");
         }
       } catch (err) {
-        toast(err instanceof Error ? err.message : "Failed to dismiss", "error");
+        toast(err instanceof Error ? err.message : "Couldn’t dismiss", "error");
         // Restore only the affected item; leave any other concurrent changes alone.
         if (target) {
           const restored = target;
@@ -82,11 +82,11 @@ export function AthleteInsightsClient({ athleteId, initialInsights, progress }: 
       );
       const json = await res.json();
       if (!res.ok || !json.success) {
-        throw new Error(json.error ?? "Failed to load");
+        throw new Error(json.error ?? "Couldn’t load");
       }
       setInsights(json.data.insights as AthleteInsightWire[]);
     } catch (err) {
-      toast(err instanceof Error ? err.message : "Failed to load", "error");
+      toast(err instanceof Error ? err.message : "Couldn’t load", "error");
       setShowDismissed(!next);
     }
   };
@@ -101,7 +101,7 @@ export function AthleteInsightsClient({ athleteId, initialInsights, progress }: 
         });
         const json = await res.json();
         if (!res.ok || !json.success) {
-          throw new Error(json.error ?? "Failed to recompute");
+          throw new Error(json.error ?? "Couldn’t recompute");
         }
         toast(
           json.data.persistedCount === 0
@@ -117,7 +117,7 @@ export function AthleteInsightsClient({ athleteId, initialInsights, progress }: 
           setInsights(listJson.data.insights as AthleteInsightWire[]);
         }
       } catch (err) {
-        toast(err instanceof Error ? err.message : "Failed to recompute", "error");
+        toast(err instanceof Error ? err.message : "Couldn’t recompute", "error");
       }
     });
   };
@@ -138,7 +138,7 @@ export function AthleteInsightsClient({ athleteId, initialInsights, progress }: 
               disabled={isRecomputing}
               className="btn-secondary text-xs"
             >
-              {isRecomputing ? "Recomputing..." : "Recompute"}
+              {isRecomputing ? "Recomputing…" : "Recompute"}
             </button>
           </div>
         </header>

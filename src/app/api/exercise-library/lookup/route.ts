@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error("Exercise lookup error", { context: "exercise-library/lookup", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to look up exercise" },
+      { success: false, error: "Couldn’t look up exercise" },
       { status: 500 }
     );
   }

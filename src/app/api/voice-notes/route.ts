@@ -77,7 +77,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error("Get voice notes error", { context: "voice-notes", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch voice notes" },
+      { success: false, error: "Couldn’t fetch voice notes" },
       { status: 500 }
     );
   }
@@ -187,7 +187,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error("Create voice note error", { context: "voice-notes", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to create voice note" },
+      { success: false, error: "Couldn’t create voice note" },
       { status: 500 }
     );
   }

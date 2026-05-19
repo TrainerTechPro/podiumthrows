@@ -109,7 +109,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to log lifts" },
+      { success: false, error: "Couldn’t log lifts" },
       { status: 500 },
     );
   }

@@ -167,6 +167,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: result }, { status: 201 });
   } catch (error) {
     logger.error("POST /api/throws", { context: "throws", error });
-    return NextResponse.json({ success: false, error: "Failed to create throw" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t create throw" }, { status: 500 });
   }
 }

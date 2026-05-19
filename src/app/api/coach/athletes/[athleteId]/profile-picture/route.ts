@@ -92,7 +92,7 @@ export async function PUT(
       context: "api",
       error: err,
     });
-    return NextResponse.json({ success: false, error: "Failed to update photo" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t update photo" }, { status: 500 });
   }
 }
 
@@ -121,6 +121,6 @@ export async function DELETE(
       context: "api",
       error: err,
     });
-    return NextResponse.json({ success: false, error: "Failed to remove photo" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t remove photo" }, { status: 500 });
   }
 }

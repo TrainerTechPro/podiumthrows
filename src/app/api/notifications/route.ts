@@ -88,7 +88,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     logger.error("GET /api/notifications", { context: "api", metadata: { error: String(err) } });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch notifications." },
+      { success: false, error: "Couldn’t fetch notifications." },
       { status: 500 }
     );
   }

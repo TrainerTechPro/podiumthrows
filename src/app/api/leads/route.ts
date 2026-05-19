@@ -213,6 +213,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: true, data: { id: lead.id } }, { status: 201 });
   } catch (error) {
     logger.error("Lead capture error", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to save lead" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t save lead" }, { status: 500 });
   }
 }

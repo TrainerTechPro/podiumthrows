@@ -83,7 +83,7 @@ export function UploadVideoModal({
             disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           type="button"
         >
-          {uploading ? "Uploading..." : "Upload Video"}
+          {uploading ? "Uploading…" : "Upload Video"}
         </button>
       }
     >

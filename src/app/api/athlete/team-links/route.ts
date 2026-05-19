@@ -26,6 +26,6 @@ export async function GET() {
     return NextResponse.json({ success: true, data });
   } catch (err) {
     logger.error("GET /api/athlete/team-links", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch team links." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch team links." }, { status: 500 });
   }
 }

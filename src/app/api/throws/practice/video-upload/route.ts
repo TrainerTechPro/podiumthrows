@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       }
     } catch (err) {
       // Non-fatal — video is uploaded, just not indexed in library
-      logger.error("Failed to create VideoUpload record for practice attempt", {
+      logger.error("Couldn’t create VideoUpload record for practice attempt", {
         context: "throws/practice/video-upload",
         error: err,
       });

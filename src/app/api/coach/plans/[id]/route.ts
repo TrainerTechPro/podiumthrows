@@ -95,7 +95,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true, data: updated });
   } catch (err) {
     logger.error("PATCH /api/coach/plans/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update plan." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t update plan." }, { status: 500 });
   }
 }
 
@@ -146,6 +146,6 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/coach/plans/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to delete plan." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t delete plan." }, { status: 500 });
   }
 }

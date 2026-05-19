@@ -57,7 +57,7 @@ export async function POST() {
   } catch (err) {
     logger.error("POST /api/push/test", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to send test notification." },
+      { success: false, error: "Couldn’t send test notification." },
       { status: 500 }
     );
   }

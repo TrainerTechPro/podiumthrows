@@ -53,7 +53,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
     logger.error("PATCH /api/coach/announcements/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to update announcement." },
+      { success: false, error: "Couldn’t update announcement." },
       { status: 500 }
     );
   }
@@ -80,7 +80,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
     }
     logger.error("DELETE /api/coach/announcements/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to delete announcement." },
+      { success: false, error: "Couldn’t delete announcement." },
       { status: 500 }
     );
   }

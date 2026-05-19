@@ -39,7 +39,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: complex });
   } catch (error) {
     logger.error("Create complex error", { context: "throws/complexes", error: error });
-    return NextResponse.json({ success: false, error: "Failed to create complex" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t create complex" }, { status: 500 });
   }
 }
 
@@ -69,6 +69,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: complexes });
   } catch (error) {
     logger.error("Get complexes error", { context: "throws/complexes", error: error });
-    return NextResponse.json({ success: false, error: "Failed to fetch complexes" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch complexes" }, { status: 500 });
   }
 }

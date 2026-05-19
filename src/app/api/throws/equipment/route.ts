@@ -43,7 +43,7 @@ export async function GET(_req: NextRequest) {
     try {
       implements_ = JSON.parse(inventory.implements || "[]");
     } catch (parseErr) {
-      logger.warn("Failed to parse EquipmentInventory.implements JSON", {
+      logger.warn("Couldn’t parse EquipmentInventory.implements JSON", {
         context: "throws/equipment",
         metadata: {
           athleteId: athleteProfile.id,
@@ -54,7 +54,7 @@ export async function GET(_req: NextRequest) {
     try {
       gymEquipment = inventory.gymEquipment ? JSON.parse(inventory.gymEquipment) : null;
     } catch (parseErr) {
-      logger.warn("Failed to parse EquipmentInventory.gymEquipment JSON", {
+      logger.warn("Couldn’t parse EquipmentInventory.gymEquipment JSON", {
         context: "throws/equipment",
         metadata: {
           athleteId: athleteProfile.id,
@@ -84,7 +84,7 @@ export async function GET(_req: NextRequest) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch equipment" },
+      { success: false, error: "Couldn’t fetch equipment" },
       { status: 500 }
     );
   }
@@ -170,7 +170,7 @@ export async function POST(req: NextRequest) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to save equipment" },
+      { success: false, error: "Couldn’t save equipment" },
       { status: 500 }
     );
   }

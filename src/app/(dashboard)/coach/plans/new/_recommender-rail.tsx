@@ -90,7 +90,7 @@ export function RecommenderRail({ event, onAdd }: Props) {
         }
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : "Failed to load");
+        if (!cancelled) setError(err instanceof Error ? err.message : "Couldn’t load");
       })
       .finally(() => {
         if (!cancelled) setLoading(false);

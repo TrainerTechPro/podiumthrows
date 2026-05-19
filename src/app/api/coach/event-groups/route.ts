@@ -28,7 +28,7 @@ export async function GET() {
     return NextResponse.json({ success: true, data });
   } catch (error) {
     logger.error("Error listing event groups", { context: "api", error });
-    return NextResponse.json({ success: false, error:"Failed to list event groups" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Couldn’t list event groups" }, { status: 500 });
   }
 }
 
@@ -72,6 +72,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data }, { status: 201 });
   } catch (error) {
     logger.error("Error creating event group", { context: "api", error });
-    return NextResponse.json({ success: false, error:"Failed to create event group" }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Couldn’t create event group" }, { status: 500 });
   }
 }

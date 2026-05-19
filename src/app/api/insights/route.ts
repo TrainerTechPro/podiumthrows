@@ -75,7 +75,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error("Get insights error", { context: "insights/route", error });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch insights" },
+      { success: false, error: "Couldn’t fetch insights" },
       { status: 500 }
     );
   }

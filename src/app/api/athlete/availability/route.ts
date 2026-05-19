@@ -27,7 +27,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/athlete/availability", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch availability." },
+      { success: false, error: "Couldn’t fetch availability." },
       { status: 500 }
     );
   }
@@ -66,7 +66,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ success: true, data: block }, { status: 201 });
   } catch (err) {
     logger.error("POST /api/athlete/availability", { context: "api", error: err });
-    const message = err instanceof Error ? err.message : "Failed to create availability block.";
+    const message = err instanceof Error ? err.message : "Couldn’t create availability block.";
     const status = message === "Not found" ? 404 : 500;
     return NextResponse.json({ success: false, error: message }, { status });
   }

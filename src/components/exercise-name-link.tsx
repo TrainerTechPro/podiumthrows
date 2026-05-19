@@ -110,7 +110,7 @@ export function ExerciseNameLink({ name, className, children }: Props) {
                     <div className="flex justify-center">
                       <div className="w-8 h-8 rounded-full border-2 border-primary-200 border-t-primary-500 animate-spin" />
                     </div>
-                    <p className="text-sm text-gray-400 text-center">Looking up exercise...</p>
+                    <p className="text-sm text-gray-400 text-center">Looking up exercise…</p>
                   </div>
                 ) : notFound ? (
                   <div className="text-center py-8">

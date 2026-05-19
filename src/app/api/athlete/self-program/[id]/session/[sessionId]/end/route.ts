@@ -97,6 +97,6 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
       context: "api",
       error: err,
     });
-    return NextResponse.json({ success: false, error: "Failed to end session" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t end session" }, { status: 500 });
   }
 }

@@ -42,7 +42,7 @@ export async function PATCH(_request: NextRequest, ctx: RouteCtx) {
   } catch (error) {
     logger.error("Mark insight read error", { context: "insights/read", error });
     return NextResponse.json(
-      { success: false, error: "Failed to mark insight read" },
+      { success: false, error: "Couldn’t mark insight read" },
       { status: 500 }
     );
   }

@@ -68,6 +68,6 @@ export async function POST(
     return NextResponse.json({ success: true, data: athleteSession }, { status: 201 });
   } catch (error) {
     logger.error("Error logging session for athlete", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to log session" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t log session" }, { status: 500 });
   }
 }

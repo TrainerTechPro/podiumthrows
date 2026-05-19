@@ -72,7 +72,7 @@ export function NotesStep({ data, onChange, onNext, onBack }: StepProps) {
 
         {/* Submit — mobile: SlideToConfirm / desktop: Button */}
         <div className="flex-[2] sm:hidden">
-          <SlideToConfirm label="Slide to Submit" onConfirm={onNext} variant="confirm" />
+          <SlideToConfirm label="Slide to save check-in" onConfirm={onNext} variant="confirm" />
         </div>
         <Button
           variant="primary"
@@ -80,7 +80,7 @@ export function NotesStep({ data, onChange, onNext, onBack }: StepProps) {
           className="hidden sm:flex flex-[2] rounded-xl min-h-[48px] text-sm font-bold text-black"
           onClick={onNext}
         >
-          Submit
+          Save Check-in
         </Button>
       </div>
     </div>

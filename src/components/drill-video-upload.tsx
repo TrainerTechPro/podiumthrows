@@ -537,7 +537,7 @@ export default function DrillVideoUpload({
                 className="input"
                 required
               >
-                <option value="">Select drill...</option>
+                <option value="">Select drill…</option>
                 {DRILL_TYPES.map((d) => (
                   <option key={d.value} value={d.value}>
                     {d.label}
@@ -553,7 +553,7 @@ export default function DrillVideoUpload({
                 className="input"
                 required
               >
-                <option value="">Select event...</option>
+                <option value="">Select event…</option>
                 {EVENTS.map((ev) => (
                   <option key={ev.value} value={ev.value}>
                     {ev.label}
@@ -568,7 +568,7 @@ export default function DrillVideoUpload({
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="Distance, implement weight, technique cues..."
+              placeholder="Distance, implement weight, technique cues…"
               rows={2}
               className="input resize-none"
             />
@@ -584,7 +584,7 @@ export default function DrillVideoUpload({
           {uploading && (
             <div>
               <div className="flex justify-between text-xs text-gray-500 mb-1">
-                <span>Uploading...</span>
+                <span>Uploading…</span>
                 <span>{uploadProgress}%</span>
               </div>
               <div className="w-full h-2 bg-gray-200 dark:bg-surface-700 rounded-full overflow-hidden">
@@ -611,7 +611,7 @@ export default function DrillVideoUpload({
               disabled={uploading || !file || trimExceedsMax}
               className="flex-1 btn-primary disabled:opacity-60"
             >
-              {uploading ? "Uploading..." : "Upload Video"}
+              {uploading ? "Uploading…" : "Upload Video"}
             </button>
           </div>
         </form>

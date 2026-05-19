@@ -60,7 +60,7 @@ export default function SecuritySettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Failed to start MFA setup");
+        setError(data.error || "Couldn’t start MFA setup");
         setLoading(false);
         return;
       }
@@ -121,7 +121,7 @@ export default function SecuritySettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(data.error || "Failed to disable MFA");
+        setError(data.error || "Couldn’t disable MFA");
         setLoading(false);
         return;
       }
@@ -202,7 +202,7 @@ export default function SecuritySettingsPage() {
         {/* Phase: Disabled */}
         {phase === "disabled" && (
           <button onClick={startSetup} disabled={loading} className="btn-primary">
-            {loading ? "Setting up..." : "Enable Two-Factor Authentication"}
+            {loading ? "Setting up…" : "Enable Two-Factor Authentication"}
           </button>
         )}
 
@@ -269,7 +269,7 @@ export default function SecuritySettingsPage() {
                 disabled={loading || setupCode.length !== 6}
                 className="btn-primary"
               >
-                {loading ? "Verifying..." : "Verify"}
+                {loading ? "Verifying…" : "Verify"}
               </button>
             </div>
             <button

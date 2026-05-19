@@ -53,7 +53,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error("Muscle visualization error", { context: "muscles/visualize", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to generate visualization" },
+      { success: false, error: "Couldn’t generate visualization" },
       { status: 500 }
     );
   }

@@ -30,7 +30,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/athlete/dashboard", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to load dashboard." },
+      { success: false, error: "Couldn’t load dashboard." },
       { status: 500 }
     );
   }

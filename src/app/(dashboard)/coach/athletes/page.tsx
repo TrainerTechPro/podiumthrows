@@ -103,7 +103,7 @@ export default async function AthletesPage({
     // knows the roster didn't load. An empty array with no banner (the
     // prior behavior) was indistinguishable from "coach has no athletes"
     // which misled users during a brief DB outage.
-    logger.error("Failed to load coach roster", {
+    logger.error("Couldn’t load coach roster", {
       context: "coach/athletes",
       metadata: { coachId: coach.id, teamId: resolvedTeamId },
       error: err,

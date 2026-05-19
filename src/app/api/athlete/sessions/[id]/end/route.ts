@@ -106,6 +106,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true, data: updated });
   } catch (err) {
     logger.error("PATCH /api/athlete/sessions/[id]/end", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to end session" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t end session" }, { status: 500 });
   }
 }

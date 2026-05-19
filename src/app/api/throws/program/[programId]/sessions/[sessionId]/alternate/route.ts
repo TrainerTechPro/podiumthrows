@@ -78,7 +78,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to log alternate session" },
+      { success: false, error: "Couldn’t log alternate session" },
       { status: 500 },
     );
   }

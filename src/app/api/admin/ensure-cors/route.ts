@@ -28,7 +28,7 @@ export async function POST() {
   } catch (err) {
     logger.error("ensure-cors Failed to configure R2 CORS", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to configure CORS" },
+      { success: false, error: "Couldn’t configure CORS" },
       { status: 500 }
     );
   }

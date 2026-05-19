@@ -52,7 +52,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch lifting program." },
+      { success: false, error: "Couldn’t fetch lifting program." },
       { status: 500 }
     );
   }
@@ -140,7 +140,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to update lifting program." },
+      { success: false, error: "Couldn’t update lifting program." },
       { status: 500 }
     );
   }

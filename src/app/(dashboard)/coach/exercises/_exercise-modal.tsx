@@ -170,7 +170,7 @@ export function ExerciseModal({
         router.refresh();
         onClose();
       } catch {
-        setError("Failed to save exercise. Please try again.");
+        setError("Couldn’t save exercise. Please try again.");
       }
     });
   }

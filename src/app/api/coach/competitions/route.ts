@@ -108,7 +108,7 @@ export async function GET(req: NextRequest) {
     }
     logger.error("coach competitions GET error", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch competitions" },
+      { success: false, error: "Couldn’t fetch competitions" },
       { status: 500 }
     );
   }
@@ -177,7 +177,7 @@ export async function POST(req: NextRequest) {
     }
     logger.error("coach competitions POST error", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to create competition entries" },
+      { success: false, error: "Couldn’t create competition entries" },
       { status: 500 }
     );
   }
@@ -296,7 +296,7 @@ export async function PATCH(req: NextRequest) {
     }
     logger.error("coach competitions PATCH error", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to update results" },
+      { success: false, error: "Couldn’t update results" },
       { status: 500 }
     );
   }

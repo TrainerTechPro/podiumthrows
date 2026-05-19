@@ -27,6 +27,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ success: true, data: dto });
   } catch (err) {
     logger.error("GET /api/athlete/sessions/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to load session." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t load session." }, { status: 500 });
   }
 }

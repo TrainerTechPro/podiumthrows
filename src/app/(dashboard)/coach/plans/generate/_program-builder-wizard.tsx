@@ -468,7 +468,7 @@ export function ProgramBuilderWizard({ athletes }: { athletes: AthletePickerItem
 
         if (!res.ok) {
           const err = await res.json();
-          setErrors({ generate: err.error || "Failed to generate preview" });
+          setErrors({ generate: err.error || "Couldn’t generate preview" });
           setGenerating(false);
           return;
         }
@@ -633,7 +633,7 @@ export function ProgramBuilderWizard({ athletes }: { athletes: AthletePickerItem
                 d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
               />
             </svg>
-            Loading athlete data...
+            Loading athlete data…
           </div>
         </div>
       )}
@@ -756,7 +756,7 @@ export function ProgramBuilderWizard({ athletes }: { athletes: AthletePickerItem
                       d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
                     />
                   </svg>
-                  Generating...
+                  Generating…
                 </span>
               ) : sandboxMode ? (
                 "Preview Program"

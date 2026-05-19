@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error("Compute insights error", { context: "insights/compute", error });
     return NextResponse.json(
-      { success: false, error: "Failed to compute insights" },
+      { success: false, error: "Couldn’t compute insights" },
       { status: 500 }
     );
   }

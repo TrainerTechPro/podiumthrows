@@ -151,7 +151,7 @@ function IntraEvalBanner({
               d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
             />
           </svg>
-          <span className="text-xs text-muted">Checking readiness...</span>
+          <span className="text-xs text-muted">Checking readiness…</span>
         </div>
       </div>
     );
@@ -236,7 +236,7 @@ function IntraEvalBanner({
             disabled={applying}
             className="text-micro font-medium px-2.5 py-1 rounded-md bg-primary-600 hover:bg-primary-700 text-white disabled:opacity-50 transition-colors"
           >
-            {applying ? "Applying..." : "Apply"}
+            {applying ? "Applying…" : "Apply"}
           </button>
           <button
             type="button"

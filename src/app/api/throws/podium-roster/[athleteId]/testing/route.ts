@@ -62,7 +62,7 @@ export async function GET(
       error: error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch testing records" },
+      { success: false, error: "Couldn’t fetch testing records" },
       { status: 500 }
     );
   }
@@ -320,7 +320,7 @@ export async function POST(
       error: error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to create testing record" },
+      { success: false, error: "Couldn’t create testing record" },
       { status: 500 }
     );
   }

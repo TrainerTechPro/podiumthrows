@@ -82,7 +82,7 @@ export async function GET() {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch program" },
+      { success: false, error: "Couldn’t fetch program" },
       { status: 500 },
     );
   }

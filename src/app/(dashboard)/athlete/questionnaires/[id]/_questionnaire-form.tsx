@@ -582,7 +582,7 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
           onClick={() => setShowConfirm(true)}
           disabled={requiredCount > 0 && answeredRequired < requiredCount}
         >
-          Submit
+          Send Responses
         </Button>
       </div>
 
@@ -590,9 +590,9 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
         open={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={handleSubmit}
-        title="Submit Responses"
-        description="Are you sure you want to submit? Your responses cannot be changed after submission."
-        confirmLabel="Save Responses"
+        title="Send your responses?"
+        description="Responses can’t be changed after sending. Make sure everything looks right."
+        confirmLabel="Send Responses"
         loading={submitting}
       />
     </div>

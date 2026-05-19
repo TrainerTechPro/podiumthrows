@@ -72,7 +72,7 @@ export async function POST(
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to save wellness check-in." },
+      { success: false, error: "Couldn’t save wellness check-in." },
       { status: 500 }
     );
   }

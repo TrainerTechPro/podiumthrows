@@ -77,12 +77,12 @@ export function LiveSessionsView() {
         toast.success("Live session started");
         router.push(`/coach/throws/practice/${data.data.id}`);
       } else {
-        toast.error(data.error || "Failed to create session");
+        toast.error(data.error || "Couldn’t create session");
         setCreating(false);
       }
     } catch (err) {
       logger.error("[calendar/live] create error", { error: err });
-      toast.error("Failed to create session");
+      toast.error("Couldn’t create session");
       setCreating(false);
     }
   }

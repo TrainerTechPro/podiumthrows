@@ -344,7 +344,7 @@ export async function POST(
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to generate next phase." },
+      { success: false, error: "Couldn’t generate next phase." },
       { status: 500 },
     );
   }

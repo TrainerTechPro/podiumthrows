@@ -176,7 +176,7 @@ export function SessionsLibraryView({
         });
         setBlockedAthletes(rows);
       } else {
-        setAssignError(data.error ?? "Failed to assign");
+        setAssignError(data.error ?? "Couldn’t assign");
       }
     } catch {
       setAssignError("Network error. Please try again.");
@@ -372,7 +372,7 @@ export function SessionsLibraryView({
                 className="btn-primary flex-1"
               >
                 {assigning
-                  ? "Assigning..."
+                  ? "Assigning…"
                   : `Assign to ${selectedAthletes.size} athlete${selectedAthletes.size !== 1 ? "s" : ""}`}
               </button>
               <button

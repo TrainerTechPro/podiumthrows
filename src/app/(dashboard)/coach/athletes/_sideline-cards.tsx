@@ -203,7 +203,7 @@ export function RosterSidelineCards({ data }: { data: AthleteRosterItem[] }) {
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Find athlete…"
           aria-label="Search athletes"
-          className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] pl-9 pr-3 py-2.5 text-sm text-[var(--foreground)] placeholder:text-muted focus:outline-none focus:border-primary-500/40 focus:ring-2 focus:ring-primary-500/20"
+          className="w-full rounded-xl border border-[var(--card-border)] bg-[var(--card-bg)] pl-9 pr-3 py-2.5 text-sm text-[var(--foreground)] placeholder:text-muted focus-visible:outline-none focus-visible:border-primary-500/40 focus-visible:ring-2 focus-visible:ring-primary-500/20"
         />
       </div>
       {filtered.length === 0 ? (

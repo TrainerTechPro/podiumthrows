@@ -68,11 +68,11 @@ export default function PracticeSessionsPage() {
       if (data.success) {
         router.push(`/coach/throws/practice/${data.data.id}`);
       } else {
-        setCreateError(data.error || "Failed to create session");
+        setCreateError(data.error || "Couldn’t create session");
         setCreating(false);
       }
     } catch {
-      setCreateError("Failed to create session");
+      setCreateError("Couldn’t create session");
       setCreating(false);
     }
   }

@@ -178,7 +178,7 @@ function RecommendationCard({ rec, isTop, countdownActive, secondsLeft, onClick 
           on the brand-tinted surface instead). */}
       <div className="relative aspect-video bg-black flex items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-br from-primary-500/20 via-transparent to-transparent" />
-        <div className="w-12 h-12 rounded-full bg-white/15 flex items-center justify-center backdrop-blur-sm">
+        <div className="w-12 h-12 rounded-full bg-black/60 ring-1 ring-white/30 flex items-center justify-center">
           <Play size={20} strokeWidth={1.75} className="text-white ml-0.5" aria-hidden="true" />
         </div>
         <span className="absolute bottom-1.5 right-1.5 px-1.5 py-0.5 rounded bg-black/60 text-white text-[10px] font-mono tabular-nums">

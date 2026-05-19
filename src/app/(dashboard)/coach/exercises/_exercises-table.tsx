@@ -264,12 +264,12 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toastError("Delete failed", data.error ?? "Failed to delete exercise.");
+        toastError("Delete failed", data.error ?? "Couldn’t delete exercise.");
         return;
       }
       router.refresh();
     } catch {
-      toastError("Delete failed", "An unexpected error occurred. Please try again.");
+      toastError("Couldn’t delete exercise", "Try again in a moment.");
     } finally {
       setDeleteLoading(false);
       setDeleteTarget(null);

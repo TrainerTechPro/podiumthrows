@@ -79,7 +79,7 @@ export async function GET(
   } catch (error) {
     logger.error("Get podium profile error", { context: "throws/podium-roster", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch profile" },
+      { success: false, error: "Couldn’t fetch profile" },
       { status: 500 }
     );
   }
@@ -230,7 +230,7 @@ export async function PATCH(
   } catch (error) {
     logger.error("Update podium profile error", { context: "throws/podium-roster", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to update profile" },
+      { success: false, error: "Couldn’t update profile" },
       { status: 500 }
     );
   }

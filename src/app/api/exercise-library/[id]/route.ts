@@ -41,7 +41,7 @@ export async function GET(
   } catch (error) {
     logger.error("Exercise library detail error", { context: "exercise-library", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch exercise" },
+      { success: false, error: "Couldn’t fetch exercise" },
       { status: 500 }
     );
   }
@@ -79,7 +79,7 @@ export async function PATCH(
   } catch (error) {
     logger.error("Update exercise library error", { context: "exercise-library", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to update exercise" },
+      { success: false, error: "Couldn’t update exercise" },
       { status: 500 }
     );
   }

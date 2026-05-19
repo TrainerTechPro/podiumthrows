@@ -106,7 +106,7 @@ export async function GET(_req: NextRequest, { params }: RouteContext) {
   } catch (err) {
     logger.error("GET /api/athlete/self-program/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch self-program config." },
+      { success: false, error: "Couldn’t fetch self-program config." },
       { status: 500 }
     );
   }
@@ -280,7 +280,7 @@ export async function PUT(req: NextRequest, { params }: RouteContext) {
   } catch (err) {
     logger.error("PUT /api/athlete/self-program/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to update self-program config." },
+      { success: false, error: "Couldn’t update self-program config." },
       { status: 500 }
     );
   }
@@ -347,7 +347,7 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to deactivate self-program config." },
+      { success: false, error: "Couldn’t deactivate self-program config." },
       { status: 500 }
     );
   }

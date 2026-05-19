@@ -87,7 +87,7 @@ export async function PATCH(request: NextRequest, ctx: RouteCtx) {
     }
     logger.error("PATCH /api/coach/implements/[id]", { context: "implements", error });
     return NextResponse.json(
-      { success: false, error: "Failed to update custom implement" },
+      { success: false, error: "Couldn’t update custom implement" },
       { status: 500 }
     );
   }
@@ -114,7 +114,7 @@ export async function DELETE(_request: NextRequest, ctx: RouteCtx) {
     }
     logger.error("DELETE /api/coach/implements/[id]", { context: "implements", error });
     return NextResponse.json(
-      { success: false, error: "Failed to delete custom implement" },
+      { success: false, error: "Couldn’t delete custom implement" },
       { status: 500 }
     );
   }

@@ -84,7 +84,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     logger.error("GET /api/throws/comments", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch comments" },
+      { success: false, error: "Couldn’t fetch comments" },
       { status: 500 }
     );
   }
@@ -211,7 +211,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     logger.error("POST /api/throws/comments", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to create comment" },
+      { success: false, error: "Couldn’t create comment" },
       { status: 500 }
     );
   }

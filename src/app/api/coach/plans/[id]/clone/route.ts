@@ -76,6 +76,6 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true, data: clone }, { status: 201 });
   } catch (err) {
     logger.error("POST /api/coach/plans/[id]/clone", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to clone plan." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t clone plan." }, { status: 500 });
   }
 }

@@ -318,7 +318,7 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
       }
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to create invite");
+      toast.error(err instanceof Error ? err.message : "Couldn’t create invite");
     } finally {
       setBusyId(null);
     }
@@ -341,7 +341,7 @@ export function AthletesTable({ data }: { data: AthleteRosterItem[] }) {
       toast.success("Invite revoked");
       router.refresh();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Failed to revoke invite");
+      toast.error(err instanceof Error ? err.message : "Couldn’t revoke invite");
     } finally {
       setBusyId(null);
     }

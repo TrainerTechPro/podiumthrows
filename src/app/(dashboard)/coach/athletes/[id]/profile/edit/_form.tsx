@@ -113,7 +113,7 @@ export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProp
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        toastError(data.error || "Failed to save profile");
+        toastError(data.error || "Couldn’t save profile");
         return;
       }
 

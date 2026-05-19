@@ -40,7 +40,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   } catch (error) {
     logger.error("Error updating event group", { context: "api", error });
     return NextResponse.json(
-      { success: false, error: "Failed to update event group" },
+      { success: false, error: "Couldn’t update event group" },
       { status: 500 }
     );
   }
@@ -75,7 +75,7 @@ export async function DELETE(
   } catch (error) {
     logger.error("Error deleting event group", { context: "api", error });
     return NextResponse.json(
-      { success: false, error: "Failed to delete event group" },
+      { success: false, error: "Couldn’t delete event group" },
       { status: 500 }
     );
   }

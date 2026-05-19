@@ -57,7 +57,7 @@ export async function GET(
     return NextResponse.json({ success: true, data: { ...video, videoUrl } });
   } catch (error) {
     logger.error("Get drill video error", { context: "drill-videos", error: error });
-    return NextResponse.json({ success: false, error: "Failed to get drill video" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t get drill video" }, { status: 500 });
   }
 }
 
@@ -123,6 +123,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (error) {
     logger.error("Delete drill video error", { context: "drill-videos", error: error });
-    return NextResponse.json({ success: false, error: "Failed to delete drill video" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t delete drill video" }, { status: 500 });
   }
 }

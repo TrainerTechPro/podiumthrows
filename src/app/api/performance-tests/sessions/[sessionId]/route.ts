@@ -33,7 +33,7 @@ export async function DELETE(_request: NextRequest, ctx: RouteCtx) {
   } catch (error) {
     logger.error("DELETE performance-tests session", { context: "performance-tests", error });
     return NextResponse.json(
-      { success: false, error: "Failed to delete session" },
+      { success: false, error: "Couldn’t delete session" },
       { status: 500 }
     );
   }

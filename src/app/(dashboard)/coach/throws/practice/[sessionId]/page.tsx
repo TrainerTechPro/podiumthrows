@@ -248,7 +248,7 @@ function LogAttemptPanel({
         };
         onSave(optimisticAttempt);
       } catch {
-        setSaveError("Failed to save offline");
+        setSaveError("Couldn’t save offline");
         setSaving(false);
       }
       return;
@@ -292,7 +292,7 @@ function LogAttemptPanel({
       if (data.success) {
         onSave(data.data);
       } else {
-        setSaveError(data.error ?? "Failed to save attempt");
+        setSaveError(data.error ?? "Couldn’t save attempt");
         setSaving(false);
       }
     } catch {
@@ -321,7 +321,7 @@ function LogAttemptPanel({
         };
         onSave(optimisticAttempt);
       } catch {
-        setSaveError("Failed to save attempt");
+        setSaveError("Couldn’t save attempt");
         setSaving(false);
       }
     }

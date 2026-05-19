@@ -240,11 +240,11 @@ export function usePoseDetection(): UsePoseDetectionReturn {
 
       initializedRef.current = true;
     } catch (err) {
-      logger.error("Failed to initialize MediaPipe Pose:", {
+      logger.error("Couldn’t initialize MediaPipe Pose:", {
         context: "video/usePoseDetection",
         error: err,
       });
-      setError(err instanceof Error ? err.message : "Failed to load pose detection model");
+      setError(err instanceof Error ? err.message : "Couldn’t load pose detection model");
     } finally {
       loadingRef.current = false;
       setLoading(false);

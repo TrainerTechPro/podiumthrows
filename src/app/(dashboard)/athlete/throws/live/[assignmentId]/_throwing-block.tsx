@@ -90,7 +90,7 @@ export function ThrowingBlockView({
       });
       const data = await res.json();
       if (!data.success) {
-        toast(data.error || "Failed to log throw", "error");
+        toast(data.error || "Couldn’t log throw", "error");
         return;
       }
 
@@ -397,7 +397,7 @@ export function ThrowingBlockView({
                     clipPath: CHAMFER_LG,
                   }}
                 >
-                  {logging ? "..." : "LOG"}
+                  {logging ? "…" : "LOG"}
                 </button>
               </div>
 

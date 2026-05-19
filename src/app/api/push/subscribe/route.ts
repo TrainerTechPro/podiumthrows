@@ -78,7 +78,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     logger.error("POST /api/push/subscribe", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to save subscription." },
+      { success: false, error: "Couldn’t save subscription." },
       { status: 500 }
     );
   }
@@ -106,7 +106,7 @@ export async function DELETE(req: NextRequest) {
   } catch (err) {
     logger.error("DELETE /api/push/subscribe", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to remove subscription." },
+      { success: false, error: "Couldn’t remove subscription." },
       { status: 500 }
     );
   }

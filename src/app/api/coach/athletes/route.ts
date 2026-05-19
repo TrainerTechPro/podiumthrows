@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error("Error creating athlete", { context: "api", error });
     return NextResponse.json(
-      { success: false, error: "Failed to create athlete" },
+      { success: false, error: "Couldn’t create athlete" },
       { status: 500 }
     );
   }
@@ -147,6 +147,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: reshaped });
   } catch (error) {
     logger.error("Error listing athletes", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to list athletes" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t list athletes" }, { status: 500 });
   }
 }

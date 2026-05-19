@@ -56,7 +56,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true, data: { avatarUrl: updated.avatarUrl } });
   } catch (err) {
     logger.error("PUT /api/coach/profile-picture", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update profile picture" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t update profile picture" }, { status: 500 });
   }
 }
 
@@ -86,6 +86,6 @@ export async function DELETE() {
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/coach/profile-picture", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to remove profile picture" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t remove profile picture" }, { status: 500 });
   }
 }

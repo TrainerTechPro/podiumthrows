@@ -297,7 +297,7 @@ export function StepReview({
               ) : undefined
             }
           >
-            {generating ? "Generating..." : "Generate Program"}
+            {generating ? "Generating…" : "Generate Program"}
           </Button>
         </div>
 

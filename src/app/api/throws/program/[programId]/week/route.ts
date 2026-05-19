@@ -109,7 +109,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch week sessions" },
+      { success: false, error: "Couldn’t fetch week sessions" },
       { status: 500 },
     );
   }

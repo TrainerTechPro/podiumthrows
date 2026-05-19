@@ -79,7 +79,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         notifyAthleteQuestionnaireAssigned(athleteId, questionnaire.title, id)
       )
     ).catch((err) =>
-      logger.error("Failed to notify athletes of questionnaire assignment", {
+      logger.error("Couldn’t notify athletes of questionnaire assignment", {
         context: "api",
         error: err,
       })

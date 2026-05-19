@@ -36,6 +36,6 @@ export async function GET(
     return NextResponse.json({ success: true, data });
   } catch (err) {
     logger.error("GET /api/coach/availability/[athleteId]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch athlete availability." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch athlete availability." }, { status: 500 });
   }
 }

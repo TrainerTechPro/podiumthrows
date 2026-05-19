@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
     }
     logger.error("GET /api/coach/practices", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch practices." },
+      { success: false, error: "Couldn’t fetch practices." },
       { status: 500 }
     );
   }
@@ -92,7 +92,7 @@ export async function POST(req: NextRequest) {
     }
     logger.error("POST /api/coach/practices", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to create practice." },
+      { success: false, error: "Couldn’t create practice." },
       { status: 500 }
     );
   }

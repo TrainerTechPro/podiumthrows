@@ -823,7 +823,7 @@ function FileUploadForm({ onDone, onCancel }: { onDone: () => void; onCancel: ()
 
       const urlPayload = await urlRes.json();
       if (!urlRes.ok || !urlPayload.success) {
-        throw new Error(urlPayload.error || "Failed to get upload URL");
+        throw new Error(urlPayload.error || "Couldn’t get upload URL");
       }
 
       // API returns { success: true, data: { uploadUrl, publicUrl, fileKey } }
@@ -867,7 +867,7 @@ function FileUploadForm({ onDone, onCancel }: { onDone: () => void; onCancel: ()
 
       if (!registerRes.ok) {
         const json = await registerRes.json();
-        throw new Error(json.error || "Failed to register file");
+        throw new Error(json.error || "Couldn’t register file");
       }
 
       success("File Uploaded", selectedFile.name);
@@ -1031,7 +1031,7 @@ function ManageDrawer({
 
       if (!res.ok) {
         const json = await res.json();
-        throw new Error(json.error || "Failed to save");
+        throw new Error(json.error || "Couldn’t save");
       }
 
       success(isEdit ? "Announcement Updated" : "Announcement Posted", formData.title);
@@ -1040,7 +1040,7 @@ function ManageDrawer({
       router.refresh();
       onMutated();
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to save announcement");
+      showError("Couldn’t save announcement", err instanceof Error ? err.message : "Try again in a moment.");
     } finally {
       setSavingAnnouncement(false);
     }
@@ -1054,12 +1054,12 @@ function ManageDrawer({
         method: "DELETE",
         headers: csrfHeaders(),
       });
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) throw new Error("Couldn’t delete");
       success("Deleted", "Announcement removed");
       router.refresh();
       onMutated();
     } catch {
-      showError("Error", "Failed to delete announcement");
+      showError("Couldn’t delete announcement", "Try again in a moment.");
     } finally {
       setDeletingId(null);
     }
@@ -1093,7 +1093,7 @@ function ManageDrawer({
 
       if (!res.ok) {
         const json = await res.json();
-        throw new Error(json.error || "Failed to save link");
+        throw new Error(json.error || "Couldn’t save link");
       }
 
       success(isEdit ? "Link Updated" : "Link Added", formData.title);
@@ -1102,7 +1102,7 @@ function ManageDrawer({
       router.refresh();
       onMutated();
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to save link");
+      showError("Couldn’t save link", err instanceof Error ? err.message : "Try again in a moment.");
     } finally {
       setSavingLink(false);
     }
@@ -1116,12 +1116,12 @@ function ManageDrawer({
         method: "DELETE",
         headers: csrfHeaders(),
       });
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) throw new Error("Couldn’t delete");
       success("Deleted", "Link removed");
       router.refresh();
       onMutated();
     } catch {
-      showError("Error", "Failed to delete link");
+      showError("Couldn’t delete link", "Try again in a moment.");
     } finally {
       setDeletingId(null);
     }
@@ -1146,11 +1146,11 @@ function ManageDrawer({
         },
         body: JSON.stringify({ ids: newOrder.map((l) => l.id) }),
       });
-      if (!res.ok) throw new Error("Failed to reorder");
+      if (!res.ok) throw new Error("Couldn’t reorder");
       router.refresh();
       onMutated();
     } catch {
-      showError("Error", "Failed to reorder links");
+      showError("Couldn’t reorder links", "Try again in a moment.");
     }
   }
 
@@ -1162,12 +1162,12 @@ function ManageDrawer({
         method: "DELETE",
         headers: csrfHeaders(),
       });
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) throw new Error("Couldn’t delete");
       success("Deleted", "File removed");
       router.refresh();
       onMutated();
     } catch {
-      showError("Error", "Failed to delete file");
+      showError("Couldn’t delete file", "Try again in a moment.");
     } finally {
       setDeletingId(null);
     }
@@ -1536,14 +1536,14 @@ export function TeamHubClient({ mode, data }: Props) {
         });
         if (!res.ok) {
           const json = await res.json();
-          throw new Error(json.error || "Failed to save");
+          throw new Error(json.error || "Couldn’t save");
         }
         success(editId ? "Announcement Updated" : "Announcement Posted", formData.title);
         setShowInlineAnnouncement(false);
         setEditingAnnouncement(null);
         router.refresh();
       } catch (err) {
-        showError("Error", err instanceof Error ? err.message : "Failed to save");
+        showError("Couldn’t save announcement", err instanceof Error ? err.message : "Try again in a moment.");
       } finally {
         setSavingAnnouncement(false);
       }
@@ -1560,11 +1560,11 @@ export function TeamHubClient({ mode, data }: Props) {
           method: "DELETE",
           headers: csrfHeaders(),
         });
-        if (!res.ok) throw new Error("Failed to delete");
+        if (!res.ok) throw new Error("Couldn’t delete");
         success("Deleted", "Announcement removed");
         router.refresh();
       } catch {
-        showError("Error", "Failed to delete announcement");
+        showError("Couldn’t delete announcement", "Try again in a moment.");
       } finally {
         setDeletingId(null);
       }
@@ -1597,14 +1597,14 @@ export function TeamHubClient({ mode, data }: Props) {
         });
         if (!res.ok) {
           const json = await res.json();
-          throw new Error(json.error || "Failed to save link");
+          throw new Error(json.error || "Couldn’t save link");
         }
         success(editId ? "Link Updated" : "Link Added", formData.title);
         setShowInlineLink(false);
         setEditingLink(null);
         router.refresh();
       } catch (err) {
-        showError("Error", err instanceof Error ? err.message : "Failed to save link");
+        showError("Couldn’t save link", err instanceof Error ? err.message : "Try again in a moment.");
       } finally {
         setSavingLink(false);
       }
@@ -1621,11 +1621,11 @@ export function TeamHubClient({ mode, data }: Props) {
           method: "DELETE",
           headers: csrfHeaders(),
         });
-        if (!res.ok) throw new Error("Failed to delete");
+        if (!res.ok) throw new Error("Couldn’t delete");
         success("Deleted", "Link removed");
         router.refresh();
       } catch {
-        showError("Error", "Failed to delete link");
+        showError("Couldn’t delete link", "Try again in a moment.");
       } finally {
         setDeletingId(null);
       }
@@ -1650,10 +1650,10 @@ export function TeamHubClient({ mode, data }: Props) {
           },
           body: JSON.stringify({ ids: links.map((l) => l.id) }),
         });
-        if (!res.ok) throw new Error("Failed to reorder");
+        if (!res.ok) throw new Error("Couldn’t reorder");
         router.refresh();
       } catch {
-        showError("Error", "Failed to reorder links");
+        showError("Couldn’t reorder links", "Try again in a moment.");
       }
     },
     [sortedLinks, router, showError]
@@ -1668,11 +1668,11 @@ export function TeamHubClient({ mode, data }: Props) {
           method: "DELETE",
           headers: csrfHeaders(),
         });
-        if (!res.ok) throw new Error("Failed to delete");
+        if (!res.ok) throw new Error("Couldn’t delete");
         success("Deleted", "File removed");
         router.refresh();
       } catch {
-        showError("Error", "Failed to delete file");
+        showError("Couldn’t delete file", "Try again in a moment.");
       } finally {
         setDeletingId(null);
       }

@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to restore account" },
+      { success: false, error: "Couldn’t restore account" },
       { status: 500 }
     );
   }

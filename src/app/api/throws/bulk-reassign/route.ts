@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error("POST /api/throws/bulk-reassign", { context: "throws", error });
     return NextResponse.json(
-      { success: false, error: "Failed to reassign throws" },
+      { success: false, error: "Couldn’t reassign throws" },
       { status: 500 }
     );
   }

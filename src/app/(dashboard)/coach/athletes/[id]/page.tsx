@@ -1456,7 +1456,7 @@ function WellnessTab({ trend }: { trend: ReadinessTrendPoint[] }) {
               yMin={0}
               yMax={10}
               showArea={false}
-              emptyMessage="No data available"
+              emptyMessage="No check-ins in this window yet"
             />
           </div>
 

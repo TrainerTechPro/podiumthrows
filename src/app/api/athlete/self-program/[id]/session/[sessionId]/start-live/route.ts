@@ -223,10 +223,10 @@ export async function POST(
 
     return NextResponse.json({ success: true, data: { assignmentId: result.id } }, { status: 201 });
   } catch (error) {
-    logger.error("Failed to start live workout from self-program", {
+    logger.error("Couldn’t start live workout from self-program", {
       context: "api",
       error,
     });
-    return NextResponse.json({ success: false, error: "Failed to start workout" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t start workout" }, { status: 500 });
   }
 }

@@ -31,7 +31,7 @@ export async function GET() {
     }
     logger.error("GET /api/coach/team-files", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch files" },
+      { success: false, error: "Couldn’t fetch files" },
       { status: 500 },
     );
   }
@@ -95,7 +95,7 @@ export async function POST(req: NextRequest) {
     }
     logger.error("POST /api/coach/team-files", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to register file" },
+      { success: false, error: "Couldn’t register file" },
       { status: 500 },
     );
   }

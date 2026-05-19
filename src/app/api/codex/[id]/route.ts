@@ -33,6 +33,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/codex/:id", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to delete entry" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t delete entry" }, { status: 500 });
   }
 }

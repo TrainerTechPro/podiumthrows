@@ -38,10 +38,10 @@ export default function AuthError({ error, reset }: ErrorProps) {
       {/* Copy */}
       <div className="space-y-2">
         <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">
-          Something went wrong
+          Sign-in didn&rsquo;t load
         </h2>
         <p className="text-sm text-muted">
-          We couldn&apos;t load this page. Please try again.
+          Reload to retry. If it keeps failing, head back and try again from the start.
           {error.digest && (
             <span className="block mt-1 font-mono text-xs opacity-60">
               Error ID: {error.digest}

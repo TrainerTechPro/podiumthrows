@@ -39,10 +39,10 @@ export default function CoachError({ error, reset }: ErrorProps) {
         {/* Copy */}
         <div className="space-y-2">
           <h1 className="text-xl font-bold font-heading text-[var(--foreground)]">
-            Something went wrong
+            This page didn&rsquo;t load
           </h1>
           <p className="text-sm text-muted">
-            An unexpected error occurred loading this page.
+            Reload to retry, or return to the dashboard. Send the Error ID below to support if it keeps failing.
             {error.digest && (
               <span className="block mt-1 font-mono text-xs opacity-60">
                 Error ID: {error.digest}

@@ -82,7 +82,7 @@ async function postHandler(userId: string, bodyText: string): Promise<NextRespon
   } catch (err) {
     logger.error("POST /api/coach/sessions", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to assign sessions." },
+      { success: false, error: "Couldn’t assign sessions." },
       { status: 500 }
     );
   }

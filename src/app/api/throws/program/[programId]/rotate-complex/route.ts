@@ -213,7 +213,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to rotate exercise complex" },
+      { success: false, error: "Couldn’t rotate exercise complex" },
       { status: 500 }
     );
   }
