@@ -337,7 +337,7 @@ export function CompletionScreen({
             clipPath: CHAMFER_LG,
           }}
         >
-          {submitting ? "Submitting..." : "Submit Session"}
+          {submitting ? "Finishing session…" : "Finish Session"}
         </button>
       </div>
     </div>

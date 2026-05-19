@@ -277,7 +277,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
             {saving && (
               <div className="text-xs text-muted mb-3 flex items-center gap-1.5">
                 <span className="inline-block h-1.5 w-1.5 rounded-full bg-primary-500 animate-pulse" />
-                Saving...
+                Saving customizations…
               </div>
             )}
 

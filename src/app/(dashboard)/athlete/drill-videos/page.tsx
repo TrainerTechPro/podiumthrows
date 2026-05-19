@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useUrlStateMany } from "@/lib/hooks/useUrlState";
 import { Video, Search } from "lucide-react";
 import { useToast } from "@/components/toast";
 import DrillVideoUpload from "@/components/drill-video-upload";
@@ -12,6 +13,7 @@ import {
   WatchNextOverlay,
   type WatchNextRecommendation,
 } from "@/components/video/WatchNextOverlay";
+import { DrillVideoPlayer } from "@/components/video/DrillVideoPlayer";
 
 interface DrillVideo {
   id: string;
@@ -69,8 +71,11 @@ export default function AthleteDrillVideosPage() {
   const [showUpload, setShowUpload] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [playingId, setPlayingId] = useState<string | null>(null);
-  const [filterEvent, setFilterEvent] = useState("");
-  const [filterDrill, setFilterDrill] = useState("");
+  const url = useUrlStateMany();
+  const filterEvent = url.get("event", "");
+  const setFilterEvent = (next: string) => url.set({ event: next || null });
+  const filterDrill = url.get("drill", "");
+  const setFilterDrill = (next: string) => url.set({ drill: next || null });
   const _videoRef = useRef<HTMLVideoElement>(null);
 
   // Watch-next: when a clip ends, fetch 3 recommendations and overlay them
@@ -323,12 +328,9 @@ export default function AthleteDrillVideosPage() {
               {/* Video player */}
               <div className="relative bg-black aspect-video">
                 {playingId === video.id ? (
-                  <video
+                  <DrillVideoPlayer
                     src={video.videoUrl}
-                    className="w-full h-full object-contain"
                     autoPlay
-                    controls
-                    playsInline
                     onPlay={() => {
                       // Best-effort manual-source view ping. Source defaults
                       // to "manual"; recommendation source is logged from

@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useUrlState } from "@/lib/hooks/useUrlState";
 import {
   Calendar,
   Plus,
@@ -641,7 +642,7 @@ function NewPracticeModal({ onClose, onCreated }: { onClose: () => void; onCreat
 export function PracticesClient({
   initialPractices,
   initialStartDate,
-  initialEndDate,
+  initialEndDate: _initialEndDate,
 }: {
   initialPractices: PracticeListItem[];
   initialStartDate: string;
@@ -649,8 +650,13 @@ export function PracticesClient({
 }) {
   const router = useRouter();
   const [practices, setPractices] = useState<PracticeListItem[]>(initialPractices);
-  const [startDate, setStartDate] = useState(initialStartDate);
-  const [endDate, setEndDate] = useState(initialEndDate);
+
+  /* Week navigation is URL-persisted so coach back-button or shared link
+     restores the same week range. `?week=YYYY-MM-DD` is the Monday. */
+  const [weekParam, setWeekParam] = useUrlState("week", initialStartDate);
+  const startDate = /^\d{4}-\d{2}-\d{2}$/.test(weekParam) ? weekParam : initialStartDate;
+  const endDate = addDays(startDate, 6);
+
   const [loading, setLoading] = useState(false);
   const [showNewModal, setShowNewModal] = useState(false);
 
@@ -669,18 +675,14 @@ export function PracticesClient({
 
   function goToPrevWeek() {
     const newStart = addDays(startDate, -7);
-    const newEnd = addDays(endDate, -7);
-    setStartDate(newStart);
-    setEndDate(newEnd);
-    fetchPractices(newStart, newEnd);
+    setWeekParam(newStart);
+    fetchPractices(newStart, addDays(newStart, 6));
   }
 
   function goToNextWeek() {
     const newStart = addDays(startDate, 7);
-    const newEnd = addDays(endDate, 7);
-    setStartDate(newStart);
-    setEndDate(newEnd);
-    fetchPractices(newStart, newEnd);
+    setWeekParam(newStart);
+    fetchPractices(newStart, addDays(newStart, 6));
   }
 
   function goToThisWeek() {
@@ -689,13 +691,9 @@ export function PracticesClient({
     const offset = dow === 0 ? -6 : 1 - dow;
     const mon = new Date(now);
     mon.setDate(now.getDate() + offset);
-    const sun = new Date(mon);
-    sun.setDate(mon.getDate() + 6);
     const newStart = mon.toISOString().split("T")[0];
-    const newEnd = sun.toISOString().split("T")[0];
-    setStartDate(newStart);
-    setEndDate(newEnd);
-    fetchPractices(newStart, newEnd);
+    setWeekParam("");
+    fetchPractices(newStart, addDays(newStart, 6));
   }
 
   // Build conflict sidebar entries

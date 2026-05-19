@@ -590,7 +590,7 @@ export function AssessmentWizard({
               disabled={isPending}
               className="btn btn-primary text-sm"
             >
-              {isPending ? "Saving..." : "Save Assessment"}
+              {isPending ? "Saving assessment…" : "Save Assessment"}
             </button>
           </div>
         </div>

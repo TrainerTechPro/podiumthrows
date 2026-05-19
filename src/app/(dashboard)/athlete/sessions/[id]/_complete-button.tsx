@@ -25,7 +25,7 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
 
         const data = await res.json().catch(() => null);
         if (!res.ok || !data?.success) {
-          setError(data?.error ?? `Something went wrong (${res.status}).`);
+          setError(data?.error ?? `Couldn't complete session (${res.status}). Try again.`);
           return;
         }
 

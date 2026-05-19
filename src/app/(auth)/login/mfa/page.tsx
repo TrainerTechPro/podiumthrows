@@ -47,10 +47,7 @@ export default function MfaLoginPage() {
     }
   }
 
-  function handleKeyDown(
-    index: number,
-    e: React.KeyboardEvent<HTMLInputElement>
-  ) {
+  function handleKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Backspace" && !digits[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -58,10 +55,7 @@ export default function MfaLoginPage() {
 
   function handlePaste(e: React.ClipboardEvent) {
     e.preventDefault();
-    const pasted = e.clipboardData
-      .getData("text")
-      .replace(/\D/g, "")
-      .slice(0, 6);
+    const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
     if (pasted.length === 6) {
       const newDigits = pasted.split("");
       setDigits(newDigits);
@@ -84,7 +78,10 @@ export default function MfaLoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Verification failed");
+        setError(
+          data.error ||
+            "That code didn't match. Make sure your authenticator clock is in sync — or tap “Use a backup code instead” below."
+        );
         setDigits(["", "", "", "", "", ""]);
         inputRefs.current[0]?.focus();
         setLoading(false);
@@ -93,7 +90,9 @@ export default function MfaLoginPage() {
 
       router.push(redirect || data.data?.redirectTo || "/coach/dashboard");
     } catch {
-      setError("Network error. Please try again.");
+      setError(
+        "We couldn't reach the server. Check your connection and try again — your code is still valid."
+      );
       setLoading(false);
     }
   }
@@ -115,23 +114,26 @@ export default function MfaLoginPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Invalid backup code");
+        setError(
+          data.error ||
+            "That backup code isn't recognized. Backup codes are single-use — try the next unused one, or use your authenticator app."
+        );
         setLoading(false);
         return;
       }
 
       router.push(redirect || data.data?.redirectTo || "/coach/dashboard");
     } catch {
-      setError("Network error. Please try again.");
+      setError(
+        "We couldn't reach the server. Check your connection and try again — your backup code is still valid."
+      );
       setLoading(false);
     }
   }
 
   return (
     <div className="card p-8 max-w-md mx-auto">
-      <h2 className="text-display-sm text-center mb-2">
-        Two-Factor Authentication
-      </h2>
+      <h2 className="text-display-sm text-center mb-2">Two-Factor Authentication</h2>
       <p className="text-muted text-center text-sm mb-6">
         {backupMode
           ? "Enter one of your backup codes"
@@ -199,7 +201,7 @@ export default function MfaLoginPage() {
               disabled={loading || !backupCode.trim()}
               className="btn-primary w-full"
             >
-              {loading ? "Verifying..." : "Verify Backup Code"}
+              {loading ? "Verifying…" : "Verify Backup Code"}
             </button>
           </form>
 
@@ -217,10 +219,7 @@ export default function MfaLoginPage() {
         </>
       )}
 
-      <Link
-        href="/login"
-        className="text-sm text-muted hover:text-foreground block text-center"
-      >
+      <Link href="/login" className="text-sm text-muted hover:text-foreground block text-center">
         Back to login
       </Link>
     </div>

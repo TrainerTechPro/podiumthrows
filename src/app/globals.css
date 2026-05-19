@@ -594,6 +594,27 @@
     border-radius: 0.75rem;
   }
 
+  /* ── Auth shell — iOS focus-zoom prevention ─────────────────────────
+     Auth pages are mobile-critical (registration on a phone, MFA on a
+     phone, password reset on a phone). The global `.input` is 14px,
+     which triggers iOS Safari focus-zoom on every form. Bump auth
+     inputs to 16px the same way `.athlete-shell` does.
+
+     Scoped to `.auth-shell` so the coach-app text-sm look elsewhere
+     is unaffected. */
+  .auth-shell .input,
+  .auth-shell input[type="text"],
+  .auth-shell input[type="email"],
+  .auth-shell input[type="tel"],
+  .auth-shell input[type="search"],
+  .auth-shell input[type="url"],
+  .auth-shell input[type="password"],
+  .auth-shell input[type="number"],
+  .auth-shell textarea,
+  .auth-shell select {
+    font-size: 16px;
+  }
+
   .landing-grain::after {
     content: '';
     position: fixed;

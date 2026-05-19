@@ -70,7 +70,7 @@ export function NavigationControls({
 
         {showSubmit && (
           <Button onClick={onSubmit} disabled={!canSubmit || submitting}>
-            {submitting ? "Submitting..." : "Submit"}
+            {submitting ? "Saving responses…" : "Save Responses"}
           </Button>
         )}
       </div>

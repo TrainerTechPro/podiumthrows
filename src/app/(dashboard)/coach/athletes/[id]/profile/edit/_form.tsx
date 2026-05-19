@@ -342,7 +342,7 @@ export function CoachProfileEditForm({ athleteId, isClaimed, initial }: FormProp
             disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           type="button"
         >
-          {saving ? "Saving..." : "Save Profile"}
+          {saving ? "Saving profile…" : "Save Profile"}
         </button>
       </div>
     </div>

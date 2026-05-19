@@ -343,7 +343,7 @@ export default function AthleteTypingQuizPage() {
             disabled={!pendingScore || saving}
             className="flex items-center gap-1.5 px-5 min-h-[44px] rounded-xl bg-primary-500 hover:opacity-90 text-white text-sm font-bold transition-colors active:scale-[0.98] disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            {saving ? "Saving..." : isLastQuestion ? "Submit" : "Next"}
+            {saving ? "Scoring…" : isLastQuestion ? "See Results" : "Next"}
             {!saving && !isLastQuestion && (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path

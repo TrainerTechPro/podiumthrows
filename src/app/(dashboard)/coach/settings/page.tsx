@@ -946,14 +946,6 @@ export default function CoachSettingsPage() {
                       aria-hidden="true"
                       strokeWidth={1.75}
                     />
-                    Video annotation (coming soon)
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check
-                      className="h-4 w-4 text-success-500 shrink-0"
-                      aria-hidden="true"
-                      strokeWidth={1.75}
-                    />
                     Priority support
                   </li>
                 </ul>
@@ -1390,7 +1382,7 @@ export default function CoachSettingsPage() {
                   />
                   <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
                 </svg>
-                Saving...
+                Saving changes…
               </div>
             )}
           </div>

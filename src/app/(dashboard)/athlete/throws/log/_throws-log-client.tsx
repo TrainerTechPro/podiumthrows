@@ -1136,7 +1136,7 @@ export default function ThrowsLogClient({ userId, athleteId }: ThrowsLogClientPr
                 className="w-full py-3.5 rounded-xl text-white text-sm font-bold transition-colors disabled:opacity-60"
                 style={{ backgroundColor: eventMeta?.color }}
               >
-                {saving ? "Saving..." : editingSessionId ? "Update Session" : "Save Session"}
+                {saving ? "Saving session…" : editingSessionId ? "Update Session" : "Save Session"}
               </button>
             </div>
           )}

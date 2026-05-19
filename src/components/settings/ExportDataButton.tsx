@@ -22,8 +22,9 @@ export function ExportDataButton() {
 
       if (!res.ok) {
         const message = isJson
-          ? ((await res.json()) as { error?: string }).error || "Download failed"
-          : "Download failed";
+          ? ((await res.json()) as { error?: string }).error ||
+            "We couldn't prepare your export. Try again in a moment — if the issue continues, email support."
+          : "We couldn't prepare your export. Try again in a moment — if the issue continues, email support.";
         toast.error(message);
         return;
       }
@@ -44,7 +45,7 @@ export function ExportDataButton() {
 
       toast.success("Your data is downloading");
     } catch {
-      toast.error("Download failed — try again in a moment");
+      toast.error("We couldn't reach the server. Check your connection and try again.");
     } finally {
       setLoading(false);
     }

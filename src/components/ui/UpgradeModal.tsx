@@ -15,17 +15,10 @@ const PLAN_FEATURES: Record<"PRO" | "ELITE", string[]> = {
     "Up to 25 athletes",
     "All Free features",
     "Program builder",
-    "Video analysis",
     "ACWR analytics",
     "Athlete progress exports",
   ],
-  ELITE: [
-    "Unlimited athletes",
-    "Everything in Pro",
-    "Advanced analytics",
-    "Priority support",
-    "Custom branding (coming soon)",
-  ],
+  ELITE: ["Unlimited athletes", "Everything in Pro", "Advanced analytics", "Priority support"],
 };
 
 /* ── Plan card ───────────────────────────────────────────────────────────── */
@@ -127,7 +120,9 @@ export function UpgradeModal({ open, onClose, reason, currentPlan = "FREE" }: Up
       }
       window.location.href = payload.data.url;
     } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Something went wrong.");
+      setError(
+        err instanceof Error ? err.message : "Couldn't start checkout — try again in a moment."
+      );
       setLoadingPlan(null);
     }
   }

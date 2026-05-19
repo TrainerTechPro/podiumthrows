@@ -186,36 +186,73 @@ function ThrowingBlockResults({
       )}
 
       {throwLogs.length > 0 ? (
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-[var(--card-border)]">
-                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
-                  #
-                </th>
-                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
-                  Distance
-                </th>
-                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
-                  Implement
-                </th>
-                <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2">
-                  Notes
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {throwLogs.map((log) => {
-                const isBest = log.distance != null && log.distance === bestMark;
-                return (
-                  <tr
-                    key={log.throwNumber}
-                    className="border-b border-[var(--card-border)] last:border-0"
-                  >
-                    <td className="py-2 pr-4 tabular-nums text-muted">{log.throwNumber}</td>
-                    <td
+        <>
+          {/* Desktop: table */}
+          <div className="hidden md:block overflow-x-auto custom-scrollbar">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-[var(--card-border)]">
+                  <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
+                    #
+                  </th>
+                  <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
+                    Distance
+                  </th>
+                  <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2 pr-4">
+                    Implement
+                  </th>
+                  <th className="text-left text-xs font-semibold text-muted uppercase tracking-wider py-2">
+                    Notes
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {throwLogs.map((log) => {
+                  const isBest = log.distance != null && log.distance === bestMark;
+                  return (
+                    <tr
+                      key={log.throwNumber}
+                      className="border-b border-[var(--card-border)] last:border-0"
+                    >
+                      <td className="py-2 pr-4 tabular-nums text-muted">{log.throwNumber}</td>
+                      <td
+                        className={cn(
+                          "py-2 pr-4 tabular-nums font-semibold",
+                          isBest
+                            ? "text-success-600 dark:text-success-400"
+                            : "text-[var(--foreground)]"
+                        )}
+                      >
+                        {log.distance != null ? `${log.distance.toFixed(2)}m` : "—"}
+                        {isBest && (
+                          <span className="ml-1.5 text-nano font-bold uppercase">Best</span>
+                        )}
+                      </td>
+                      <td className="py-2 pr-4 text-muted">{log.implement}</td>
+                      <td className="py-2 text-muted text-xs">{log.notes ?? ""}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Mobile: per-throw cards — throw # + big distance + implement + notes */}
+          <ul className="md:hidden divide-y divide-[var(--card-border)]">
+            {throwLogs.map((log) => {
+              const isBest = log.distance != null && log.distance === bestMark;
+              return (
+                <li
+                  key={log.throwNumber}
+                  className="py-2.5 first:pt-0 last:pb-0 flex items-start gap-3"
+                >
+                  <span className="text-nano text-muted tabular-nums shrink-0 w-6 pt-1">
+                    #{log.throwNumber}
+                  </span>
+                  <div className="flex-1 min-w-0">
+                    <p
                       className={cn(
-                        "py-2 pr-4 tabular-nums font-semibold",
+                        "text-base font-bold tabular-nums",
                         isBest
                           ? "text-success-600 dark:text-success-400"
                           : "text-[var(--foreground)]"
@@ -223,15 +260,15 @@ function ThrowingBlockResults({
                     >
                       {log.distance != null ? `${log.distance.toFixed(2)}m` : "—"}
                       {isBest && <span className="ml-1.5 text-nano font-bold uppercase">Best</span>}
-                    </td>
-                    <td className="py-2 pr-4 text-muted">{log.implement}</td>
-                    <td className="py-2 text-muted text-xs">{log.notes ?? ""}</td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </p>
+                    <p className="text-nano text-muted mt-0.5">{log.implement}</p>
+                    {log.notes && <p className="text-xs text-muted mt-1">{log.notes}</p>}
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </>
       ) : (
         <p className="text-sm text-muted italic">No throws logged for this block</p>
       )}
@@ -266,7 +303,7 @@ function StrengthBlockPrescription({ config }: { config: Record<string, unknown>
   }
   return (
     <div className="space-y-1">
-      <p className="text-xs text-muted italic mb-2">Prescribed (strength logging coming soon)</p>
+      <p className="text-xs text-muted italic mb-2">Prescribed strength block</p>
       <div className="space-y-1.5">
         {exercises.map((ex, i) => {
           const name = (ex.name as string) || "Exercise";

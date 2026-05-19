@@ -20,7 +20,7 @@ export function scoreBg(score: number | null): string {
 
 /** Status label for recovery/readiness score */
 export function scoreLabel(score: number | null): string {
-  if (score === null) return "No data";
+  if (score === null) return "Not synced";
   if (score >= 80) return "Excellent";
   if (score >= 67) return "Good";
   if (score >= 34) return "Moderate";

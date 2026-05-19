@@ -519,7 +519,7 @@ export default function ThrowsBuilderClient({ userId }: ThrowsBuilderClientProps
             disabled={saving || !validationResult.canAssign}
             className="btn-primary"
           >
-            {saving ? "Saving..." : "Save Session"}
+            {saving ? "Saving session…" : "Save Session"}
           </button>
         </div>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 import { useState, useCallback, useTransition } from "react";
+import { useUrlState } from "@/lib/hooks/useUrlState";
 import { useToast } from "@/components/toast";
 import { InsightList } from "@/components/insights/InsightList";
 import { InsightProgressCard } from "@/components/insights/InsightProgressCard";
@@ -16,7 +17,9 @@ type Props = {
 export function AthleteInsightsClient({ athleteId, initialInsights, progress }: Props) {
   const { toast } = useToast();
   const [insights, setInsights] = useState(initialInsights);
-  const [showDismissed, setShowDismissed] = useState(false);
+  const [showDismissedRaw, setShowDismissedRaw] = useUrlState("dismissed", "0");
+  const showDismissed = showDismissedRaw === "1";
+  const setShowDismissed = (next: boolean) => setShowDismissedRaw(next ? "1" : "0");
   const [isRecomputing, startRecomputing] = useTransition();
 
   const markRead = useCallback(

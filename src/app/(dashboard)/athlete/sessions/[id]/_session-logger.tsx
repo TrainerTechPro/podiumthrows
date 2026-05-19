@@ -418,7 +418,8 @@ export function SessionLogger({ session }: { session: SessionWithPrescription })
           context: "athlete/sessions/[id]/session-logger",
           error: err,
         });
-        const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+        const msg =
+          err instanceof Error ? err.message : "Couldn't save session — try again in a moment.";
         setError(msg);
         toastError("Log failed", msg);
       }

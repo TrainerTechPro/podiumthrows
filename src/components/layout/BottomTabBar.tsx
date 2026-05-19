@@ -17,10 +17,13 @@ import { useHaptic } from "@/lib/hooks/useHaptic";
    else ladders up to that moment.
 
    Everything not in these five tabs lives inside the tabs: roster and
-   self-program under Training; history, trends, PRs, competitions, and
-   readiness under Throws; notifications/settings/wellness/availability
-   under Me. If a surface can't be reached from these five, it shouldn't
-   be a standalone page.
+   self-program under Training; history, trends, PRs, competitions,
+   readiness, and achievements under Throws; wellness check-in under Home
+   (it gates today's training decision, not a profile setting); notifications,
+   settings, and profile under Me. /athlete/availability and
+   /athlete/integrations are deep-link only with no tab highlight. If a
+   surface can't be reached from these five tabs (directly or via deep
+   link), it shouldn't be a standalone page.
    ─────────────────────────────────────────────────────────────────────── */
 
 interface Tab {

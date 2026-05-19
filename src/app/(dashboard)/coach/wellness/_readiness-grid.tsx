@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useUrlState } from "@/lib/hooks/useUrlState";
 import Link from "next/link";
 import Image from "next/image";
 import { AlertTriangle } from "lucide-react";
@@ -107,7 +107,7 @@ function Sparkline({ history }: { history: { date: string; score: number }[] }) 
 /* ─── Main Component ─────────────────────────────────────────────── */
 
 export function ReadinessGrid({ athletes }: { athletes: TeamReadinessDetail[] }) {
-  const [eventFilter, setEventFilter] = useState("ALL");
+  const [eventFilter, setEventFilter] = useUrlState("event", "ALL");
 
   const filtered =
     eventFilter === "ALL" ? athletes : athletes.filter((a) => a.events.includes(eventFilter));

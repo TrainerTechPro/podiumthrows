@@ -173,7 +173,7 @@ export function EnablePushNotifications({
       if (name === "NotAllowedError") {
         setPermission("denied");
       } else {
-        toast.error("Something went wrong. Please try again.");
+        toast.error("Couldn't enable push notifications — try again in a moment.");
       }
     } finally {
       setBusy(false);

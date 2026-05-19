@@ -219,7 +219,7 @@ export function LogThrowModal({
               disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             type="button"
           >
-            {saving ? "Saving..." : "Save"}
+            {saving ? "Logging throw…" : "Log Throw"}
           </button>
         </>
       }

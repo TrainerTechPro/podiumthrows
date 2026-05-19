@@ -177,7 +177,9 @@ function TwoUpCards({ device, today }: { device: "whoop" | "oura"; today: WhoopR
             {w.sleepDurationMs !== null ? formatMs(w.sleepDurationMs) : "--"}
           </p>
           <p className="text-xs text-muted">
-            {w.sleepEfficiency !== null ? `${w.sleepEfficiency.toFixed(0)}% efficiency` : "No data"}
+            {w.sleepEfficiency !== null
+              ? `${w.sleepEfficiency.toFixed(0)}% efficiency`
+              : "Efficiency not synced"}
           </p>
         </div>
       </div>

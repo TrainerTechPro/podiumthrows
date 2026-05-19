@@ -129,45 +129,85 @@ export default async function CoachSessionPage({ params }: { params: Promise<{ i
           {session.logs.length === 0 ? (
             <p className="text-sm text-muted py-4 text-center">No exercise logs recorded.</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-muted text-xs uppercase tracking-wider border-b border-[var(--card-border)]">
-                    <th className="pb-2 pr-4 font-medium">Exercise</th>
-                    <th className="pb-2 pr-4 font-medium text-right">Sets</th>
-                    <th className="pb-2 pr-4 font-medium text-right">Reps</th>
-                    <th className="pb-2 pr-4 font-medium text-right">Weight</th>
-                    <th className="pb-2 pr-4 font-medium text-right">Distance</th>
-                    <th className="pb-2 font-medium text-right">RPE</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--card-border)]">
-                  {session.logs.map((log) => (
-                    <tr key={log.id}>
-                      <td className="py-2.5 pr-4 font-medium text-[var(--foreground)]">
-                        {log.exerciseName}
-                        {log.notes && (
-                          <p className="text-xs text-muted font-normal mt-0.5">{log.notes}</p>
-                        )}
-                      </td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums">{log.sets}</td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
-                        {log.reps ?? "—"}
-                      </td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
-                        {log.weight != null ? `${log.weight}kg` : "—"}
-                      </td>
-                      <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
-                        {log.distance != null ? `${log.distance.toFixed(2)}m` : "—"}
-                      </td>
-                      <td className="py-2.5 text-right tabular-nums text-muted">
-                        {log.rpe != null ? log.rpe.toFixed(1) : "—"}
-                      </td>
+            <>
+              {/* Desktop: table */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-muted text-xs uppercase tracking-wider border-b border-[var(--card-border)]">
+                      <th className="pb-2 pr-4 font-medium">Exercise</th>
+                      <th className="pb-2 pr-4 font-medium text-right">Sets</th>
+                      <th className="pb-2 pr-4 font-medium text-right">Reps</th>
+                      <th className="pb-2 pr-4 font-medium text-right">Weight</th>
+                      <th className="pb-2 pr-4 font-medium text-right">Distance</th>
+                      <th className="pb-2 font-medium text-right">RPE</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--card-border)]">
+                    {session.logs.map((log) => (
+                      <tr key={log.id}>
+                        <td className="py-2.5 pr-4 font-medium text-[var(--foreground)]">
+                          {log.exerciseName}
+                          {log.notes && (
+                            <p className="text-xs text-muted font-normal mt-0.5">{log.notes}</p>
+                          )}
+                        </td>
+                        <td className="py-2.5 pr-4 text-right tabular-nums">{log.sets}</td>
+                        <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
+                          {log.reps ?? "—"}
+                        </td>
+                        <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
+                          {log.weight != null ? `${log.weight}kg` : "—"}
+                        </td>
+                        <td className="py-2.5 pr-4 text-right tabular-nums text-muted">
+                          {log.distance != null ? `${log.distance.toFixed(2)}m` : "—"}
+                        </td>
+                        <td className="py-2.5 text-right tabular-nums text-muted">
+                          {log.rpe != null ? log.rpe.toFixed(1) : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile: stacked cards — exercise name + inline metric chips */}
+              <ul className="md:hidden divide-y divide-[var(--card-border)]">
+                {session.logs.map((log) => (
+                  <li key={log.id} className="py-3 first:pt-0 last:pb-0">
+                    <p className="text-sm font-medium text-[var(--foreground)]">
+                      {log.exerciseName}
+                    </p>
+                    {log.notes && <p className="text-xs text-muted mt-0.5">{log.notes}</p>}
+                    <div className="mt-2 flex flex-wrap gap-1.5 text-nano tabular-nums">
+                      <span className="inline-flex rounded-full bg-surface-100 dark:bg-surface-800 px-2 py-0.5">
+                        {log.sets} sets
+                      </span>
+                      {log.reps != null && (
+                        <span className="inline-flex rounded-full bg-surface-100 dark:bg-surface-800 px-2 py-0.5">
+                          {log.reps} reps
+                        </span>
+                      )}
+                      {log.weight != null && (
+                        <span className="inline-flex rounded-full bg-surface-100 dark:bg-surface-800 px-2 py-0.5">
+                          {log.weight}kg
+                        </span>
+                      )}
+                      {log.distance != null && (
+                        <span className="inline-flex rounded-full bg-surface-100 dark:bg-surface-800 px-2 py-0.5">
+                          {log.distance.toFixed(2)}m
+                        </span>
+                      )}
+                      {log.rpe != null && (
+                        <span className="inline-flex rounded-full bg-primary-500/15 text-primary-700 dark:text-primary-300 px-2 py-0.5">
+                          RPE {log.rpe.toFixed(1)}
+                        </span>
+                      )}
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
       </section>
@@ -176,7 +216,8 @@ export default async function CoachSessionPage({ params }: { params: Promise<{ i
         <section className="space-y-3">
           <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Throw Log</h2>
           <div className="card px-4 py-3">
-            <div className="overflow-x-auto">
+            {/* Desktop: table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="text-left text-muted text-xs uppercase tracking-wider border-b border-[var(--card-border)]">
@@ -209,6 +250,31 @@ export default async function CoachSessionPage({ params }: { params: Promise<{ i
                 </tbody>
               </table>
             </div>
+
+            {/* Mobile: distance hero, event + implement supporting */}
+            <ul className="md:hidden divide-y divide-[var(--card-border)]">
+              {session.throwLogs.map((t) => (
+                <li key={t.id} className="py-3 first:pt-0 last:pb-0 flex items-start gap-3">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[var(--foreground)]">
+                      {t.event}
+                      {t.isPersonalBest && (
+                        <Badge variant="warning" className="ml-1.5">
+                          PR
+                        </Badge>
+                      )}
+                    </p>
+                    <p className="text-nano text-muted mt-0.5 tabular-nums">
+                      {t.implementWeight}kg
+                    </p>
+                    {t.notes && <p className="text-xs text-muted mt-1">{t.notes}</p>}
+                  </div>
+                  <p className="text-base font-bold tabular-nums text-[var(--foreground)] shrink-0">
+                    {t.distance != null ? `${t.distance.toFixed(2)}m` : "—"}
+                  </p>
+                </li>
+              ))}
+            </ul>
           </div>
         </section>
       )}

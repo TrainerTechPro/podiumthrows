@@ -143,7 +143,9 @@ function InlineInviteButton({
       setCanShare(typeof navigator !== "undefined" && !!navigator.share);
       setTimeout(() => router.refresh(), 1500);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Something went wrong");
+      setError(
+        err instanceof Error ? err.message : "Couldn't update checklist — please try again."
+      );
     } finally {
       setLoading(false);
     }

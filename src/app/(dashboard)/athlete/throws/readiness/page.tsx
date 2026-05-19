@@ -608,7 +608,7 @@ export default function AthleteProfilePage() {
                   disabled={savingPR || !prForm.implement || !prForm.distance}
                   className="btn-primary text-xs px-4 min-h-[44px]"
                 >
-                  {savingPR ? "Saving..." : "Save PR"}
+                  {savingPR ? "Saving PR…" : "Save PR"}
                 </button>
               </div>
             )}
@@ -774,7 +774,7 @@ export default function AthleteProfilePage() {
                 <p className="text-xs text-danger-600 dark:text-danger-400">{saveError}</p>
               )}
               <button onClick={handleCheckIn} disabled={saving} className="btn-primary w-full">
-                {saving ? "Saving..." : "Submit Check-In"}
+                {saving ? "Saving check-in…" : "Save Check-In"}
               </button>
             </div>
           )}

@@ -341,7 +341,7 @@ export function TabCompetition({ profile, throwsProfiles }: TabCompetitionProps)
           disabled={isPending}
           className="w-full sm:w-auto"
         >
-          {isPending ? "Saving..." : justSaved ? "Saved" : "Save Changes"}
+          {isPending ? "Saving changes…" : justSaved ? "Saved" : "Save Changes"}
         </Button>
       </div>
     </div>

@@ -15,10 +15,16 @@ import { test, expect } from "@playwright/test";
 test.describe("Athlete Training Hub", () => {
   test("seeded athlete sees active training state with assigned sessions", async ({ page }) => {
     await page.goto("/athlete/sessions");
-    await expect(page.getByRole("heading", { name: "Training" })).toBeVisible();
-    // Active state copy — proves at least one scheduled session was found
-    // for this athlete. A broken assignments pipeline would flip this to
-    // "Welcome to Podium Throws" or "Great work this week".
-    await expect(page.getByText("Here's what's on deck")).toBeVisible();
+    // Status-aware header (post status-aware Training refactor, commit 9df3f78):
+    // "active" data → status pill of "In progress" or "Due today" plus an h1
+    // titled "<n> sessions today" (or the single session's name). The "cold-start"
+    // / "between" / "Rest day" copy would flip these, so this is what proves the
+    // assignments pipeline produced today's sessions.
+    await expect(page.getByText(/^(In progress|Due today)$/).first()).toBeVisible();
+    await expect(
+      page.getByRole("heading", { level: 1, name: /sessions today|Quick Log|Session/i })
+    ).toBeVisible();
+    // The hub itself renders today's workouts list — proves TrainingHub mounted.
+    await expect(page.getByRole("heading", { name: "Today's Workouts" })).toBeVisible();
   });
 });

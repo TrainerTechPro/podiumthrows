@@ -179,7 +179,7 @@ export function DrillFormModal({ open, onClose, editDrill }: Props) {
       router.refresh();
       onClose();
     } catch {
-      setError("Something went wrong");
+      setError("Couldn't save drill — please try again.");
     } finally {
       setSaving(false);
     }

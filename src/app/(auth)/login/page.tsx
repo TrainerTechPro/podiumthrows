@@ -38,7 +38,10 @@ export default function LoginPage() {
       const data = await res.json();
 
       if (!res.ok || !data?.success) {
-        setError(data?.error || "Login failed");
+        setError(
+          data?.error ||
+            "We couldn't sign you in. Double-check your email and password — or use “Forgot password?” to reset it."
+        );
         setLoading(false);
         return;
       }
@@ -61,7 +64,9 @@ export default function LoginPage() {
 
       router.push(redirect || data.data?.redirectTo || "/dashboard");
     } catch {
-      setError("Network error. Please try again.");
+      setError(
+        "We couldn't reach the server. Check your connection and try again — your password isn't lost."
+      );
       setLoading(false);
     }
   }

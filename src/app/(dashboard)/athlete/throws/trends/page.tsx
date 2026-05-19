@@ -170,7 +170,7 @@ export default function ThrowAnalysisPage() {
         <div className="card">
           <EmptyState
             title="Unable to load analysis"
-            description="Something went wrong fetching your throw data. Please try again."
+            description="Couldn't load your throws. Pull to refresh, or try again in a moment."
             action={
               <button className="btn-primary" onClick={() => window.location.reload()}>
                 Retry
@@ -279,7 +279,9 @@ export default function ThrowAnalysisPage() {
                           >
                             {meta?.label ?? pr.event}
                           </span>
-                          <span className="text-xs text-muted font-mono">{pr.implement}</span>
+                          <span className="text-xs text-muted font-mono tabular-nums">
+                            {pr.implement}
+                          </span>
                           <span className="text-nano px-1.5 py-0.5 rounded bg-[var(--muted-bg)] text-muted font-medium">
                             {pr.source === "COMPETITION" ? "Competition" : "Training"}
                           </span>
@@ -288,7 +290,7 @@ export default function ThrowAnalysisPage() {
                           {fmtDateLong(pr.date)}
                         </p>
                       </div>
-                      <span className="text-lg font-bold font-mono text-primary-600 dark:text-primary-300 whitespace-nowrap">
+                      <span className="text-lg font-bold font-mono tabular-nums text-primary-600 dark:text-primary-300 whitespace-nowrap">
                         {formatDist(pr.distance)}
                       </span>
                     </div>
@@ -322,7 +324,7 @@ export default function ThrowAnalysisPage() {
               </span>
             </div>
             <div>
-              <p className="text-2xl font-bold font-mono text-[var(--foreground)]">
+              <p className="text-2xl font-bold font-mono tabular-nums text-[var(--foreground)]">
                 {totalComp.count}
               </p>
               <p className="text-xs text-muted">throws</p>
@@ -350,7 +352,7 @@ export default function ThrowAnalysisPage() {
               </span>
             </div>
             <div>
-              <p className="text-2xl font-bold font-mono text-[var(--foreground)]">
+              <p className="text-2xl font-bold font-mono tabular-nums text-[var(--foreground)]">
                 {totalPract.count}
               </p>
               <p className="text-xs text-muted">throws</p>
@@ -403,7 +405,7 @@ export default function ThrowAnalysisPage() {
                         className="py-3 flex items-center justify-between gap-4"
                       >
                         <div className="min-w-0">
-                          <p className="text-sm font-semibold font-mono text-[var(--foreground)]">
+                          <p className="text-sm font-semibold font-mono tabular-nums text-[var(--foreground)]">
                             {row.implement}
                           </p>
                           <p className="text-xs text-surface-700 dark:text-surface-300">
@@ -412,7 +414,7 @@ export default function ThrowAnalysisPage() {
                             {formatDist(row.avgDistance)}
                           </p>
                         </div>
-                        <span className="text-base font-bold font-mono text-warning-600 dark:text-warning-400 whitespace-nowrap">
+                        <span className="text-base font-bold font-mono tabular-nums text-warning-600 dark:text-warning-400 whitespace-nowrap">
                           {formatDist(row.bestDistance)}
                         </span>
                       </div>
@@ -580,7 +582,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
             <button
               key={label}
               onClick={() => toggleWeight(label)}
-              className={`text-micro font-mono font-semibold px-3 min-h-[44px] rounded-md border transition-colors ${
+              className={`text-micro font-mono tabular-nums font-semibold px-3 min-h-[44px] rounded-md border transition-colors ${
                 isVisible
                   ? isComp
                     ? "bg-primary-500 border-primary-500 text-white"

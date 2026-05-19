@@ -909,7 +909,7 @@ export function SessionDetail({
                 loading={rescheduling}
                 disabled={!rescheduleDate}
               >
-                {rescheduling ? "Saving..." : "Save"}
+                {rescheduling ? "Rescheduling…" : "Reschedule"}
               </Button>
             </div>
           </div>
@@ -994,7 +994,7 @@ export function SessionDetail({
                 loading={savingMod}
                 disabled={!modNotes.trim()}
               >
-                {savingMod ? "Saving..." : "Save Changes"}
+                {savingMod ? "Saving changes…" : "Save Changes"}
               </Button>
             </div>
           </div>

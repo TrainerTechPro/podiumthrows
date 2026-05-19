@@ -111,7 +111,7 @@ export function WarmupChecklist({
             onClick={handleNext}
             className="btn-primary w-full py-3 text-sm font-semibold"
           >
-            {hasThrows ? "Start Throws" : hasStrength ? "Start Strength" : "Continue"}
+            {hasThrows ? "Start Throws" : hasStrength ? "Start Strength" : "Start Session"}
           </button>
         ) : (
           <p className="text-center text-xs text-surface-400 dark:text-surface-500">

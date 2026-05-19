@@ -604,13 +604,15 @@ function CheckInCard({ c }: { c: CheckIn }) {
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 ml-5">
         <div>
           <p className="text-nano text-muted uppercase tracking-wide">Sleep</p>
-          <p className="text-xs text-[var(--foreground)] font-medium">
+          <p className="text-xs text-[var(--foreground)] font-medium tabular-nums">
             {c.sleepQuality}/10 · {c.sleepHours}h
           </p>
         </div>
         <div>
           <p className="text-nano text-muted uppercase tracking-wide">Soreness</p>
-          <p className="text-xs text-[var(--foreground)] font-medium">{c.soreness}/10</p>
+          <p className="text-xs text-[var(--foreground)] font-medium tabular-nums">
+            {c.soreness}/10
+          </p>
           {isStructured && areas.length > 0 ? (
             <div className="flex flex-wrap gap-1 mt-0.5">
               {areas.map((area) => (
@@ -635,11 +637,15 @@ function CheckInCard({ c }: { c: CheckIn }) {
         </div>
         <div>
           <p className="text-nano text-muted uppercase tracking-wide">Stress</p>
-          <p className="text-xs text-[var(--foreground)] font-medium">{c.stressLevel}/10</p>
+          <p className="text-xs text-[var(--foreground)] font-medium tabular-nums">
+            {c.stressLevel}/10
+          </p>
         </div>
         <div>
           <p className="text-nano text-muted uppercase tracking-wide">Energy</p>
-          <p className="text-xs text-[var(--foreground)] font-medium">{c.energyMood}/10</p>
+          <p className="text-xs text-[var(--foreground)] font-medium tabular-nums">
+            {c.energyMood}/10
+          </p>
         </div>
       </div>
       {c.injuryStatus !== "NONE" && (

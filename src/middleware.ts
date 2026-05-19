@@ -2,7 +2,8 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { verifyTokenEdge as verifyToken } from "@/lib/auth-edge";
 import { CSRF_COOKIE_NAME, CSRF_HEADER_NAME, generateCsrfToken } from "@/lib/csrf";
-import { getFlags, type FlagKey } from "@/lib/flags";
+import { getFlags } from "@/lib/flags";
+import { FLAG_GATED_ROUTES } from "@/lib/flag-gated-routes";
 import { rateLimit } from "@/lib/rate-limit";
 
 const PUBLIC_PATHS = [
@@ -33,21 +34,6 @@ const PHONE_UA_RE = /iPhone|iPod|Android.*Mobile|webOS|BlackBerry|IEMobile|Opera
 function isPhoneUA(ua: string | null): boolean {
   return ua ? PHONE_UA_RE.test(ua) : false;
 }
-
-// Route prefixes gated by feature flags
-const FLAG_GATED_ROUTES: { prefix: string; flag: FlagKey }[] = [
-  { prefix: "/athlete/self-program", flag: "selfProgram" },
-  { prefix: "/coach/videos", flag: "videoAnnotator" },
-  { prefix: "/coach/video-analysis", flag: "videoAnalysis" },
-  { prefix: "/coach/architect", flag: "aiArchitect" },
-  { prefix: "/coach/sideline", flag: "coachSideline" },
-  { prefix: "/athlete/throws/trends", flag: "throwsAnalysis" },
-  { prefix: "/athlete/oura", flag: "ouraIntegration" },
-  { prefix: "/athlete/whoop", flag: "whoopIntegration" },
-  { prefix: "/coach/questionnaires", flag: "questionnaireBuilder" },
-  { prefix: "/athlete/questionnaires", flag: "questionnaireBuilder" },
-  { prefix: "/coach/throws/practice", flag: "practiceMode" },
-];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;

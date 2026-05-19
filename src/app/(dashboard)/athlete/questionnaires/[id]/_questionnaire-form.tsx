@@ -592,7 +592,7 @@ function LegacyQuestionForm({ questionnaire, userId }: Props) {
         onConfirm={handleSubmit}
         title="Submit Responses"
         description="Are you sure you want to submit? Your responses cannot be changed after submission."
-        confirmLabel="Submit"
+        confirmLabel="Save Responses"
         loading={submitting}
       />
     </div>

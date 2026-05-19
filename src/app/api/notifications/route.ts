@@ -2,7 +2,11 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { getSession } from "@/lib/auth";
 import { getNotifications, resolveNotificationContext } from "@/lib/notifications";
-import { categoryToTypes, type NotificationCategory } from "@/lib/notifications/deep-links";
+import {
+  categoryToTypes,
+  categoryIsUnread,
+  type NotificationCategory,
+} from "@/lib/notifications/deep-links";
 import { logger } from "@/lib/logger";
 
 const QuerySchema = z.object({
@@ -22,7 +26,7 @@ const QuerySchema = z.object({
     .optional()
     .transform((v) => v === "true" || v === "1"),
   category: z
-    .enum(["all", "feedback", "prs", "team", "system"])
+    .enum(["all", "unread", "comments", "sessions", "prs", "system"])
     .nullable()
     .optional()
     .transform((v) => (v ?? "all") as NotificationCategory),
@@ -68,10 +72,15 @@ export async function GET(req: NextRequest) {
     const types =
       parsed.data.types && parsed.data.types.length > 0 ? parsed.data.types : fromCategory;
 
+    /* "unread" category is a read-state filter applied at the API layer —
+       overlay it on top of any explicit `unreadOnly=true` so the chip and
+       the legacy param are both respected. */
+    const unreadOnly = parsed.data.unreadOnly || categoryIsUnread(parsed.data.category);
+
     const result = await getNotifications(ctx.profileId, ctx.effectiveRole, {
       cursor: parsed.data.cursor ?? null,
       limit: parsed.data.limit,
-      unreadOnly: parsed.data.unreadOnly,
+      unreadOnly,
       types,
     });
 

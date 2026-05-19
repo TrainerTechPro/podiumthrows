@@ -91,6 +91,29 @@ export default defineConfig({
       workers: 1,
       testMatch: /athlete-mobile-loop\.spec\.ts$/,
     },
+    {
+      // Mobile screenshots for the trust/setup surfaces (register, login,
+      // onboarding, settings) at 375 + 390 widths. Verifies the auth-shell
+      // iOS-zoom rule lands clean, and gives a baseline for setup-flow
+      // visual regressions. Serial for the same DB-pool reason.
+      name: "auth-onboarding-screenshots",
+      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
+      fullyParallel: false,
+      workers: 1,
+      testMatch: /auth-onboarding-screenshots\.spec\.ts$/,
+    },
+    {
+      // Data-surface screenshots — coach tables that collapse to cards on
+      // mobile + athlete lists. Captures the structural shape of every
+      // list/table at 390px + 1440px after the DataTable upgrade.
+      name: "data-surfaces-screenshots",
+      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
+      fullyParallel: false,
+      workers: 1,
+      testMatch: /data-surfaces-screenshots\.spec\.ts$/,
+    },
   ],
   webServer: {
     command: "npm run dev",

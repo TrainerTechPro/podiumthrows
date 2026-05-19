@@ -26,7 +26,10 @@ export function RestoreClient({ role }: Props) {
       } | null;
 
       if (!res.ok || !payload?.success) {
-        toast.error(payload?.error || "Could not restore account");
+        toast.error(
+          payload?.error ||
+            "We couldn't restore your account. The grace window may have expired — email support to check."
+        );
         setLoading(false);
         return;
       }
@@ -34,7 +37,9 @@ export function RestoreClient({ role }: Props) {
       toast.success("Welcome back");
       window.location.assign(role === "COACH" ? "/coach/dashboard" : "/athlete/dashboard");
     } catch {
-      toast.error("Network error — try again in a moment");
+      toast.error(
+        "We couldn't reach the server. Check your connection and try again — your grace window is still active."
+      );
       setLoading(false);
     }
   }

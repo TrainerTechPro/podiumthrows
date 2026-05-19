@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { useUrlState } from "@/lib/hooks/useUrlState";
 import {
   Bell,
   Trophy,
@@ -465,9 +466,10 @@ function DesktopOverflowMenu({
 
 const CATEGORY_CHIPS: { key: NotificationCategory; label: string }[] = [
   { key: "all", label: "All" },
-  { key: "feedback", label: "Feedback" },
+  { key: "unread", label: "Unread" },
+  { key: "comments", label: "Comments" },
+  { key: "sessions", label: "Sessions" },
   { key: "prs", label: "PRs" },
-  { key: "team", label: "Team" },
   { key: "system", label: "System" },
 ];
 
@@ -487,13 +489,19 @@ function emptyCopy(
           : "Coach feedback, assigned questionnaires, videos, and competition reminders will appear here.",
     };
   }
-  if (category === "feedback") {
+  if (category === "unread") {
     return {
-      title: "No feedback yet",
+      title: "All caught up",
+      description: "You've read every notification. Switch to All to see the full history.",
+    };
+  }
+  if (category === "comments") {
+    return {
+      title: "No comments yet",
       description:
         role === "ATHLETE"
           ? "Your coach will post here when they review a session."
-          : "Athlete responses to your feedback will appear here.",
+          : "Athlete reactions to your feedback will appear here.",
     };
   }
   if (category === "prs") {
@@ -505,18 +513,19 @@ function emptyCopy(
           : "When your athletes hit personal bests, you'll see them here.",
     };
   }
-  if (category === "team") {
+  if (category === "sessions") {
     return {
-      title: "Quiet team feed",
+      title: "No session activity",
       description:
         role === "COACH"
-          ? "Roster joins, programming requests, and readiness flags land here."
-          : "Workout assignments, streaks, and competition reminders land here.",
+          ? "Workout assignments, completions, program checkpoints, and roster joins land here."
+          : "Assigned workouts, streaks, competition reminders, and program updates land here.",
     };
   }
   return {
     title: "Nothing in System",
-    description: "Questionnaires, videos, and engine updates land here.",
+    description:
+      "Questionnaires, videos, invitations, readiness flags, and weekly recaps land here.",
   };
 }
 
@@ -544,7 +553,13 @@ export function NotificationsClient({
   const toast = useToast();
   const [items, setItems] = useState<NotificationItem[]>(initialNotifications);
   const [cursor, setCursor] = useState<string | null>(initialNextCursor);
-  const [category, setCategory] = useState<NotificationCategory>("all");
+  const [categoryRaw, setCategoryRaw] = useUrlState("category", "all");
+  const category = (
+    ["all", "unread", "comments", "sessions", "prs", "system"].includes(categoryRaw)
+      ? categoryRaw
+      : "all"
+  ) as NotificationCategory;
+  const setCategory = (next: NotificationCategory) => setCategoryRaw(next);
   const [serverUnread, setServerUnread] = useState(initialUnreadCount);
   const [loading, setLoading] = useState(false);
   const [reloading, setReloading] = useState(false);

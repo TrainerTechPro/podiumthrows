@@ -55,7 +55,7 @@ export function FormBuilderShell({ initialData }: FormBuilderShellProps) {
   // Convert legacy questions to blocks for editing
   const initialBlocks: FormBlock[] =
     initialData?.blocks ??
-    initialData?.questions?.map((q, i) => ({
+    (initialData?.questions?.map((q, i) => ({
       id: q.id,
       type: q.type as BlockType,
       label: q.text,
@@ -70,7 +70,7 @@ export function FormBuilderShell({ initialData }: FormBuilderShellProps) {
             })),
           }
         : {}),
-    })) as FormBlock[] ??
+    })) as FormBlock[]) ??
     [];
 
   const initialState: Partial<FormBuilderState> | undefined = initialData
@@ -80,8 +80,7 @@ export function FormBuilderShell({ initialData }: FormBuilderShellProps) {
           description: initialData.description ?? "",
           type: (initialData.type as FormBuilderState["form"]["type"]) ?? "CUSTOM",
           displayMode:
-            (initialData.displayMode as FormBuilderState["form"]["displayMode"]) ??
-            "ALL_AT_ONCE",
+            (initialData.displayMode as FormBuilderState["form"]["displayMode"]) ?? "ALL_AT_ONCE",
           welcomeScreen: null,
           thankYouScreen: null,
           scoringEnabled: false,
@@ -101,9 +100,7 @@ export function FormBuilderShell({ initialData }: FormBuilderShellProps) {
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
 
-  const selectedBlock = state.blocks.find(
-    (b) => b.id === state.selectedBlockId
-  );
+  const selectedBlock = state.blocks.find((b) => b.id === state.selectedBlockId);
 
   // Drag & drop handlers
   const handleDragStart = useCallback(
@@ -177,19 +174,14 @@ export function FormBuilderShell({ initialData }: FormBuilderShellProps) {
               id: b.id,
               text: b.label,
               type: b.type,
-              ...(("options" in b && Array.isArray(b.options))
+              ...("options" in b && Array.isArray(b.options)
                 ? {
-                    options: (b.options as Array<{ label: string }>).map(
-                      (o) => o.label
-                    ),
+                    options: (b.options as Array<{ label: string }>).map((o) => o.label),
                   }
                 : {}),
               required: b.required,
             })),
-          conditionalLogic:
-            state.conditionalLogic.length > 0
-              ? state.conditionalLogic
-              : undefined,
+          conditionalLogic: state.conditionalLogic.length > 0 ? state.conditionalLogic : undefined,
           scoringEnabled: state.form.scoringEnabled,
           scoringRules: state.form.scoringRules,
           welcomeScreen: state.form.welcomeScreen,
@@ -219,7 +211,7 @@ export function FormBuilderShell({ initialData }: FormBuilderShellProps) {
         router.push("/coach/questionnaires");
         router.refresh();
       } catch {
-        setError("Something went wrong");
+        setError("Couldn't save questionnaire — please try again.");
       } finally {
         setSaving(false);
       }
@@ -232,9 +224,7 @@ export function FormBuilderShell({ initialData }: FormBuilderShellProps) {
     return (
       <div className="space-y-6">
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">
-            Preview
-          </h2>
+          <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Preview</h2>
           <Button variant="ghost" onClick={() => setShowPreview(false)}>
             Back to Editor
           </Button>
@@ -245,19 +235,12 @@ export function FormBuilderShell({ initialData }: FormBuilderShellProps) {
               {state.form.title || "Untitled Form"}
             </h3>
             {state.form.description && (
-              <p className="text-sm text-muted mt-1">
-                {state.form.description}
-              </p>
+              <p className="text-sm text-muted mt-1">{state.form.description}</p>
             )}
           </div>
           {state.blocks.map((block) => (
             <div key={block.id} className="card p-4">
-              <BlockRenderer
-                block={block}
-                value={undefined}
-                onChange={() => {}}
-                disabled
-              />
+              <BlockRenderer block={block} value={undefined} onChange={() => {}} disabled />
             </div>
           ))}
         </div>
@@ -380,15 +363,9 @@ export function FormBuilderShell({ initialData }: FormBuilderShellProps) {
                 block={block}
                 index={idx}
                 isSelected={block.id === state.selectedBlockId}
-                onSelect={() =>
-                  dispatch({ type: "SELECT_BLOCK", blockId: block.id })
-                }
-                onRemove={() =>
-                  dispatch({ type: "REMOVE_BLOCK", blockId: block.id })
-                }
-                onDuplicate={() =>
-                  dispatch({ type: "DUPLICATE_BLOCK", blockId: block.id })
-                }
+                onSelect={() => dispatch({ type: "SELECT_BLOCK", blockId: block.id })}
+                onRemove={() => dispatch({ type: "REMOVE_BLOCK", blockId: block.id })}
+                onDuplicate={() => dispatch({ type: "DUPLICATE_BLOCK", blockId: block.id })}
                 onMoveUp={() =>
                   dispatch({
                     type: "REORDER_BLOCKS",
@@ -455,9 +432,7 @@ export function FormBuilderShell({ initialData }: FormBuilderShellProps) {
                 <line x1="9" y1="21" x2="9" y2="9" />
               </svg>
               <p className="text-sm">Select a block to preview</p>
-              <p className="text-xs mt-1">
-                Or click + to add your first block
-              </p>
+              <p className="text-xs mt-1">Or click + to add your first block</p>
             </div>
           )}
         </div>
@@ -506,17 +481,11 @@ export function FormBuilderShell({ initialData }: FormBuilderShellProps) {
           </button>
         </div>
         <div className="flex gap-2">
-          <Button
-            variant="ghost"
-            onClick={() => handleSave("draft")}
-            loading={saving}
-          >
+          <Button variant="ghost" onClick={() => handleSave("draft")} loading={saving}>
             Save Draft
           </Button>
           <Button onClick={() => handleSave("published")} loading={saving}>
-            {isEdit && initialData?.status === "published"
-              ? "Save Changes"
-              : "Publish"}
+            {isEdit && initialData?.status === "published" ? "Save Changes" : "Publish"}
           </Button>
         </div>
       </div>

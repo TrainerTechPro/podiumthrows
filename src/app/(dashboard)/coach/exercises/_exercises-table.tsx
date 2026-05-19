@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
+import { useUrlStateMany } from "@/lib/hooks/useUrlState";
 import { Badge, DataTable, Button, ConfirmDialog, useToast } from "@/components";
 import type { Column } from "@/components";
 import type { ExerciseItem } from "@/lib/data/coach";
@@ -175,23 +176,47 @@ function CorrelationCell({
 export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
   const router = useRouter();
   const { error: toastError } = useToast();
-  const [activeCategory, setActiveCategory] = useState<string>("All");
+  const url = useUrlStateMany();
+
+  /* All filter state lives in the URL so a coach can refresh / share / back
+     and not lose their analysis context. */
+  const activeCategory = (() => {
+    const c = url.get("cat", "All");
+    return (CATEGORIES as readonly string[]).includes(c) ? c : "All";
+  })();
+  const setActiveCategory = (next: string) => url.set({ cat: next === "All" ? null : next });
+
+  const filterEvent = (() => {
+    const v = url.get("event", "SHOT_PUT");
+    return (["SHOT_PUT", "DISCUS", "HAMMER", "JAVELIN"] as const).includes(v as ThrowEvent)
+      ? (v as ThrowEvent)
+      : "SHOT_PUT";
+  })();
+  const setFilterEvent = (next: ThrowEvent) =>
+    url.set({ event: next === "SHOT_PUT" ? null : next, band: null });
+
+  const filterGender = (() => {
+    const v = url.get("gender", "MALE");
+    return v === "FEMALE" ? "FEMALE" : "MALE";
+  })();
+  const setFilterGender = (next: Gender) =>
+    url.set({ gender: next === "MALE" ? null : next, band: null });
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingExercise, setEditingExercise] = useState<ExerciseItem | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<ExerciseItem | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // Correlation filter state
-  const [filterEvent, setFilterEvent] = useState<ThrowEvent>("SHOT_PUT");
-  const [filterGender, setFilterGender] = useState<Gender>("MALE");
   const availableBands = useMemo(
     () => getBandsForFilter(filterEvent, filterGender),
     [filterEvent, filterGender]
   );
-  const [filterBand, setFilterBand] = useState<string>(() => {
-    const bands = getBandsForFilter("SHOT_PUT", "MALE");
+  const defaultBand = useMemo(() => {
+    const bands = getBandsForFilter(filterEvent, filterGender);
     return bands.length > 0 ? bands[Math.floor(bands.length / 2)] : "";
-  });
+  }, [filterEvent, filterGender]);
+  const filterBand = url.get("band", defaultBand);
+  const setFilterBand = (next: string) => url.set({ band: next === defaultBand ? null : next });
 
   // Reset band when event/gender changes if current band isn't available
   const effectiveBand = useMemo(() => {
@@ -416,11 +441,17 @@ export function ExercisesTable({ exercises }: { exercises: ExerciseItem[] }) {
         searchable
         searchPlaceholder="Search exercises..."
         pageSize={25}
+        urlStateKey=""
         emptyTitle="No exercises in your library"
         emptyDescription={
           activeCategory !== "All"
             ? `No ${activeCategory} exercises — switch category or add a custom one.`
             : "Add one or import the catalog to get started."
+        }
+        emptyAction={
+          <Button variant="primary" size="sm" onClick={handleAdd}>
+            + Add Exercise
+          </Button>
         }
         actions={
           <Button variant="primary" size="sm" onClick={handleAdd}>

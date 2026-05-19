@@ -92,7 +92,7 @@ export function GroupModal({ open, onClose, group, onSaved }: GroupModalProps) {
 
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        throw new Error(data?.error ?? "Something went wrong");
+        throw new Error(data?.error ?? "Couldn't save group — please try again.");
       }
 
       onSaved();

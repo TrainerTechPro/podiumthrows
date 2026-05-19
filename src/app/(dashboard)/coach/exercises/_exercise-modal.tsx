@@ -163,7 +163,7 @@ export function ExerciseModal({
 
         if (!res.ok) {
           const data = await res.json();
-          setError(data.error ?? "Something went wrong.");
+          setError(data.error ?? "Couldn't save exercise — please try again.");
           return;
         }
 

@@ -71,7 +71,10 @@ export default function ResetPasswordPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "Reset failed");
+        setError(
+          data.error ||
+            "We couldn't update your password. The reset link may have expired — request a new one from “Forgot password?”."
+        );
         setLoading(false);
         return;
       }
@@ -79,7 +82,9 @@ export default function ResetPasswordPage() {
       // Success — redirect to login
       router.push("/login?reset=success");
     } catch {
-      setError("Network error. Please try again.");
+      setError(
+        "We couldn't reach the server. Check your connection and try again — the reset link is still valid for now."
+      );
       setLoading(false);
     }
   }

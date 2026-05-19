@@ -547,7 +547,7 @@ export function TeamsClient() {
               onClick={handleSave}
               disabled={saving || !formName.trim()}
             >
-              {saving ? "Saving..." : "Save"}
+              {saving ? "Saving group…" : "Save Group"}
             </button>
           </div>
         </div>

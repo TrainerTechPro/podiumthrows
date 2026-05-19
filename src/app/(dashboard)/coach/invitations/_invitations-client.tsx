@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { Mail, Link2 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useConfirm } from "@/components";
@@ -90,23 +91,7 @@ export function InvitationsClient({ initialInvitations }: Props) {
   if (invitations.length === 0) {
     return (
       <EmptyState
-        icon={
-          <svg
-            width="48"
-            height="48"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="1.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="text-muted"
-            aria-hidden="true"
-          >
-            <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-            <polyline points="22,6 12,13 2,6" />
-          </svg>
-        }
+        icon={<Mail size={48} strokeWidth={1.5} aria-hidden="true" />}
         title="No invitations sent yet"
         description="Invite athletes by email or shareable link. They'll create their account and join your roster automatically."
       />
@@ -134,35 +119,19 @@ export function InvitationsClient({ initialInvitations }: Props) {
                     aria-hidden="true"
                   >
                     {inv.email ? (
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="#f59e0b"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                      <Mail
+                        size={16}
+                        strokeWidth={1.75}
+                        className="text-status-warning-fg"
                         aria-hidden="true"
-                      >
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                        <polyline points="22,6 12,13 2,6" />
-                      </svg>
+                      />
                     ) : (
-                      <svg
-                        width="16"
-                        height="16"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="var(--primary-500)"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                      <Link2
+                        size={16}
+                        strokeWidth={1.75}
+                        className="text-primary-500"
                         aria-hidden="true"
-                      >
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                      </svg>
+                      />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -226,37 +195,19 @@ export function InvitationsClient({ initialInvitations }: Props) {
                     aria-hidden="true"
                   >
                     {inv.email ? (
-                      <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                      <Mail
+                        size={15}
+                        strokeWidth={1.75}
                         className="text-muted"
                         aria-hidden="true"
-                      >
-                        <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
-                        <polyline points="22,6 12,13 2,6" />
-                      </svg>
+                      />
                     ) : (
-                      <svg
-                        width="15"
-                        height="15"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
+                      <Link2
+                        size={15}
+                        strokeWidth={1.75}
                         className="text-muted"
                         aria-hidden="true"
-                      >
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                      </svg>
+                      />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Inbox, Check, AlertCircle, ThumbsDown } from "lucide-react";
+import { Avatar } from "@/components";
 import { requireCoachSession } from "@/lib/data/coach";
 import { fetchCoachFeedbackInbox } from "@/lib/data/coach-feedback-inbox";
 
@@ -83,30 +84,21 @@ export default async function CoachFeedbackInboxPage() {
               href={`/coach/athletes/${row.athleteId}`}
               className="flex items-center gap-3 px-4 py-3 hover:bg-surface-50 dark:hover:bg-surface-800/50 transition-colors"
             >
-              {row.athleteAvatar ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={row.athleteAvatar}
-                  alt=""
-                  className="h-10 w-10 rounded-full object-cover shrink-0"
-                />
-              ) : (
-                <div className="h-10 w-10 rounded-full bg-primary-500/15 flex items-center justify-center text-sm font-bold text-primary-500 shrink-0">
-                  {row.athleteName.charAt(0)}
-                </div>
-              )}
+              <Avatar name={row.athleteName} src={row.athleteAvatar} size="md" />
+
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-[var(--foreground)] truncate">
                   {row.athleteName}
                 </p>
                 <p className="text-xs text-muted mt-0.5">
-                  {row.totalFeedback} note{row.totalFeedback === 1 ? "" : "s"}
+                  <span className="tabular-nums">{row.totalFeedback}</span> note
+                  {row.totalFeedback === 1 ? "" : "s"}
                   {row.lastFeedbackAt && <> · last sent {formatRelative(row.lastFeedbackAt)}</>}
                 </p>
               </div>
               <div className="flex items-center gap-2 shrink-0">
                 {row.unread > 0 && (
-                  <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-500">
+                  <span className="inline-flex items-center gap-1 text-xs font-bold text-primary-500 tabular-nums">
                     <AlertCircle className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />
                     {row.unread} unread
                   </span>
