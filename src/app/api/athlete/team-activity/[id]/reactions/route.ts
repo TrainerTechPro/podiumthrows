@@ -102,7 +102,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to update reaction." },
+      { success: false, error: "Couldn’t update reaction." },
       { status: 500 }
     );
   }
@@ -142,7 +142,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to remove reaction." },
+      { success: false, error: "Couldn’t remove reaction." },
       { status: 500 }
     );
   }

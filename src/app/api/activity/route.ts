@@ -33,7 +33,7 @@ export async function GET() {
   } catch (error) {
     logger.error("Activity log error", { context: "activity", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to load activity logs" },
+      { success: false, error: "Couldn’t load activity logs" },
       { status: 500 }
     );
   }

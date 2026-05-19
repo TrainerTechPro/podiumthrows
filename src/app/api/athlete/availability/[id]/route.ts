@@ -34,7 +34,7 @@ export async function PATCH(
     return NextResponse.json({ success: true, data: block });
   } catch (err) {
     logger.error("PATCH /api/athlete/availability/[id]", { context: "api", error: err });
-    const message = err instanceof Error ? err.message : "Failed to update availability block.";
+    const message = err instanceof Error ? err.message : "Couldn’t update availability block.";
     const status = message.includes("not found") || message === "Not found" ? 404 : 500;
     return NextResponse.json({ success: false, error: message }, { status });
   }
@@ -65,7 +65,7 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/athlete/availability/[id]", { context: "api", error: err });
-    const message = err instanceof Error ? err.message : "Failed to delete availability block.";
+    const message = err instanceof Error ? err.message : "Couldn’t delete availability block.";
     const status = message.includes("not found") || message === "Not found" ? 404 : 500;
     return NextResponse.json({ success: false, error: message }, { status });
   }

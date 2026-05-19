@@ -253,7 +253,7 @@ export function SessionDetail({
       const assignmentId = data?.success ? data.data?.assignmentId : undefined;
 
       if (res.ok && assignmentId) {
-        success("Workout started", "Launching live view...");
+        success("Workout started", "Launching live view…");
         router.push(`/athlete/throws/${assignmentId}?view=live`);
       } else if (res.status === 409) {
         // 409 means the session is already completed — informational, not
@@ -475,7 +475,7 @@ export function SessionDetail({
                 !starting ? <Play size={18} strokeWidth={1.75} aria-hidden="true" /> : undefined
               }
             >
-              {starting ? "Starting..." : "Start Workout"}
+              {starting ? "Starting…" : "Start Workout"}
             </Button>
           </div>
           {/* Mobile: slide to confirm */}
@@ -509,7 +509,7 @@ export function SessionDetail({
               !starting ? <Play size={16} strokeWidth={1.75} aria-hidden="true" /> : undefined
             }
           >
-            {starting ? "Resuming..." : "Resume Workout"}
+            {starting ? "Resuming…" : "Resume Workout"}
           </Button>
           <button
             type="button"
@@ -728,7 +728,7 @@ export function SessionDetail({
                 !starting ? <Play size={16} strokeWidth={1.75} aria-hidden="true" /> : undefined
               }
             >
-              {starting ? "Resuming..." : "Resume Workout"}
+              {starting ? "Resuming…" : "Resume Workout"}
             </Button>
           )}
 

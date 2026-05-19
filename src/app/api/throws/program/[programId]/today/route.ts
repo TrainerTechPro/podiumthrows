@@ -121,7 +121,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch today's sessions" },
+      { success: false, error: "Couldn’t fetch today's sessions" },
       { status: 500 },
     );
   }

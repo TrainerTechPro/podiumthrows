@@ -44,7 +44,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch attendance." },
+      { success: false, error: "Couldn’t fetch attendance." },
       { status: 500 }
     );
   }
@@ -83,7 +83,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to update attendance." },
+      { success: false, error: "Couldn’t update attendance." },
       { status: 500 }
     );
   }
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to mark all present." },
+      { success: false, error: "Couldn’t mark all present." },
       { status: 500 }
     );
   }

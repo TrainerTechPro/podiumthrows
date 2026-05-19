@@ -101,7 +101,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     logger.error("POST /api/readiness", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to save check-in." },
+      { success: false, error: "Couldn’t save check-in." },
       { status: 500 }
     );
   }

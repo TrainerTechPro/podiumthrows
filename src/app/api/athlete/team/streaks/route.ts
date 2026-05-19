@@ -90,7 +90,7 @@ export async function GET(req: NextRequest) {
       metadata: { error: String(err) },
     });
     return NextResponse.json(
-      { success: false, error: "Failed to load streak standings." },
+      { success: false, error: "Couldn’t load streak standings." },
       { status: 500 }
     );
   }

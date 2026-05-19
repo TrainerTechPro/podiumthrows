@@ -115,6 +115,6 @@ export async function POST() {
       context: "api",
       error: err,
     });
-    return NextResponse.json({ success: false, error: "Failed to check." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t check." }, { status: 500 });
   }
 }

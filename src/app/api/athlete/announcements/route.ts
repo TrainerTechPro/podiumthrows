@@ -25,6 +25,6 @@ export async function GET() {
     return NextResponse.json({ success: true, data });
   } catch (err) {
     logger.error("GET /api/athlete/announcements", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch announcements." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch announcements." }, { status: 500 });
   }
 }

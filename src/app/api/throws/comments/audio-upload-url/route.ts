@@ -90,7 +90,7 @@ export async function POST(req: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error:"Failed to get upload URL." },
+      { success: false, error:"Couldn’t get upload URL." },
       { status: 500 }
     );
   }

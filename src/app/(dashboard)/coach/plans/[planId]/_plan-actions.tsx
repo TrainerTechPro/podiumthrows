@@ -160,7 +160,7 @@ export function PlanActions({
         router.refresh();
       } else {
         const data = await res.json().catch(() => ({}));
-        error("Delete failed", data.error ?? "Failed to delete plan.");
+        error("Delete failed", data.error ?? "Couldn’t delete plan.");
         setConfirmDeleteOpen(false);
       }
     } finally {

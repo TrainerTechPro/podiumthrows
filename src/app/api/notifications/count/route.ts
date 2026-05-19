@@ -25,7 +25,7 @@ export async function GET() {
     // stale badge rather than pretending zero unread.
     logger.error("GET /api/notifications/count", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch unread count." },
+      { success: false, error: "Couldn’t fetch unread count." },
       { status: 500 }
     );
   }

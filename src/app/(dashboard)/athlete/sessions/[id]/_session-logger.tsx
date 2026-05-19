@@ -974,7 +974,7 @@ function ThrowingInput({
               (e.currentTarget as HTMLElement).style.transform = "scale(1)";
             }}
           >
-            {isPending ? "Logging..." : `Log Throw #${currentThrowNumber}`}
+            {isPending ? "Logging…" : `Log Throw #${currentThrowNumber}`}
           </button>
         </div>
       )}
@@ -1213,7 +1213,7 @@ function StrengthInput({
               (e.currentTarget as HTMLElement).style.transform = "scale(1)";
             }}
           >
-            {isPending ? "Logging..." : `Log Set ${currentSetNumber}`}
+            {isPending ? "Logging…" : `Log Set ${currentSetNumber}`}
           </button>
         </div>
       )}

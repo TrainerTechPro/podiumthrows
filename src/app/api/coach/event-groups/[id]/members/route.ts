@@ -34,6 +34,6 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     }
   } catch (error) {
     logger.error("Error adding members to event group", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to add members" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t add members" }, { status: 500 });
   }
 }

@@ -40,6 +40,6 @@ export async function DELETE(
     return NextResponse.json({ success: true, data: null });
   } catch (error) {
     logger.error("Error removing team member", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to remove team member" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t remove team member" }, { status: 500 });
   }
 }

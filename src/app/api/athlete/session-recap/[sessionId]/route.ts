@@ -42,6 +42,6 @@ export async function GET(
       context: "api",
       error: err,
     });
-    return NextResponse.json({ success: false, error: "Failed to load recap." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t load recap." }, { status: 500 });
   }
 }

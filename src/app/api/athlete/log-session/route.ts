@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     logger.error("GET /api/athlete/log-session", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch sessions" },
+      { success: false, error: "Couldn’t fetch sessions" },
       { status: 500 }
     );
   }

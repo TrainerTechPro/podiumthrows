@@ -72,7 +72,7 @@ export function AthleteSettingsForm({ profile }: { profile: AthleteProfileFull }
 
         const payload = await res.json().catch(() => null);
         if (!res.ok || !payload?.success) {
-          setError(payload?.error ?? "Failed to save.");
+          setError(payload?.error ?? "Couldn’t save.");
           toast.error("Couldn't save", payload?.error ?? "Please try again.");
           return;
         }

@@ -801,7 +801,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
             setThrowCount((c) => c - 1);
             setRecentThrows((prev) => prev.filter((t) => t.id !== tempId));
             const msg = err instanceof Error ? err.message : "Unknown error";
-            toastError("Failed to save throw", msg);
+            toastError("Couldn’t save throw", msg);
           }
         }
       } else {
@@ -956,7 +956,7 @@ export function QuickLogClient({ userId }: { userId: string }) {
             prev.map((t) => (t.id === editingThrow.id ? { ...updated, isOptimistic: false } : t))
           );
         } catch {
-          toastError("Failed to update throw", "Changes could not be saved.");
+          toastError("Couldn’t update throw", "Changes could not be saved.");
         }
       }
     },

@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
     try {
       benchmarks = JSON.parse(athlete.performanceBenchmarks || "{}");
     } catch (parseErr) {
-      logger.warn("Failed to parse AthleteProfile.performanceBenchmarks JSON (GET)", {
+      logger.warn("Couldn’t parse AthleteProfile.performanceBenchmarks JSON (GET)", {
         context: "throws/testing",
         metadata: { athleteId, error: String(parseErr) },
       });
@@ -106,7 +106,7 @@ export async function PATCH(req: NextRequest) {
     try {
       current = JSON.parse(existing?.performanceBenchmarks || "{}");
     } catch (parseErr) {
-      logger.warn("Failed to parse AthleteProfile.performanceBenchmarks JSON (PATCH merge)", {
+      logger.warn("Couldn’t parse AthleteProfile.performanceBenchmarks JSON (PATCH merge)", {
         context: "throws/testing",
         metadata: { athleteId, error: String(parseErr) },
       });

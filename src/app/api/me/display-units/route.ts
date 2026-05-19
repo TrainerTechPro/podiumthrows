@@ -53,7 +53,7 @@ export async function GET() {
   } catch (error) {
     logger.error("GET /api/me/display-units", { context: "units", error });
     return NextResponse.json(
-      { success: false, error: "Failed to load unit preferences" },
+      { success: false, error: "Couldn’t load unit preferences" },
       { status: 500 }
     );
   }
@@ -117,7 +117,7 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     logger.error("PATCH /api/me/display-units", { context: "units", error });
     return NextResponse.json(
-      { success: false, error: "Failed to update unit preferences" },
+      { success: false, error: "Couldn’t update unit preferences" },
       { status: 500 }
     );
   }

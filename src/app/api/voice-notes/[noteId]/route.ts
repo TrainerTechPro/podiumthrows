@@ -63,7 +63,7 @@ export async function GET(
   } catch (error) {
     logger.error("Get voice note error", { context: "voice-notes", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch voice note" },
+      { success: false, error: "Couldn’t fetch voice note" },
       { status: 500 }
     );
   }
@@ -121,7 +121,7 @@ export async function DELETE(
       const r2Key = extractR2KeyFromUrl(voiceNote.audioUrl);
       if (r2Key) {
         await deleteObject(r2Key).catch((err) => {
-          logger.warn("Failed to delete voice note from R2", { context: "voice-notes", metadata: { r2Key, error: err } });
+          logger.warn("Couldn’t delete voice note from R2", { context: "voice-notes", metadata: { r2Key, error: err } });
         });
       }
     }
@@ -134,7 +134,7 @@ export async function DELETE(
   } catch (error) {
     logger.error("Delete voice note error", { context: "voice-notes", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to delete voice note" },
+      { success: false, error: "Couldn’t delete voice note" },
       { status: 500 }
     );
   }

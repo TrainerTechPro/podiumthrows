@@ -122,7 +122,7 @@ export async function GET() {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to load preferences." },
+      { success: false, error: "Couldn’t load preferences." },
       { status: 500 }
     );
   }
@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to save preferences." },
+      { success: false, error: "Couldn’t save preferences." },
       { status: 500 }
     );
   }

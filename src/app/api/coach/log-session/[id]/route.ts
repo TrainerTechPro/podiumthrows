@@ -47,7 +47,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ success: true, data: entry });
   } catch (err) {
     logger.error("GET /api/coach/log-session/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch session" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch session" }, { status: 500 });
   }
 }
 
@@ -181,7 +181,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
   } catch (err) {
     logger.error("PUT /api/coach/log-session/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to update session" },
+      { success: false, error: "Couldn’t update session" },
       { status: 500 }
     );
   }
@@ -243,6 +243,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/coach/log-session/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to delete" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t delete" }, { status: 500 });
   }
 }

@@ -84,6 +84,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: { id: view.id } });
   } catch (error) {
     logger.error("Drill view record error", { context: "drill-videos/views", error });
-    return NextResponse.json({ success: false, error: "Failed to record view" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t record view" }, { status: 500 });
   }
 }

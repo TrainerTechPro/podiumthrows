@@ -250,7 +250,7 @@ export async function POST(req: NextRequest) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to generate program" },
+      { success: false, error: "Couldn’t generate program" },
       { status: 500 },
     );
   }

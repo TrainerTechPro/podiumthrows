@@ -229,7 +229,7 @@ function WindowCard({ window: win, rank, allAthletes, athleteMap }: WindowCardPr
             </div>
           )}
 
-          {/* No data */}
+          {/* Awaiting check-in */}
           {noDataAthletes.length > 0 && (
             <div>
               <div className="flex items-center gap-2 mb-2">
@@ -239,7 +239,7 @@ function WindowCard({ window: win, rank, allAthletes, athleteMap }: WindowCardPr
                   aria-hidden="true"
                 />
                 <span className="text-xs font-semibold text-muted uppercase tracking-wider">
-                  No Data ({noDataAthletes.length})
+                  Awaiting Check-In ({noDataAthletes.length})
                 </span>
               </div>
               <div className="space-y-1">

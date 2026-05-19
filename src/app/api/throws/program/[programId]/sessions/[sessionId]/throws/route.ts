@@ -119,7 +119,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to log throws" },
+      { success: false, error: "Couldn’t log throws" },
       { status: 500 },
     );
   }

@@ -247,7 +247,7 @@ export async function PATCH(req: NextRequest) {
   } catch (err) {
     logger.error("PATCH /api/athlete/profile", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to update profile." },
+      { success: false, error: "Couldn’t update profile." },
       { status: 500 }
     );
   }

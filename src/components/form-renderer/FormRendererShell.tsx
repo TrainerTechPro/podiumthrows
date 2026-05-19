@@ -321,9 +321,9 @@ export function FormRendererShell({
         open={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={confirmSubmit}
-        title="Submit Responses"
-        description="Are you sure you want to submit? Your responses cannot be changed after submission."
-        confirmLabel="Save Responses"
+        title="Send your responses?"
+        description="Responses can’t be changed after sending. Make sure everything looks right."
+        confirmLabel="Send Responses"
         loading={submitting}
       />
     </div>

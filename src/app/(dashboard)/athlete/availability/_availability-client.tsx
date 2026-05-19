@@ -328,7 +328,7 @@ export function AvailabilityClient({ initialData }: AvailabilityClientProps) {
 
       const hasError = results.some((r) => !r.ok);
       if (hasError) {
-        error("Failed to save", "One or more blocks could not be created.");
+        error("Couldn’t save", "One or more blocks could not be created.");
       } else {
         success(
           "Availability saved",

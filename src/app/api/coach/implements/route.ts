@@ -65,7 +65,7 @@ export async function GET() {
   } catch (error) {
     logger.error("GET /api/coach/implements", { context: "implements", error });
     return NextResponse.json(
-      { success: false, error: "Failed to load custom implements" },
+      { success: false, error: "Couldn’t load custom implements" },
       { status: 500 }
     );
   }
@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     }
     logger.error("POST /api/coach/implements", { context: "implements", error });
     return NextResponse.json(
-      { success: false, error: "Failed to create custom implement" },
+      { success: false, error: "Couldn’t create custom implement" },
       { status: 500 }
     );
   }

@@ -36,7 +36,7 @@ export async function GET() {
     });
   } catch {
     return NextResponse.json(
-      { success: false, error: "Failed to fetch filter options" },
+      { success: false, error: "Couldn’t fetch filter options" },
       { status: 500 }
     );
   }

@@ -120,7 +120,7 @@ export async function POST() {
   } catch (error) {
     logger.error("Seed exercise library error", { context: "exercise-library/seed", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to seed exercise library" },
+      { success: false, error: "Couldn’t seed exercise library" },
       { status: 500 }
     );
   }

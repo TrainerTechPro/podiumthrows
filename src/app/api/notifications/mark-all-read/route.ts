@@ -23,7 +23,7 @@ export async function POST() {
       metadata: { error: String(err) },
     });
     return NextResponse.json(
-      { success: false, error: "Failed to mark notifications as read." },
+      { success: false, error: "Couldn’t mark notifications as read." },
       { status: 500 }
     );
   }

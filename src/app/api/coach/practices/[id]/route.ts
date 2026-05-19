@@ -23,7 +23,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     }
     logger.error("GET /api/coach/practices/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch practice." },
+      { success: false, error: "Couldn’t fetch practice." },
       { status: 500 }
     );
   }
@@ -67,7 +67,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     }
     logger.error("PATCH /api/coach/practices/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to update practice." },
+      { success: false, error: "Couldn’t update practice." },
       { status: 500 }
     );
   }
@@ -94,7 +94,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     }
     logger.error("DELETE /api/coach/practices/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to delete practice." },
+      { success: false, error: "Couldn’t delete practice." },
       { status: 500 }
     );
   }

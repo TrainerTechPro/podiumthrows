@@ -75,7 +75,7 @@ export function SaveResumeBar({ questionnaireId, answers, enabled }: SaveResumeB
       {status === "saving" && (
         <>
           <div className="w-3 h-3 rounded-full border-2 border-primary-500 border-t-transparent animate-spin" />
-          <span>Saving draft...</span>
+          <span>Saving draft…</span>
         </>
       )}
       {status === "saved" && (

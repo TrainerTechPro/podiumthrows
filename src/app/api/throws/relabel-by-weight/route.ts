@@ -206,7 +206,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error("POST /api/throws/relabel-by-weight", { context: "throws", error });
     return NextResponse.json(
-      { success: false, error: "Failed to relabel throws" },
+      { success: false, error: "Couldn’t relabel throws" },
       { status: 500 }
     );
   }

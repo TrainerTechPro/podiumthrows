@@ -17,7 +17,7 @@ export async function GET() {
     }
     logger.error("GET /api/coach/announcements", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch announcements." },
+      { success: false, error: "Couldn’t fetch announcements." },
       { status: 500 }
     );
   }
@@ -61,7 +61,7 @@ export async function POST(req: NextRequest) {
     }
     logger.error("POST /api/coach/announcements", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to create announcement." },
+      { success: false, error: "Couldn’t create announcement." },
       { status: 500 }
     );
   }

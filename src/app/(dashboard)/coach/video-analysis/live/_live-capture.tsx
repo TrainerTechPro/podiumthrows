@@ -330,7 +330,7 @@ export function LiveCapture({ athletes }: Props) {
       success("Live capture saved");
       router.push(`/coach/video-analysis/${data.data.id}`);
     } catch (err) {
-      showError("Failed to save", err instanceof Error ? err.message : "Please try again");
+      showError("Couldn’t save", err instanceof Error ? err.message : "Please try again");
       setSaving(false);
     }
   }

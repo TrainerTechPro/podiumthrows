@@ -142,7 +142,7 @@ export function RequestProgramming({
                   )
                 }
               >
-                {loading ? "Sending..." : "Request Programming"}
+                {loading ? "Sending…" : "Request Programming"}
               </Button>
             </>
           )}

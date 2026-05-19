@@ -114,7 +114,7 @@ export async function PATCH(
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     logger.error("Error updating team", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to update team" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t update team" }, { status: 500 });
   }
 }
 
@@ -160,6 +160,6 @@ export async function DELETE(
     return NextResponse.json({ success: true, data: null });
   } catch (error) {
     logger.error("Error deleting team", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to delete team" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t delete team" }, { status: 500 });
   }
 }

@@ -32,6 +32,6 @@ export async function DELETE(
     }
   } catch (error) {
     logger.error("Error removing member from event group", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to remove member" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t remove member" }, { status: 500 });
   }
 }

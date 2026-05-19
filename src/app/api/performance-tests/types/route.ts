@@ -20,7 +20,7 @@ export async function GET() {
   } catch (error) {
     logger.error("GET /api/performance-tests/types", { context: "performance-tests", error });
     return NextResponse.json(
-      { success: false, error: "Failed to load test types" },
+      { success: false, error: "Couldn’t load test types" },
       { status: 500 }
     );
   }

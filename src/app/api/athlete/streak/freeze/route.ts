@@ -52,7 +52,7 @@ export async function POST() {
     });
   } catch (err) {
     logger.error("POST /api/athlete/streak/freeze", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to apply freeze." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t apply freeze." }, { status: 500 });
   }
 }
 

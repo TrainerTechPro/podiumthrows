@@ -214,7 +214,7 @@ export default function AthleteProfilePage() {
         error: err,
       });
       setSaveError(
-        err instanceof Error ? err.message : "Failed to save check-in. Please try again."
+        err instanceof Error ? err.message : "Couldn’t save check-in. Please try again."
       );
     }
     setSaving(false);
@@ -244,7 +244,7 @@ export default function AthleteProfilePage() {
       if (athleteId) loadProfile(athleteId);
     } catch (err) {
       logger.error("PR save failed", { context: "athlete/throws/readiness", error: err });
-      setPrError(err instanceof Error ? err.message : "Failed to save PR. Please try again.");
+      setPrError(err instanceof Error ? err.message : "Couldn’t save PR. Please try again.");
     }
     setSavingPR(false);
   }
@@ -390,7 +390,7 @@ export default function AthleteProfilePage() {
               <ScoreArc
                 score={p.prs.length > 0 ? 72 : null}
                 label="Transfer"
-                sublabel={p.prs.length > 0 ? "Exercise transfer" : "No data yet"}
+                sublabel={p.prs.length > 0 ? "Exercise transfer" : "Log lifts to track"}
                 color="#5BB88A"
               />
             </div>

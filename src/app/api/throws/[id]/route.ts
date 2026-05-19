@@ -140,7 +140,7 @@ export async function PATCH(request: NextRequest, ctx: RouteCtx) {
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     logger.error("PATCH /api/throws/[id]", { context: "throws", error });
-    return NextResponse.json({ success: false, error: "Failed to update throw" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t update throw" }, { status: 500 });
   }
 }
 
@@ -194,6 +194,6 @@ export async function DELETE(_request: NextRequest, ctx: RouteCtx) {
     return NextResponse.json({ success: true, data: { id } });
   } catch (error) {
     logger.error("DELETE /api/throws/[id]", { context: "throws", error });
-    return NextResponse.json({ success: false, error: "Failed to delete throw" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t delete throw" }, { status: 500 });
   }
 }

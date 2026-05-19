@@ -91,7 +91,7 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
         await deleteFile(video.storageKey);
       } catch {
         // Log but don't fail if storage deletion fails
-        logger.error("Failed to delete video file from storage", { context: "api" });
+        logger.error("Couldn’t delete video file from storage", { context: "api" });
       }
     }
 

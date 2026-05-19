@@ -38,7 +38,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/lifting/programs", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch lifting programs." },
+      { success: false, error: "Couldn’t fetch lifting programs." },
       { status: 500 }
     );
   }
@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     logger.error("POST /api/lifting/programs", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to create lifting program." },
+      { success: false, error: "Couldn’t create lifting program." },
       { status: 500 }
     );
   }

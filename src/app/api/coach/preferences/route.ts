@@ -48,7 +48,7 @@ export async function GET() {
     return NextResponse.json({ success: true, data: parsePreferences(coach.preferences) });
   } catch (error) {
     logger.error("Get preferences error", { context: "coach/preferences", error });
-    return NextResponse.json({ success: false, error: "Failed to fetch preferences" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch preferences" }, { status: 500 });
   }
 }
 
@@ -93,6 +93,6 @@ export async function PUT(request: NextRequest) {
     return NextResponse.json({ success: true, data: updated });
   } catch (error) {
     logger.error("Update preferences error", { context: "coach/preferences", error });
-    return NextResponse.json({ success: false, error: "Failed to update preferences" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t update preferences" }, { status: 500 });
   }
 }

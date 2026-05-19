@@ -51,7 +51,7 @@ export async function GET(_request: NextRequest, ctx: RouteCtx) {
   } catch (error) {
     logger.error("GET /api/athletes/[athleteId]/implements", { context: "implements", error });
     return NextResponse.json(
-      { success: false, error: "Failed to load implements" },
+      { success: false, error: "Couldn’t load implements" },
       { status: 500 }
     );
   }

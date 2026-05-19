@@ -178,7 +178,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to complete session" },
+      { success: false, error: "Couldn’t complete session" },
       { status: 500 },
     );
   }

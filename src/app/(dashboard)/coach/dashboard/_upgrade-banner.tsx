@@ -28,7 +28,7 @@ export function UpgradeBanner({ athleteCount, planLimit }: UpgradeBannerProps) {
     } catch (err) {
       // sessionStorage unavailable (private mode / quota) — non-fatal,
       // banner will just reappear on next session.
-      logger.debug("Failed to persist upgrade-banner dismissal", {
+      logger.debug("Couldn’t persist upgrade-banner dismissal", {
         context: "coach/dashboard/_upgrade-banner",
         metadata: { reason: err instanceof Error ? err.message : "unknown" },
       });

@@ -84,7 +84,7 @@ export async function GET() {
     return NextResponse.json({ success: true, data: reshaped });
   } catch (error) {
     logger.error("Get podium roster error", { context: "throws/podium-roster", error: error });
-    return NextResponse.json({ success: false, error: "Failed to fetch roster" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch roster" }, { status: 500 });
   }
 }
 
@@ -250,7 +250,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error("Enroll podium throws error", { context: "throws/podium-roster", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to enroll athlete" },
+      { success: false, error: "Couldn’t enroll athlete" },
       { status: 500 }
     );
   }

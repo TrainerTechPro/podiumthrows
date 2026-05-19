@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to load exercise history" },
+      { success: false, error: "Couldn’t load exercise history" },
       { status: 500 },
     );
   }

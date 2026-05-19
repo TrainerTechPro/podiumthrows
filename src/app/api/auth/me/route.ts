@@ -64,7 +64,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/auth/me", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "An unexpected error occurred" },
+      { success: false, error: "Server error — try again in a moment." },
       { status: 500 }
     );
   }
@@ -215,7 +215,7 @@ export async function PATCH(request: NextRequest) {
   } catch (err) {
     logger.error("PATCH /api/auth/me", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "An unexpected error occurred" },
+      { success: false, error: "Server error — try again in a moment." },
       { status: 500 }
     );
   }

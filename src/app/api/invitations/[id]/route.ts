@@ -52,6 +52,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("PATCH /api/invitations/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error:"Failed to revoke invitation." }, { status: 500 });
+    return NextResponse.json({ success: false, error:"Couldn’t revoke invitation." }, { status: 500 });
   }
 }

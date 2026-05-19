@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: competition });
   } catch (error) {
     logger.error("Create competition error", { context: "throws/competitions", error: error });
-    return NextResponse.json({ success: false, error: "Failed to create competition" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t create competition" }, { status: 500 });
   }
 }
 
@@ -101,7 +101,7 @@ export async function PATCH(request: NextRequest) {
     return NextResponse.json({ success: true, data: competition });
   } catch (error) {
     logger.error("Update competition error", { context: "throws/competitions", error: error });
-    return NextResponse.json({ success: false, error: "Failed to update competition" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t update competition" }, { status: 500 });
   }
 }
 
@@ -133,7 +133,7 @@ export async function DELETE(request: NextRequest) {
     return NextResponse.json({ success: true, data: { id } });
   } catch (error) {
     logger.error("Delete competition error", { context: "throws/competitions", error: error });
-    return NextResponse.json({ success: false, error: "Failed to delete competition" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t delete competition" }, { status: 500 });
   }
 }
 
@@ -182,6 +182,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: shaped });
   } catch (error) {
     logger.error("Get competitions error", { context: "throws/competitions", error: error });
-    return NextResponse.json({ success: false, error: "Failed to fetch competitions" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch competitions" }, { status: 500 });
   }
 }

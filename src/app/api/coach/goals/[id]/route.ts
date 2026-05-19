@@ -115,7 +115,7 @@ export async function PATCH(req: NextRequest, { params }: RouteContext) {
     });
   } catch (err) {
     logger.error("PATCH /api/coach/goals/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update goal." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t update goal." }, { status: 500 });
   }
 }
 
@@ -156,6 +156,6 @@ export async function DELETE(_req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ success: true, data: { id } });
   } catch (err) {
     logger.error("DELETE /api/coach/goals/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to delete goal." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t delete goal." }, { status: 500 });
   }
 }

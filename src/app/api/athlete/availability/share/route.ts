@@ -58,7 +58,7 @@ export async function POST() {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to generate share link." },
+      { success: false, error: "Couldn’t generate share link." },
       { status: 500 }
     );
   }
@@ -94,7 +94,7 @@ export async function DELETE() {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to revoke share link." },
+      { success: false, error: "Couldn’t revoke share link." },
       { status: 500 }
     );
   }

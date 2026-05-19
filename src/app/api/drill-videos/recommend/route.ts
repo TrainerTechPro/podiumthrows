@@ -207,7 +207,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error("Drill recommend error", { context: "drill-videos/recommend", error });
     return NextResponse.json(
-      { success: false, error: "Failed to compute recommendations" },
+      { success: false, error: "Couldn’t compute recommendations" },
       { status: 500 }
     );
   }

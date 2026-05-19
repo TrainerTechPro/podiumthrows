@@ -94,7 +94,7 @@ export async function GET() {
   } catch (error) {
     logger.error("GET autoregulation-settings error", { error });
     return NextResponse.json(
-      { success: false, error: "Failed to load settings" },
+      { success: false, error: "Couldn’t load settings" },
       { status: 500 },
     );
   }
@@ -224,7 +224,7 @@ export async function PATCH(req: NextRequest) {
   } catch (error) {
     logger.error("PATCH autoregulation-settings error", { error });
     return NextResponse.json(
-      { success: false, error: "Failed to save settings" },
+      { success: false, error: "Couldn’t save settings" },
       { status: 500 },
     );
   }

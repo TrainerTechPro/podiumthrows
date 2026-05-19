@@ -61,7 +61,7 @@ export async function GET() {
       try {
         implementsList = JSON.parse(eq.implements || "[]");
       } catch (parseErr) {
-        logger.warn("Failed to parse EquipmentInventory.implements JSON (onboard prefill)", {
+        logger.warn("Couldn’t parse EquipmentInventory.implements JSON (onboard prefill)", {
           context: "throws/program/onboard",
           metadata: {
             athleteId: athleteProfile.id,
@@ -81,7 +81,7 @@ export async function GET() {
         try {
           facilities.gymEquipment = JSON.parse(eq.gymEquipment);
         } catch (parseErr) {
-          logger.warn("Failed to parse EquipmentInventory.gymEquipment JSON (onboard prefill)", {
+          logger.warn("Couldn’t parse EquipmentInventory.gymEquipment JSON (onboard prefill)", {
             context: "throws/program/onboard",
             metadata: {
               athleteId: athleteProfile.id,
@@ -107,7 +107,7 @@ export async function GET() {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch onboarding data" },
+      { success: false, error: "Couldn’t fetch onboarding data" },
       { status: 500 },
     );
   }
@@ -202,7 +202,7 @@ export async function POST(req: NextRequest) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to save onboarding data" },
+      { success: false, error: "Couldn’t save onboarding data" },
       { status: 500 },
     );
   }

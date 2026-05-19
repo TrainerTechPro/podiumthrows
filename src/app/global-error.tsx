@@ -30,10 +30,10 @@ export default function GlobalError({
       >
         <div style={{ textAlign: "center", padding: "2rem" }}>
           <h1 style={{ fontSize: "1.5rem", marginBottom: "0.5rem" }}>
-            Something went wrong
+            The app didn&rsquo;t load
           </h1>
           <p style={{ color: "#888", fontSize: "0.875rem", marginBottom: "1.5rem" }}>
-            An unexpected error occurred. Please try again.
+            Reload to retry. If it keeps failing, your network may be offline — check your connection and try again.
             {error.digest && (
               <span
                 style={{ display: "block", marginTop: "0.25rem", fontFamily: "monospace", opacity: 0.6 }}

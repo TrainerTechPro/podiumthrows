@@ -1,6 +1,6 @@
 "use client";
 
-import { Dumbbell, Target, Lock } from "lucide-react";
+import { Dumbbell, Target } from "lucide-react";
 import type { WizardFormState } from "../_wizard";
 
 interface StepProgramTypeProps {
@@ -72,27 +72,6 @@ export function StepProgramType({ form, update, errors }: StepProgramTypeProps) 
             </button>
           );
         })}
-
-        {/* Lifting Only — Coming Soon */}
-        <div className="relative card p-5 text-left opacity-50 cursor-not-allowed border-[var(--card-border)]">
-          <div className="absolute inset-0 flex items-center justify-center z-10">
-            <span className="px-3 py-1 bg-surface-200 dark:bg-surface-700 text-surface-700 dark:text-surface-300 rounded-full text-xs font-semibold flex items-center gap-1.5">
-              <Lock size={12} strokeWidth={1.75} aria-hidden="true" />
-              Coming Soon
-            </span>
-          </div>
-          <div className="flex items-start gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[var(--muted-bg)] text-surface-700 dark:text-surface-300">
-              <Dumbbell size={20} strokeWidth={1.75} aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <p className="font-semibold text-sm text-[var(--foreground)]">Lifting Only</p>
-              <p className="text-xs text-surface-700 dark:text-surface-300 mt-1 leading-relaxed">
-                Strength program without throwing sessions
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
 
       {errors.programType && (

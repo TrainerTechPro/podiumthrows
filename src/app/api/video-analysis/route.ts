@@ -33,6 +33,6 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/video-analysis", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch analyses" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch analyses" }, { status: 500 });
   }
 }

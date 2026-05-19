@@ -114,6 +114,27 @@ export default defineConfig({
       workers: 1,
       testMatch: /data-surfaces-screenshots\.spec\.ts$/,
     },
+    {
+      // State-fixture screenshots — empty states + error boundary captures.
+      // Same serial-workers pattern as the other screenshot projects.
+      name: "state-fixtures-screenshots",
+      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
+      fullyParallel: false,
+      workers: 1,
+      testMatch: /state-fixtures-screenshots\.spec\.ts$/,
+    },
+    {
+      // Mobile keyboard-open screenshots — viewports shrunk to the height
+      // available with the iOS keyboard occupying the bottom. Verifies
+      // sticky CTAs + form actions remain reachable.
+      name: "mobile-keyboard-screenshots",
+      use: { ...devices["Desktop Chrome"] },
+      dependencies: ["setup"],
+      fullyParallel: false,
+      workers: 1,
+      testMatch: /mobile-keyboard-screenshots\.spec\.ts$/,
+    },
   ],
   webServer: {
     command: "npm run dev",

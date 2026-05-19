@@ -102,7 +102,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     logger.error("GET /api/recap/preview", { context: "api", metadata: { error: String(err) } });
     return NextResponse.json(
-      { success: false, error: "Failed to load recap preview" },
+      { success: false, error: "Couldn’t load recap preview" },
       { status: 500 }
     );
   }

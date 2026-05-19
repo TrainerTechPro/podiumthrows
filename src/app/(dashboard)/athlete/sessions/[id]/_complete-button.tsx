@@ -37,7 +37,7 @@ export function CompleteSessionButton({ sessionId }: { sessionId: string }) {
           context: "athlete/sessions/[id]/complete-button",
           error: err,
         });
-        setError("Failed to complete session. Please try again.");
+        setError("Couldn’t complete session. Please try again.");
       }
     });
   }

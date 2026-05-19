@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error("Error verifying invitation", { context: "api", error });
     return NextResponse.json(
-      { success: false, error: "Failed to verify invitation" },
+      { success: false, error: "Couldn’t verify invitation" },
       { status: 500 }
     );
   }

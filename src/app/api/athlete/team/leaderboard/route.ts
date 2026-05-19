@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
       metadata: { error: String(err) },
     });
     return NextResponse.json(
-      { success: false, error: "Failed to load leaderboard." },
+      { success: false, error: "Couldn’t load leaderboard." },
       { status: 500 }
     );
   }

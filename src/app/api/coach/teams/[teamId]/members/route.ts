@@ -51,6 +51,6 @@ export async function POST(
     return NextResponse.json({ success: true, data: { added: result.count } });
   } catch (error) {
     logger.error("Error adding team members", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to add team members" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t add team members" }, { status: 500 });
   }
 }

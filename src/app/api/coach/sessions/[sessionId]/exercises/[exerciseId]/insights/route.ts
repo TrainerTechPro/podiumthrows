@@ -150,7 +150,7 @@ export async function GET(
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to load insights." },
+      { success: false, error: "Couldn’t load insights." },
       { status: 500 }
     );
   }

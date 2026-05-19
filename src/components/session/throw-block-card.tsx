@@ -172,7 +172,7 @@ export function ThrowBlockCard({
               key={i}
               className="text-sm font-semibold tabular-nums px-2.5 py-1 rounded-lg bg-surface-100 dark:bg-surface-800 text-surface-900 dark:text-white"
             >
-              {t.distance}m{!t.synced && <span className="ml-1 text-xs text-surface-400">...</span>}
+              {t.distance}m{!t.synced && <span className="ml-1 text-xs text-surface-400" aria-label="Pending sync">…</span>}
             </span>
           ))}
           {/* Empty slots */}

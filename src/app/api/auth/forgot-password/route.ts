@@ -55,12 +55,12 @@ export async function POST(request: NextRequest) {
     try {
       await sendPasswordResetEmail(user.email, token);
     } catch (emailError) {
-      logger.error("Failed to send reset email", { context: "api", error: emailError });
+      logger.error("Couldn’t send reset email", { context: "api", error: emailError });
     }
 
     return successResponse;
   } catch (error) {
     logger.error("forgot-password Error", { context: "api", error });
-    return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server error — try again in a moment." }, { status: 500 });
   }
 }

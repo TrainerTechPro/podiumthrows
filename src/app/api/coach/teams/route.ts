@@ -56,7 +56,7 @@ export async function GET() {
     return NextResponse.json({ success: true, data });
   } catch (error) {
     logger.error("Error listing teams", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to list teams" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t list teams" }, { status: 500 });
   }
 }
 
@@ -127,6 +127,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: team }, { status: 201 });
   } catch (error) {
     logger.error("Error creating team", { context: "api", error });
-    return NextResponse.json({ success: false, error: "Failed to create team" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t create team" }, { status: 500 });
   }
 }

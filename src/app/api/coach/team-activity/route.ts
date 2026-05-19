@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to create post." },
+      { success: false, error: "Couldn’t create post." },
       { status: 500 }
     );
   }

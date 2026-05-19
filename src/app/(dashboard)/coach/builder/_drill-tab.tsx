@@ -92,7 +92,7 @@ export function DrillTab() {
         toast.success("Drill saved to library");
         router.push("/coach/library?view=drills");
       } else {
-        toast.error(data?.error || "Failed to save drill");
+        toast.error(data?.error || "Couldn’t save drill");
       }
     } catch (err) {
       logger.error("[builder/drill] submit error", { error: err });

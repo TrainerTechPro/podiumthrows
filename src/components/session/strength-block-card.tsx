@@ -120,7 +120,7 @@ function SingleStrengthBlock({ block, blockIndex, logged, onLogLift }: SingleStr
                 {lift.weight}kg &times; {lift.reps}
                 {lift.rpe ? ` @ RPE ${lift.rpe}` : ""}
               </span>
-              {!lift.synced && <span className="text-xs text-surface-400">...</span>}
+              {!lift.synced && <span className="text-xs text-surface-400" aria-label="Pending sync">…</span>}
             </div>
           ))}
         </div>

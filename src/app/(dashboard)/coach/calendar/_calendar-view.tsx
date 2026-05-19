@@ -80,7 +80,7 @@ export function CalendarView({
       const startStr = toDateStr(start);
       const endStr = toDateStr(addDays(start, 6));
       const res = await fetch(`/api/coach/programming?start=${startStr}&end=${endStr}`);
-      if (!res.ok) throw new Error("Failed to load sessions");
+      if (!res.ok) throw new Error("Couldn’t load sessions");
       const json = await res.json();
       setSessions(json.data ?? []);
     } catch (err) {
@@ -95,7 +95,7 @@ export function CalendarView({
   const fetchCompetitions = useCallback(async () => {
     try {
       const res = await fetch("/api/coach/competitions?filter=upcoming");
-      if (!res.ok) throw new Error("Failed to load competitions");
+      if (!res.ok) throw new Error("Couldn’t load competitions");
       const json = await res.json();
       type MeetEntry = { id: string; athleteId: string; athleteName: string; event: string };
       type Meet = { name: string; date: string; priority: string; entries: MeetEntry[] };
@@ -124,7 +124,7 @@ export function CalendarView({
   const fetchGroups = useCallback(async () => {
     try {
       const res = await fetch("/api/coach/event-groups");
-      if (!res.ok) throw new Error("Failed to load groups");
+      if (!res.ok) throw new Error("Couldn’t load groups");
       const json = await res.json();
       setGroups(json.data ?? []);
     } catch (err) {

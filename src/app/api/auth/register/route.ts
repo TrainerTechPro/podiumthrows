@@ -172,15 +172,15 @@ export async function POST(request: NextRequest) {
     // Fire-and-forget emails — never block the response
     if (role === "COACH") {
       sendWelcomeEmail(normalizedEmail, firstName, "COACH").catch((err) =>
-        logger.error("Failed to send coach welcome email", { context: "api", error: err })
+        logger.error("Couldn’t send coach welcome email", { context: "api", error: err })
       );
     } else if (role === "ATHLETE" && invitation) {
       const coachName = `${invitation.coach.firstName} ${invitation.coach.lastName}`;
       sendWelcomeEmail(normalizedEmail, firstName, "ATHLETE", coachName).catch((err) =>
-        logger.error("Failed to send athlete welcome email", { context: "api", error: err })
+        logger.error("Couldn’t send athlete welcome email", { context: "api", error: err })
       );
       sendAthleteJoinedEmail(invitation.coach.user.email, `${firstName} ${lastName}`).catch((err) =>
-        logger.error("Failed to send athlete-joined email", { context: "api", error: err })
+        logger.error("Couldn’t send athlete-joined email", { context: "api", error: err })
       );
 
       // In-app notification for the coach. Fire-and-forget; the athlete has
@@ -198,7 +198,7 @@ export async function POST(request: NextRequest) {
           );
         })
         .catch((err) =>
-          logger.error("Failed to create athlete-joined notification", {
+          logger.error("Couldn’t create athlete-joined notification", {
             context: "api",
             error: err,
           })
@@ -209,7 +209,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     logger.error("register Registration failed", { context: "api", error });
     return NextResponse.json(
-      { success: false, error: "An unexpected error occurred" },
+      { success: false, error: "Server error — try again in a moment." },
       { status: 500 }
     );
   }

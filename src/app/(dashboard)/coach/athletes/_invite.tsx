@@ -765,7 +765,7 @@ export function AddAthleteButton({
                               d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                             />
                           </svg>
-                          Generating...
+                          Generating…
                         </>
                       ) : (
                         <>

@@ -283,7 +283,7 @@ export function useFrameExtractor(options: Options = {}): FrameExtractorReturn {
             crossOrigin &&
             (msg.includes("tainted") ||
               msg.includes("SecurityError") ||
-              msg.includes("Failed to load video"))
+              msg.includes("Couldn’t load video"))
           ) {
             msg =
               "Cross-origin video blocked (CORS). The R2 bucket may need CORS configuration. " +

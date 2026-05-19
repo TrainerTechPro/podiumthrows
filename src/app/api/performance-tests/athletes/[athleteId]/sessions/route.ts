@@ -67,7 +67,7 @@ export async function GET(request: NextRequest, ctx: RouteCtx) {
       context: "performance-tests",
       error,
     });
-    return NextResponse.json({ success: false, error: "Failed to load sessions" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t load sessions" }, { status: 500 });
   }
 }
 
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest, ctx: RouteCtx) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to create session" },
+      { success: false, error: "Couldn’t create session" },
       { status: 500 }
     );
   }

@@ -63,7 +63,7 @@ export async function GET(req: NextRequest) {
   } catch (err) {
     logger.error("GET /api/coach/notifications", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch notifications." },
+      { success: false, error: "Couldn’t fetch notifications." },
       { status: 500 }
     );
   }
@@ -120,7 +120,7 @@ export async function PATCH(req: NextRequest) {
   } catch (err) {
     logger.error("PATCH /api/coach/notifications", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to update notifications." },
+      { success: false, error: "Couldn’t update notifications." },
       { status: 500 }
     );
   }

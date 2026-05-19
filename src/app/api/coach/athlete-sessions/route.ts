@@ -44,6 +44,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: sessions });
   } catch (err) {
     logger.error("GET /api/coach/athlete-sessions", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to fetch sessions" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch sessions" }, { status: 500 });
   }
 }

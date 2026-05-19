@@ -111,7 +111,7 @@ export async function POST(request: NextRequest, ctx: RouteCtx) {
       context: "competitions/throws/video",
       error,
     });
-    return NextResponse.json({ success: false, error: "Failed to upload video" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t upload video" }, { status: 500 });
   }
 }
 
@@ -168,6 +168,6 @@ export async function DELETE(_request: NextRequest, ctx: RouteCtx) {
       context: "competitions/throws/video",
       error,
     });
-    return NextResponse.json({ success: false, error: "Failed to remove video" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t remove video" }, { status: 500 });
   }
 }

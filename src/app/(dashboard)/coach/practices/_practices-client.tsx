@@ -381,7 +381,7 @@ function NewPracticeModal({ onClose, onCreated }: { onClose: () => void; onCreat
       const json = await res.json();
 
       if (!res.ok) {
-        throw new Error(json.error || "Failed to create practice");
+        throw new Error(json.error || "Couldn’t create practice");
       }
 
       // Check for conflict warning in response
@@ -400,7 +400,7 @@ function NewPracticeModal({ onClose, onCreated }: { onClose: () => void; onCreat
       }
       onCreated();
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to create practice");
+      showError("Couldn’t create practice", err instanceof Error ? err.message : "Try again in a moment.");
     } finally {
       setSaving(false);
     }

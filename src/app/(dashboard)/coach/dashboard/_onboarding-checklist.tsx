@@ -135,7 +135,7 @@ function InlineInviteButton({
         body: JSON.stringify(body),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Failed to create invitation");
+      if (!res.ok) throw new Error(data.error ?? "Couldn’t create invitation");
       const token = data.data?.token;
       setInviteLink(`${window.location.origin}/athletes/claim/${token}`);
       setSentViaEmail(inviteMode === "email");
@@ -428,7 +428,7 @@ function InlineInviteButton({
                           d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
                         />
                       </svg>
-                      Generating...
+                      Generating…
                     </>
                   ) : (
                     <>
@@ -602,7 +602,7 @@ export function OnboardingChecklist({
           disabled={dismissing}
           className="text-sm text-muted hover:text-[var(--foreground)] transition-colors disabled:opacity-50"
         >
-          {dismissing ? "Dismissing..." : "Skip setup — I'll explore on my own"}
+          {dismissing ? "Dismissing…" : "Skip setup — I'll explore on my own"}
         </button>
         <Link
           href="/coach/throws"

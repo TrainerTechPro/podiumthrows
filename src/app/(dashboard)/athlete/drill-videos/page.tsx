@@ -173,7 +173,7 @@ export default function AthleteDrillVideosPage() {
         setNextCursor(data.data.nextCursor ?? null);
       }
     } catch {
-      toast("Failed to load drill videos", "error");
+      toast("Couldn’t load drill videos", "error");
     } finally {
       if (isInitial) setLoading(false);
       else setLoadingMore(false);
@@ -202,10 +202,10 @@ export default function AthleteDrillVideosPage() {
         if (playingId === id) setPlayingId(null);
         toast("Video deleted");
       } else {
-        toast(data.error || "Failed to delete video", "error");
+        toast(data.error || "Couldn’t delete video", "error");
       }
     } catch {
-      toast("Failed to delete video", "error");
+      toast("Couldn’t delete video", "error");
     } finally {
       setDeletingId(null);
     }

@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to mark thread as read" },
+      { success: false, error: "Couldn’t mark thread as read" },
       { status: 500 }
     );
   }

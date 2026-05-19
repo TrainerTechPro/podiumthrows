@@ -154,7 +154,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to update comment." },
+      { success: false, error: "Couldn’t update comment." },
       { status: 500 }
     );
   }
@@ -255,7 +255,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to delete comment." },
+      { success: false, error: "Couldn’t delete comment." },
       { status: 500 }
     );
   }

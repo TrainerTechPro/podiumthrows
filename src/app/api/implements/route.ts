@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error("GET /api/implements", { context: "implements", error });
     return NextResponse.json(
-      { success: false, error: "Failed to load implements" },
+      { success: false, error: "Couldn’t load implements" },
       { status: 500 }
     );
   }

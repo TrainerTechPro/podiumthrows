@@ -174,6 +174,6 @@ export async function GET(request: NextRequest) {
     });
   } catch (error) {
     logger.error("Get profile error", { context: "throws/profile", error: error });
-    return NextResponse.json({ success: false, error: "Failed to fetch profile" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch profile" }, { status: 500 });
   }
 }

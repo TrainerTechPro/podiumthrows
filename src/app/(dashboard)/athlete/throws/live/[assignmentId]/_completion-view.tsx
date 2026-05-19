@@ -57,7 +57,7 @@ export function CompletionScreen({
       });
       const data = await res.json();
       if (!data.success) {
-        toast(data.error || "Failed to submit", "error");
+        toast(data.error || "Couldn’t submit", "error");
         setSubmitting(false);
         return;
       }
@@ -319,7 +319,7 @@ export function CompletionScreen({
       {/* ── Submit ── */}
       <div className="sm:hidden">
         <SlideToConfirm
-          label="Slide to Submit Session"
+          label="Slide to Finish Session"
           onConfirm={submit}
           disabled={submitting}
           variant="confirm"

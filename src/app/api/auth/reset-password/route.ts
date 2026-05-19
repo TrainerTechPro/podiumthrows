@@ -51,6 +51,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     logger.error("reset-password Error", { context: "api", error });
-    return NextResponse.json({ success: false, error: "An unexpected error occurred" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Server error — try again in a moment." }, { status: 500 });
   }
 }

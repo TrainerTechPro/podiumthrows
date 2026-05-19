@@ -39,7 +39,7 @@ export async function GET(_request: NextRequest, ctx: RouteCtx) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to load PR detail" },
+      { success: false, error: "Couldn’t load PR detail" },
       { status: 500 }
     );
   }

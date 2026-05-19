@@ -117,6 +117,6 @@ export async function POST(_req: Request, { params }: { params: Promise<{ sessio
       context: "api",
       error: err,
     });
-    return NextResponse.json({ success: false, error: "Failed to notify coach." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t notify coach." }, { status: 500 });
   }
 }

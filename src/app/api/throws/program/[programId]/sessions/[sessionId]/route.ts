@@ -106,7 +106,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch session" },
+      { success: false, error: "Couldn’t fetch session" },
       { status: 500 },
     );
   }

@@ -450,7 +450,7 @@ export function LiveWorkout({ data }: { data: WorkoutData }) {
       });
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        toast(errData.error || "Failed to end session", "error");
+        toast(errData.error || "Couldn’t end session", "error");
         return;
       }
       toast("Session ended", "info");

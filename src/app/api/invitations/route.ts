@@ -43,7 +43,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/invitations", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch invitations." },
+      { success: false, error: "Couldn’t fetch invitations." },
       { status: 500 }
     );
   }

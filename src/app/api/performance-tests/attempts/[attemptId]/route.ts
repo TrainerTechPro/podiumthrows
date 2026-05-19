@@ -62,7 +62,7 @@ export async function PATCH(request: NextRequest, ctx: RouteCtx) {
   } catch (error) {
     logger.error("PATCH performance-tests attempt", { context: "performance-tests", error });
     return NextResponse.json(
-      { success: false, error: "Failed to update attempt" },
+      { success: false, error: "Couldn’t update attempt" },
       { status: 500 }
     );
   }
@@ -96,7 +96,7 @@ export async function DELETE(_request: NextRequest, ctx: RouteCtx) {
   } catch (error) {
     logger.error("DELETE performance-tests attempt", { context: "performance-tests", error });
     return NextResponse.json(
-      { success: false, error: "Failed to delete attempt" },
+      { success: false, error: "Couldn’t delete attempt" },
       { status: 500 }
     );
   }

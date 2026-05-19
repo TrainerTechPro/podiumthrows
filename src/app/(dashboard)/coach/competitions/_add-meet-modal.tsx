@@ -133,13 +133,13 @@ export function AddMeetModal({
 
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error || "Failed to create meet");
+        throw new Error(data.error || "Couldn’t create meet");
       }
 
       success("Meet Created", `${entries.length} entries for ${name.trim()}`);
       onCreated();
     } catch (err) {
-      showError("Error", err instanceof Error ? err.message : "Failed to create meet");
+      showError("Couldn’t add meet", err instanceof Error ? err.message : "Try again in a moment.");
     } finally {
       setSaving(false);
     }
@@ -160,7 +160,7 @@ export function AddMeetModal({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={!canSubmit || saving}>
-            {saving ? "Creating..." : "Create Meet"}
+            {saving ? "Creating…" : "Create Meet"}
           </Button>
         </div>
       }

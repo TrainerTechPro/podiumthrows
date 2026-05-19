@@ -85,7 +85,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/throws/comments/unread-count", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to load unread count" },
+      { success: false, error: "Couldn’t load unread count" },
       { status: 500 }
     );
   }

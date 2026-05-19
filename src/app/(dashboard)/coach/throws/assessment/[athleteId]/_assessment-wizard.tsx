@@ -235,7 +235,7 @@ export function AssessmentWizard({
 
         if (!res.ok) {
           const data = await res.json();
-          setError(data.error || "Failed to save assessment");
+          setError(data.error || "Couldn’t save assessment");
           return;
         }
 

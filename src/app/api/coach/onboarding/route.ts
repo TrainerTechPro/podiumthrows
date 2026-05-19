@@ -38,7 +38,7 @@ export async function PATCH(req: NextRequest) {
   } catch (err) {
     logger.error("PATCH /api/coach/onboarding", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to update onboarding status" },
+      { success: false, error: "Couldn’t update onboarding status" },
       { status: 500 },
     );
   }

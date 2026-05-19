@@ -73,7 +73,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     logger.error("Exercise library error", { context: "exercise-library", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch exercises" },
+      { success: false, error: "Couldn’t fetch exercises" },
       { status: 500 }
     );
   }
@@ -104,7 +104,7 @@ export async function OPTIONS() {
     });
   } catch {
     return NextResponse.json(
-      { success: false, error: "Failed to fetch filter options" },
+      { success: false, error: "Couldn’t fetch filter options" },
       { status: 500 }
     );
   }

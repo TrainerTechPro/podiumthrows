@@ -44,7 +44,7 @@ export function TemplatePicker({ value, onChange, className }: TemplatePickerPro
     async function load() {
       try {
         const res = await fetch("/api/throws/sessions");
-        if (!res.ok) throw new Error("Failed to load templates");
+        if (!res.ok) throw new Error("Couldn’t load templates");
         const json = await res.json();
         if (!cancelled) {
           setTemplates(json.data ?? []);
@@ -77,7 +77,7 @@ export function TemplatePicker({ value, onChange, className }: TemplatePickerPro
         onChange={(e) => onChange(e.target.value)}
         disabled={loading}
       >
-        <option value="">{loading ? "Loading templates..." : "Select a template..."}</option>
+        <option value="">{loading ? "Loading templates…" : "Select a template…"}</option>
         {templates.map((t) => (
           <option key={t.id} value={t.id}>
             {t.name} — {formatEventName(t.event)} ({t.blocks.length} block

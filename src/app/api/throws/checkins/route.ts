@@ -87,7 +87,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true, data: checkin });
   } catch (error) {
     logger.error("Check-in error", { context: "throws/checkins", error: error });
-    return NextResponse.json({ success: false, error: "Failed to save check-in" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t save check-in" }, { status: 500 });
   }
 }
 
@@ -122,6 +122,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: true, data: checkins });
   } catch (error) {
     logger.error("Get check-ins error", { context: "throws/checkins", error: error });
-    return NextResponse.json({ success: false, error: "Failed to fetch check-ins" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t fetch check-ins" }, { status: 500 });
   }
 }

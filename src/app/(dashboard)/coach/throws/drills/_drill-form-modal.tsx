@@ -172,7 +172,7 @@ export function DrillFormModal({ open, onClose, editDrill }: Props) {
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error || "Failed to save drill");
+        setError(data.error || "Couldn’t save drill");
         return;
       }
 

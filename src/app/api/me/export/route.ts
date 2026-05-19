@@ -46,7 +46,7 @@ export async function GET(_req: NextRequest) {
       metadata: { userId: session.userId },
       error: err,
     });
-    return NextResponse.json({ success: false, error: "Failed to build export" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t build export" }, { status: 500 });
   }
 
   const body = JSON.stringify(envelope, null, 2);

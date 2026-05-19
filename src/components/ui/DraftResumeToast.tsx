@@ -70,7 +70,7 @@ export function useDraftResumeToast() {
           },
         },
         secondaryAction: {
-          label: "Continue",
+          label: "Resume draft",
           onClick: () => {
             if (opts.onContinue) void opts.onContinue();
             // Otherwise the form already loaded the draft — dismiss is enough.

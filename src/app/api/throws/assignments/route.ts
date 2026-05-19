@@ -154,7 +154,7 @@ export async function POST(req: NextRequest) {
           date: assignedDate,
           url: `/athlete/throws/${a.id}`,
         },
-      }).catch((err) => logger.error("Failed to create workout notification", { error: err }));
+      }).catch((err) => logger.error("Couldn’t create workout notification", { error: err }));
     }
 
     return NextResponse.json({ success: true, data: { count: assignments.count } });

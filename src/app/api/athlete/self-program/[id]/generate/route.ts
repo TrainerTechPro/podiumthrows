@@ -384,7 +384,7 @@ export async function POST(
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to generate self-program." },
+      { success: false, error: "Couldn’t generate self-program." },
       { status: 500 },
     );
   }

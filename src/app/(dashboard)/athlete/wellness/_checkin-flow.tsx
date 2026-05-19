@@ -303,7 +303,7 @@ export function CheckinFlow({
     }
   }, [data, whoopData, ouraData, draftStatus, toast, setPhase]);
 
-  /* ── Handle notes "Submit" (last step triggers submit) ──────────────── */
+  /* ── Handle notes step — last step triggers the check-in submit ─────── */
   const handleNotesNext = useCallback(() => {
     handleSubmit();
   }, [handleSubmit]);
@@ -382,7 +382,7 @@ export function CheckinFlow({
     return (
       <div className="flex flex-col items-center justify-center py-16 gap-4">
         <div className="w-10 h-10 border-4 border-primary-500/30 border-t-primary-500 rounded-full animate-spin" />
-        <p className="text-sm text-muted">Submitting your check-in...</p>
+        <p className="text-sm text-muted">Logging check-in…</p>
       </div>
     );
   }

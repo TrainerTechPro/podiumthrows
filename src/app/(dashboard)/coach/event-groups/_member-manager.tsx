@@ -48,7 +48,7 @@ export function MemberManager({ group, onUpdated }: MemberManagerProps) {
 
     fetch("/api/coach/athletes")
       .then((res) => {
-        if (!res.ok) throw new Error("Failed to load roster");
+        if (!res.ok) throw new Error("Couldn’t load roster");
         return res.json();
       })
       .then((json) => {
@@ -131,7 +131,7 @@ export function MemberManager({ group, onUpdated }: MemberManagerProps) {
         });
         if (!res.ok) {
           const data = await res.json().catch(() => null);
-          throw new Error(data?.error ?? "Failed to add members");
+          throw new Error(data?.error ?? "Couldn’t add members");
         }
       }
 
@@ -143,13 +143,13 @@ export function MemberManager({ group, onUpdated }: MemberManagerProps) {
         });
         if (!res.ok) {
           const data = await res.json().catch(() => null);
-          throw new Error(data?.error ?? "Failed to remove member");
+          throw new Error(data?.error ?? "Couldn’t remove member");
         }
       }
 
       onUpdated();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update members");
+      setError(err instanceof Error ? err.message : "Couldn’t update members");
     } finally {
       setSaving(false);
     }

@@ -220,12 +220,12 @@ function DraftView({ draft }: { draft: DraftConfig }) {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        toast.error(data?.error ?? "Failed to delete draft");
+        toast.error(data?.error ?? "Couldn’t delete draft");
         return;
       }
       router.refresh();
     } catch {
-      toast.error("Failed to delete draft");
+      toast.error("Couldn’t delete draft");
     } finally {
       setDeleting(false);
     }
@@ -368,7 +368,7 @@ function ActiveView({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => null);
-        toast.error(data?.error ?? "Failed to deactivate program");
+        toast.error(data?.error ?? "Couldn’t deactivate program");
       }
       router.refresh();
     } finally {

@@ -613,7 +613,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
           <p className="text-sm text-muted">
             {visibleImplementKeys.length === 0
               ? "No implement weights selected."
-              : "No data in the selected date range."}
+              : "No throws in the selected range — widen the range or log a session."}
           </p>
           {visibleImplementKeys.length === 0 && compLabel && (
             <button

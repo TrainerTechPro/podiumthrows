@@ -116,7 +116,7 @@ export function LineChart({
   formatY: formatYProp,
   formatYSuffix,
   formatX = (label) => label,
-  emptyMessage = "No data yet",
+  emptyMessage = "Nothing to chart yet",
   renderDot,
   onPointHover,
   onPointLeave,

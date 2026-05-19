@@ -74,7 +74,7 @@ export async function PATCH(request: Request) {
   } catch (err) {
     logger.error("PATCH /api/athlete/dashboard-config", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to update dashboard config" },
+      { success: false, error: "Couldn’t update dashboard config" },
       { status: 500 }
     );
   }

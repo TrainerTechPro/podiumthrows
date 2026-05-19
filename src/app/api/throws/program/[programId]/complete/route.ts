@@ -60,7 +60,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to complete program" },
+      { success: false, error: "Couldn’t complete program" },
       { status: 500 },
     );
   }

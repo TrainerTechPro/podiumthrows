@@ -91,7 +91,7 @@ export async function GET(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to get best marks" },
+      { success: false, error: "Couldn’t get best marks" },
       { status: 500 },
     );
   }
@@ -223,7 +223,7 @@ export async function POST(req: NextRequest, { params }: Params) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to log best marks" },
+      { success: false, error: "Couldn’t log best marks" },
       { status: 500 },
     );
   }

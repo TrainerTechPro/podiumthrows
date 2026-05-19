@@ -47,7 +47,7 @@ export async function PATCH(request: NextRequest) {
   } catch (error) {
     logger.error("Athlete bio update error", { context: "throws/athlete-bio", error: error });
     return NextResponse.json(
-      { success: false, error: "Failed to update athlete bio" },
+      { success: false, error: "Couldn’t update athlete bio" },
       { status: 500 }
     );
   }

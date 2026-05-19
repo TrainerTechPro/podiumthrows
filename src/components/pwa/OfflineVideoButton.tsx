@@ -58,7 +58,7 @@ export function OfflineVideoButton({
       success("Removed", `"${title}" removed from offline storage`);
     } catch {
       setState("cached");
-      showError("Error", "Could not remove cached video");
+      showError("Couldn’t remove cached video", "Try again in a moment.");
     }
   }, [videoId, title, success, showError]);
 

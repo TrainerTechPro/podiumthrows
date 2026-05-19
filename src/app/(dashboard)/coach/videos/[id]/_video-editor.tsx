@@ -94,7 +94,7 @@ export function VideoEditor({ video, athletes }: Props) {
     setLoadingCompare(true);
     try {
       const res = await fetch("/api/coach/videos");
-      if (!res.ok) throw new Error("Failed to load");
+      if (!res.ok) throw new Error("Couldn’t load");
       const data = await res.json();
       const list = (data?.success ? data.data?.videos : []) as CompareVideo[];
       setCompareVideos(list.filter((v) => v.id !== video.id));
@@ -174,7 +174,7 @@ export function VideoEditor({ video, athletes }: Props) {
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ annotations }),
       });
-      if (!res.ok) throw new Error("Failed to save");
+      if (!res.ok) throw new Error("Couldn’t save");
       setUndoStack([]);
       setRedoStack([]);
       toastSuccess("Annotations saved");
@@ -196,7 +196,7 @@ export function VideoEditor({ video, athletes }: Props) {
         headers: { "Content-Type": "application/json", ...csrfHeaders() },
         body: JSON.stringify({ athleteIds: Array.from(selectedAthleteIds) }),
       });
-      if (!res.ok) throw new Error("Failed to share");
+      if (!res.ok) throw new Error("Couldn’t share");
       setShowShareModal(false);
       toastSuccess(
         "Video shared",
@@ -218,7 +218,7 @@ export function VideoEditor({ video, athletes }: Props) {
         method: "DELETE",
         headers: csrfHeaders(),
       });
-      if (!res.ok) throw new Error("Failed to delete");
+      if (!res.ok) throw new Error("Couldn’t delete");
       router.push("/coach/videos");
     } catch (err) {
       logger.error("Delete failed:", { context: "coach/videos/[id]/video-editor", error: err });

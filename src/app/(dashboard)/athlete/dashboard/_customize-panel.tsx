@@ -111,7 +111,7 @@ export function CustomizePanel({ currentConfig, onClose }: CustomizePanelProps) 
           setConfig(payload.data);
           router.refresh();
         } else {
-          setError(payload?.error ?? "Failed to save. Please try again.");
+          setError(payload?.error ?? "Couldn’t save. Please try again.");
           // Revert optimistic state
           setConfig(currentConfig);
         }

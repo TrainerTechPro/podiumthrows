@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
   } catch (err) {
     logger.error("GET /api/codex", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch codex entries" },
+      { success: false, error: "Couldn’t fetch codex entries" },
       { status: 500 }
     );
   }

@@ -237,7 +237,7 @@ export async function POST(req: NextRequest) {
   } catch (err) {
     logger.error("POST /api/feedback/beta", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to submit feedback" },
+      { success: false, error: "Couldn’t submit feedback" },
       { status: 500 }
     );
   }

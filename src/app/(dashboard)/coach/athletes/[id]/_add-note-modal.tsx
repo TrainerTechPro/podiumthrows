@@ -44,7 +44,7 @@ export function AddNoteModal({ athleteId, athleteName, onClose }: AddNoteModalPr
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        toastError(data.error || "Failed to save note");
+        toastError(data.error || "Couldn’t save note");
         return;
       }
 

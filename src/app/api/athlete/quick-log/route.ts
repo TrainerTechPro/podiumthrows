@@ -287,7 +287,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/athlete/quick-log", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to load quick-log state." },
+      { success: false, error: "Couldn’t load quick-log state." },
       { status: 500 }
     );
   }
@@ -560,6 +560,6 @@ export async function PATCH(req: NextRequest) {
     });
   } catch (err) {
     logger.error("PATCH /api/athlete/quick-log", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update throw." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t update throw." }, { status: 500 });
   }
 }

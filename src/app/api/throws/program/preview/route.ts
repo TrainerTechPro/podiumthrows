@@ -110,7 +110,7 @@ export async function POST(req: NextRequest) {
       error,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to generate preview" },
+      { success: false, error: "Couldn’t generate preview" },
       { status: 500 },
     );
   }

@@ -87,7 +87,7 @@ export async function POST(req: NextRequest) {
       error: err,
     });
     return NextResponse.json(
-      { success: false, error: "Failed to create upload URL" },
+      { success: false, error: "Couldn’t create upload URL" },
       { status: 500 },
     );
   }

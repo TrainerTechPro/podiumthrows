@@ -517,7 +517,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
         {/* Mobile: Slide to confirm */}
         <div className="sm:hidden">
           <SlideToConfirm
-            label={regenerating ? "Regenerating..." : "Slide to Regenerate Program"}
+            label={regenerating ? "Regenerating…" : "Slide to Regenerate Program"}
             onConfirm={regenerate}
             disabled={regenerating}
             variant="confirm"
@@ -538,7 +538,7 @@ export function ProgramSettings({ config }: { config: SelfProgramConfig }) {
               )
             }
           >
-            {regenerating ? "Regenerating..." : "Regenerate Program"}
+            {regenerating ? "Regenerating…" : "Regenerate Program"}
           </Button>
         </div>
       </section>

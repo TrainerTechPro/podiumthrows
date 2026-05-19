@@ -56,6 +56,6 @@ export async function POST(_request: NextRequest, ctx: RouteCtx) {
     return NextResponse.json({ success: true, data: { competitionPRs: updated, promoted: true } });
   } catch (error) {
     logger.error("Promote legacy result error", { context: "competitions/promote-legacy", error });
-    return NextResponse.json({ success: false, error: "Failed to promote legacy result" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t promote legacy result" }, { status: 500 });
   }
 }

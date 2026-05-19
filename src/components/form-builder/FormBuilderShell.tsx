@@ -203,7 +203,7 @@ export function FormBuilderShell({ initialData }: FormBuilderShellProps) {
 
         if (!res.ok) {
           const data = await res.json();
-          setError(data.error || "Failed to save");
+          setError(data.error || "Couldn’t save");
           return;
         }
 

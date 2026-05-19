@@ -110,7 +110,7 @@ export async function GET() {
   } catch (err) {
     logger.error("GET /api/athlete/streak/history", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to load streak history." },
+      { success: false, error: "Couldn’t load streak history." },
       { status: 500 }
     );
   }

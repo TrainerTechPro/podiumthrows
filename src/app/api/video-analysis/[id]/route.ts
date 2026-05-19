@@ -31,7 +31,7 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
     }
     logger.error("GET /api/video-analysis/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to fetch analysis" },
+      { success: false, error: "Couldn’t fetch analysis" },
       { status: 500 }
     );
   }
@@ -73,7 +73,7 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
     logger.error("PATCH /api/video-analysis/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to update analysis" },
+      { success: false, error: "Couldn’t update analysis" },
       { status: 500 }
     );
   }
@@ -111,7 +111,7 @@ export async function DELETE(
       try {
         await deleteFile(videoKey);
       } catch (err) {
-        logger.error("Failed to delete video file", {
+        logger.error("Couldn’t delete video file", {
           context: "api",
           metadata: { key: videoKey },
           error: err,
@@ -124,7 +124,7 @@ export async function DELETE(
         try {
           await deleteFile(thumbKey);
         } catch (err) {
-          logger.error("Failed to delete thumbnail file", {
+          logger.error("Couldn’t delete thumbnail file", {
             context: "api",
             metadata: { key: thumbKey },
             error: err,
@@ -140,7 +140,7 @@ export async function DELETE(
     }
     logger.error("DELETE /api/video-analysis/[id]", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to delete analysis" },
+      { success: false, error: "Couldn’t delete analysis" },
       { status: 500 }
     );
   }

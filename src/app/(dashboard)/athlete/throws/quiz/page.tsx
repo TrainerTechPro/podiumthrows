@@ -107,7 +107,7 @@ export default function AthleteTypingQuizPage() {
       } catch (err) {
         logger.error("quiz submit failed", { context: "athlete/throws/quiz", error: err });
         setSubmitError(
-          err instanceof Error ? err.message : "Failed to save quiz results. Please try again."
+          err instanceof Error ? err.message : "Couldn’t save quiz results. Please try again."
         );
       }
       setSaving(false);
@@ -191,7 +191,7 @@ export default function AthleteTypingQuizPage() {
   if (saving) {
     return (
       <div className="animate-fade-in card text-center py-12">
-        <p className="text-muted">Saving your results...</p>
+        <p className="text-muted">Saving your results…</p>
       </div>
     );
   }

@@ -78,7 +78,7 @@ async function postHandler(userId: string): Promise<NextResponse> {
   } catch (err) {
     logger.error("POST /api/athlete/self-program", { context: "api", error: err });
     return NextResponse.json(
-      { success: false, error: "Failed to create self-program config." },
+      { success: false, error: "Couldn’t create self-program config." },
       { status: 500 }
     );
   }

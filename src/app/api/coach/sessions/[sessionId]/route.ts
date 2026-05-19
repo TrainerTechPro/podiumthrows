@@ -47,7 +47,7 @@ export async function GET(
     return NextResponse.json({ success: true, data: dto });
   } catch (err) {
     logger.error("GET /api/coach/sessions/[sessionId]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to load session." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t load session." }, { status: 500 });
   }
 }
 
@@ -236,6 +236,6 @@ export async function PATCH(
     return NextResponse.json({ success: true, data: dto });
   } catch (err) {
     logger.error("PATCH /api/coach/sessions/[sessionId]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to save edits." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t save edits." }, { status: 500 });
   }
 }

@@ -40,6 +40,6 @@ export async function GET(_request: NextRequest, ctx: RouteCtx) {
     return NextResponse.json({ success: true, data: result });
   } catch (error) {
     logger.error("GET performance-tests session", { context: "performance-tests", error });
-    return NextResponse.json({ success: false, error: "Failed to load session" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t load session" }, { status: 500 });
   }
 }

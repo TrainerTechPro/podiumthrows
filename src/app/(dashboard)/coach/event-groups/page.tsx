@@ -28,7 +28,7 @@ export default function EventGroupsPage() {
     try {
       setError(null);
       const res = await fetch("/api/coach/event-groups");
-      if (!res.ok) throw new Error("Failed to load event groups");
+      if (!res.ok) throw new Error("Couldn’t load event groups");
       const json = await res.json();
       setGroups(json.data ?? []);
     } catch (err) {
@@ -80,13 +80,13 @@ export default function EventGroupsPage() {
           });
           if (!res.ok) {
             const data = await res.json().catch(() => null);
-            throw new Error(data?.error ?? "Failed to delete group");
+            throw new Error(data?.error ?? "Couldn’t delete group");
           }
           setSelectedGroupId(null);
           fetchGroups();
           toast("Group deleted", "success");
         } catch (err) {
-          toast(err instanceof Error ? err.message : "Failed to delete group", "error");
+          toast(err instanceof Error ? err.message : "Couldn’t delete group", "error");
         }
       },
     });

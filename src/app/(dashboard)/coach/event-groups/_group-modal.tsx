@@ -98,7 +98,7 @@ export function GroupModal({ open, onClose, group, onSaved }: GroupModalProps) {
       onSaved();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to save group");
+      setError(err instanceof Error ? err.message : "Couldn’t save group");
     } finally {
       setSaving(false);
     }

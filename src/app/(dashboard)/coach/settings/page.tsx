@@ -319,7 +319,7 @@ export default function CoachSettingsPage() {
         setPreferences(data.data);
         toast("Preferences saved");
       } else {
-        toast(data.error || "Failed to save preferences", "error");
+        toast(data.error || "Couldn’t save preferences", "error");
       }
     } catch {
       toast("Network error — please try again.", "error");
@@ -348,7 +348,7 @@ export default function CoachSettingsPage() {
       toast("Profile picture updated");
       router.refresh();
     } else {
-      throw new Error(data.error || "Failed to upload picture");
+      throw new Error(data.error || "Couldn’t upload picture");
     }
   }
 
@@ -363,7 +363,7 @@ export default function CoachSettingsPage() {
       toast("Profile picture removed");
       router.refresh();
     } else {
-      throw new Error(data.error || "Failed to remove picture");
+      throw new Error(data.error || "Couldn’t remove picture");
     }
   }
 
@@ -389,7 +389,7 @@ export default function CoachSettingsPage() {
         router.refresh();
         setTimeout(() => setSaved(false), 3000);
       } else {
-        toast(data.error || "Failed to save profile", "error");
+        toast(data.error || "Couldn’t save profile", "error");
       }
     } catch {
       toast("Network error. Please try again.", "error");
@@ -1389,10 +1389,10 @@ export default function CoachSettingsPage() {
                         );
                         router.refresh();
                       } else {
-                        toast(data.error || "Failed to enable Training Mode", "error");
+                        toast(data.error || "Couldn’t enable Training Mode", "error");
                       }
                     } catch {
-                      toast("Failed to enable Training Mode", "error");
+                      toast("Couldn’t enable Training Mode", "error");
                     } finally {
                       setTrainingEnabling(false);
                     }

@@ -66,6 +66,6 @@ export async function GET(request: NextRequest, ctx: RouteCtx) {
     });
   } catch (error) {
     logger.error("GET performance-tests trends", { context: "performance-tests", error });
-    return NextResponse.json({ success: false, error: "Failed to load trend" }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t load trend" }, { status: 500 });
   }
 }

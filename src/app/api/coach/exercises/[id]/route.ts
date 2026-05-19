@@ -81,7 +81,7 @@ export async function PATCH(
     return NextResponse.json(updated);
   } catch (err) {
     logger.error("PATCH /api/coach/exercises/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to update exercise." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t update exercise." }, { status: 500 });
   }
 }
 
@@ -125,6 +125,6 @@ export async function DELETE(
     return NextResponse.json({ success: true });
   } catch (err) {
     logger.error("DELETE /api/coach/exercises/[id]", { context: "api", error: err });
-    return NextResponse.json({ success: false, error: "Failed to delete exercise." }, { status: 500 });
+    return NextResponse.json({ success: false, error: "Couldn’t delete exercise." }, { status: 500 });
   }
 }

@@ -139,7 +139,7 @@ export function QuestionnaireActions({
         )}
 
         <Button variant="ghost" className="text-sm" onClick={handleClone} disabled={cloning}>
-          {cloning ? "Cloning..." : "Duplicate"}
+          {cloning ? "Cloning…" : "Duplicate"}
         </Button>
 
         {isArchived ? (
