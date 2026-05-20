@@ -123,10 +123,10 @@ export function PerformanceTestsTile({ athleteId }: PerformanceTestsTileProps) {
               Performance tests
             </div>
             <h3 className="font-heading text-base font-semibold text-[var(--foreground)] mt-1">
-              Log your first test
+              Start a benchmark
             </h3>
             <p className="text-xs text-muted mt-1">
-              Vertical jump, broad jump, sprints. Multi-attempt capture with peak + average.
+              Capture one jump, sprint, or throw-adjacent test. Trends unlock after the next check.
             </p>
           </div>
           <span className="rounded-full bg-primary-500/10 text-primary-500 p-2 shrink-0">
@@ -150,23 +150,30 @@ export function PerformanceTestsTile({ athleteId }: PerformanceTestsTileProps) {
       : null;
   const improved = delta != null ? (testType.lowerIsBetter ? delta < 0 : delta > 0) : null;
   const TrendIcon = improved == null ? null : improved ? TrendingUp : TrendingDown;
+  const trendLabel =
+    delta == null
+      ? "Add one more capture to call the trend."
+      : improved
+        ? "Moving in the right direction."
+        : "Watch this marker next session.";
 
   return (
     <>
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="card card-interactive w-full p-5 text-left flex items-start justify-between gap-4"
+        className="card card-interactive w-full p-5 text-left flex items-start justify-between gap-4 rounded-2xl"
       >
         <div className="min-w-0">
           <div className="text-[10px] font-semibold uppercase tracking-wider text-muted flex items-center gap-1.5">
             <TestIcon iconKey={testType.iconKey} size={12} />
-            {testType.name}
+            Latest test signal
           </div>
+          <p className="mt-1 truncate text-sm font-medium text-[var(--muted)]">{testType.name}</p>
           <div className="font-mono tabular-nums text-2xl font-semibold text-[var(--foreground)] mt-1">
             {current.peakValue != null ? formatValue(current.peakValue, testType) : "—"}
           </div>
-          {delta != null && TrendIcon && (
+          {delta != null && TrendIcon ? (
             <div
               className={`text-[11px] mt-0.5 inline-flex items-center gap-1 ${
                 improved ? "text-success-500" : "text-warning-600 dark:text-warning-400"
@@ -179,7 +186,10 @@ export function PerformanceTestsTile({ athleteId }: PerformanceTestsTileProps) {
               </span>
               <span className="text-muted">vs prior</span>
             </div>
+          ) : (
+            <p className="mt-1 text-xs text-muted">{trendLabel}</p>
           )}
+          {delta != null && <p className="mt-2 text-xs leading-snug text-muted">{trendLabel}</p>}
         </div>
         <span className="rounded-full bg-primary-500/10 text-primary-500 p-2 shrink-0">
           <ArrowUpRight size={18} strokeWidth={1.75} aria-hidden="true" />

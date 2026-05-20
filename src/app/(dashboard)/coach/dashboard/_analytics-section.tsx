@@ -1,5 +1,6 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { StatCard } from "@/components";
 import { TrendingUp, Target, Heart } from "lucide-react";
@@ -24,6 +25,125 @@ function deltaDirection(val: number): "up" | "down" | "flat" {
   return "flat";
 }
 
+function MobileAnalyticsBrief({
+  period,
+  distanceDelta,
+  complianceRate,
+  avgReadiness,
+  readinessTrend,
+}: Pick<
+  AnalyticsSectionProps,
+  "period" | "distanceDelta" | "complianceRate" | "avgReadiness" | "readinessTrend"
+>) {
+  const hasDelta = distanceDelta.athleteCount > 0;
+  const deltaVal = hasDelta ? Number(distanceDelta.avgDeltaPercent.toFixed(1)) : 0;
+  const deltaIsUp = deltaVal > 0;
+  const deltaIsDown = deltaVal < 0;
+  const compliance = complianceRate ?? 0;
+  const readinessLabel =
+    avgReadiness <= 0
+      ? "No readiness baseline"
+      : readinessTrend === "up"
+        ? "Readiness rising"
+        : readinessTrend === "down"
+          ? "Readiness falling"
+          : "Readiness stable";
+  const headline = !hasDelta
+    ? "Build the comparison set."
+    : deltaIsUp
+      ? "Team distance is moving up."
+      : deltaIsDown
+        ? "Team distance is sliding."
+        : "Team distance is holding.";
+
+  return (
+    <div className="sm:hidden rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-nano font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+            Team signal
+          </p>
+          <h3 className="mt-1 font-heading text-section font-semibold leading-[1.15] text-[var(--foreground)]">
+            {headline}
+          </h3>
+        </div>
+        <span
+          className={cn(
+            "grid h-11 w-11 shrink-0 place-items-center rounded-2xl",
+            deltaIsDown
+              ? "bg-danger-500/10 text-danger-500"
+              : deltaIsUp
+                ? "bg-success-500/10 text-success-500"
+                : "bg-primary-500/10 text-primary-500"
+          )}
+        >
+          <TrendingUp className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
+        </span>
+      </div>
+
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        <MobileMetric
+          icon={<TrendingUp className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />}
+          label={`${period}d marks`}
+          value={hasDelta ? `${deltaVal >= 0 ? "+" : ""}${Math.abs(deltaVal).toFixed(1)}%` : "—"}
+          tone={deltaIsDown ? "danger" : deltaIsUp ? "success" : "neutral"}
+        />
+        <MobileMetric
+          icon={<Target className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />}
+          label="Compliance"
+          value={`${Math.round(compliance)}%`}
+          tone={compliance >= 80 ? "success" : compliance >= 60 ? "warning" : "danger"}
+        />
+        <MobileMetric
+          icon={<Heart className="h-3.5 w-3.5" strokeWidth={1.75} aria-hidden="true" />}
+          label="Ready"
+          value={avgReadiness > 0 ? avgReadiness.toFixed(1) : "—"}
+          tone={avgReadiness >= 7 ? "success" : avgReadiness >= 5 ? "warning" : "danger"}
+        />
+      </div>
+
+      <p className="mt-3 text-sm leading-relaxed text-[var(--muted)]">
+        {hasDelta
+          ? `${distanceDelta.athleteCount} of ${distanceDelta.totalAthletes} athletes have comparison marks. ${readinessLabel.toLowerCase()}.`
+          : "Repeat marks are needed before distance movement is meaningful. Keep readiness and compliance visible until then."}
+      </p>
+    </div>
+  );
+}
+
+function MobileMetric({
+  icon,
+  label,
+  value,
+  tone,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  tone: "success" | "warning" | "danger" | "neutral";
+}) {
+  const toneClass =
+    tone === "success"
+      ? "text-success-500"
+      : tone === "warning"
+        ? "text-warning-500"
+        : tone === "danger"
+          ? "text-danger-500"
+          : "text-[var(--foreground)]";
+
+  return (
+    <div className="min-w-0 px-1 py-2">
+      <div className="flex items-center gap-1.5 text-[var(--muted)]">
+        {icon}
+        <p className="truncate text-nano font-semibold uppercase tracking-[0.12em]">{label}</p>
+      </div>
+      <p className={cn("mt-2 truncate font-mono text-lg font-semibold tabular-nums", toneClass)}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
 export function AnalyticsSection({
   period,
   distanceDelta,
@@ -43,11 +163,18 @@ export function AnalyticsSection({
         <AnalyticsPeriodSelector period={period} />
       </div>
 
-      {/* Stat cards — horizontal scroll on mobile, 3-col grid on sm+ */}
-      <div className="flex sm:grid sm:grid-cols-3 gap-4 overflow-x-auto sm:overflow-visible snap-x snap-mandatory pb-2 sm:pb-0 -mx-1 px-1 sm:mx-0 sm:px-0 custom-scrollbar">
+      <MobileAnalyticsBrief
+        period={period}
+        distanceDelta={distanceDelta}
+        complianceRate={complianceRate}
+        avgReadiness={avgReadiness}
+        readinessTrend={readinessTrend}
+      />
+
+      {/* Stat cards — full grid once there is enough width for labels and values */}
+      <div className="hidden sm:grid sm:grid-cols-3 gap-4">
         {/* Distance Delta */}
         <StatCard
-          className="min-w-[220px] snap-start shrink-0 sm:min-w-0 sm:shrink"
           label="Distance Δ"
           value={
             hasDelta ? (
@@ -84,7 +211,6 @@ export function AnalyticsSection({
 
         {/* Compliance Rate */}
         <StatCard
-          className="min-w-[220px] snap-start shrink-0 sm:min-w-0 sm:shrink"
           label="Compliance"
           value={complianceRate ?? 0}
           unit="%"
@@ -102,7 +228,6 @@ export function AnalyticsSection({
 
         {/* Avg Readiness */}
         <StatCard
-          className="min-w-[220px] snap-start shrink-0 sm:min-w-0 sm:shrink"
           label="Avg Readiness"
           value={avgReadiness > 0 ? Number(avgReadiness.toFixed(1)) : 0}
           unit="/ 10"
