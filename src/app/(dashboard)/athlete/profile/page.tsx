@@ -1,8 +1,20 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { Settings, MessageCircle, ChevronRight } from "lucide-react";
+import {
+  ChevronRight,
+  Dumbbell,
+  Mail,
+  MessageCircle,
+  Settings,
+  ShieldCheck,
+  Trophy,
+  Wrench,
+  type LucideIcon,
+} from "lucide-react";
 import { getSession, canActAsAthlete } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { Avatar } from "@/components/ui/Avatar";
+import { cn, formatEventType } from "@/lib/utils";
 import { ProfileTabs } from "./_profile-tabs";
 import type {
   ProfileData,
@@ -153,107 +165,352 @@ export default async function AthleteProfilePage() {
   }));
 
   const equipmentData: EquipmentData = safeEquipment(equipment);
+  const profileSummary = buildProfileSummary({
+    profile: profileData,
+    throwsPRs: serializedPRs,
+    injuries: serializedInjuries,
+    throwsProfiles: serializedProfiles,
+    equipment: equipmentData,
+  });
 
   return (
-    <div className="space-y-10">
-      <ProfileTabs
-        profile={profileData}
-        throwsPRs={serializedPRs}
-        injuries={serializedInjuries}
-        throwsProfiles={serializedProfiles}
-        equipment={equipmentData}
-      />
+    <div className="space-y-8">
+      <ProfileCommandCenter profile={profileData} summary={profileSummary} />
 
-      <MoreMenu />
+      <section id="profile-editor" className="space-y-4">
+        <div className="flex items-end justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-nano font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+              Profile editor
+            </p>
+            <h2 className="mt-1 font-heading text-section font-semibold text-[var(--foreground)]">
+              Keep the engine honest.
+            </h2>
+          </div>
+          <Link
+            href="/athlete/settings"
+            className="hidden min-h-[44px] shrink-0 items-center gap-2 rounded-xl border border-[var(--card-border)] px-4 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-surface-50 sm:inline-flex dark:hover:bg-surface-900"
+          >
+            <Settings size={16} strokeWidth={1.75} aria-hidden="true" />
+            Settings
+          </Link>
+        </div>
+
+        <ProfileTabs
+          profile={profileData}
+          throwsPRs={serializedPRs}
+          injuries={serializedInjuries}
+          throwsProfiles={serializedProfiles}
+          equipment={equipmentData}
+        />
+      </section>
     </div>
   );
 }
 
-/* ─── More Menu ───────────────────────────────────────────────────────────
-   MVP cut (2026-05-15): Me contains profile + settings as primary actions
-   only. Goals/questionnaires/assessments/insights/codex/drill-videos/
-   coach-videos/achievements removed — those routes either redirect, are
-   flag-gated, or are linked contextually elsewhere (e.g. PRs surface in
-   Throws via the chip nav). See tasks/product-audit-roadmap-2026-05-15.md. */
+/* ─── Profile command center ─────────────────────────────────────────────
+   The bottom tab is now an identity/control surface, not a dumping ground.
+   First screen answers: who am I in the system, what is profile-ready, and
+   where are account controls? Editing stays below as a deliberate second act. */
 
-interface MenuLink {
-  href: string;
-  label: string;
-  description: string;
-  icon: typeof Settings;
+type ProfileSummary = ReturnType<typeof buildProfileSummary>;
+
+interface SummaryInput {
+  profile: ProfileData;
+  throwsPRs: ThrowsPRRecord[];
+  injuries: ThrowsInjuryRecord[];
+  throwsProfiles: ThrowsProfileSummary[];
+  equipment: EquipmentData;
 }
 
-const PRIMARY_LINKS: MenuLink[] = [
-  {
-    href: "/athlete/settings",
-    label: "Settings",
-    description: "Notifications, security, theme",
-    icon: Settings,
-  },
-];
+function buildProfileSummary({
+  profile,
+  throwsPRs,
+  injuries,
+  throwsProfiles,
+  equipment,
+}: SummaryInput) {
+  const hasAnyLift = profile.strengthNumbers
+    ? Object.values(profile.strengthNumbers.lifts).some((entry) => entry.current > 0)
+    : false;
+  const completedSections = [
+    profile.events.length > 0 && !!profile.turnDirection && !!profile.classStanding,
+    !!profile.trainingHistory?.yearsTraining,
+    !!profile.lifestyle?.sleepHours,
+    hasAnyLift,
+    equipment.implements.length > 0 || !!equipment.facility,
+    throwsProfiles.some((p) => p.competitionPb != null || p.currentDistanceBand),
+    !!profile.movementRestrictions || injuries.length === 0,
+  ].filter(Boolean).length;
+  const totalSections = 7;
+  const readinessPct = Math.round((completedSections / totalSections) * 100);
+  const primaryEvent = profile.events[0] ? formatEventType(profile.events[0]) : "Event not set";
+  const topPR = throwsPRs[0] ?? null;
+  const activeInjuries = injuries.filter((inj) => !inj.recovered).length;
+  const trainingAge =
+    profile.trainingHistory?.yearsTraining != null
+      ? `${profile.trainingHistory.yearsTraining} yr`
+      : "Unset";
+  const equipmentCount = equipment.implements.length;
 
-function MenuSection({ title, links }: { title: string; links: MenuLink[] }) {
+  return {
+    readinessPct,
+    completedSections,
+    totalSections,
+    primaryEvent,
+    topPR,
+    activeInjuries,
+    trainingAge,
+    equipmentCount,
+    hasAnyLift,
+  };
+}
+
+function ProfileCommandCenter({
+  profile,
+  summary,
+}: {
+  profile: ProfileData;
+  summary: ProfileSummary;
+}) {
+  const fullName = `${profile.firstName} ${profile.lastName}`.trim();
+  const classLine = [profile.classStanding, profile.gradYear ? `Class ${profile.gradYear}` : null]
+    .filter(Boolean)
+    .join(" · ");
+  const ringStyle = {
+    background: `conic-gradient(var(--color-brand) ${summary.readinessPct}%, var(--card-border) 0)`,
+  };
+
   return (
-    <section>
-      <h2 className="px-1 mb-3 text-xs font-semibold uppercase tracking-[0.12em] text-[var(--color-text-secondary)]">
-        {title}
-      </h2>
-      <ul className="divide-y divide-[var(--color-border-default)] border-t border-b border-[var(--color-border-default)]">
-        {links.map((link) => {
-          const Icon = link.icon;
-          return (
-            <li key={link.href}>
-              <Link
-                href={link.href}
-                className="flex items-center gap-3.5 min-h-[56px] -mx-2 px-2 hover:bg-[var(--color-bg-surface-sunken)] transition-colors"
-              >
-                <span
-                  className="w-9 h-9 rounded-full bg-[var(--color-brand-subtle)] flex items-center justify-center shrink-0"
-                  aria-hidden="true"
+    <section className="space-y-4" aria-labelledby="profile-heading">
+      <div className="overflow-hidden rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)]">
+        <div className="p-5 sm:p-6">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <Avatar name={fullName} src={profile.avatarUrl} size="lg" />
+              <div className="min-w-0">
+                <p className="text-nano font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+                  Athlete profile
+                </p>
+                <h1
+                  id="profile-heading"
+                  className="mt-1 font-heading text-section font-semibold leading-tight text-[var(--foreground)] sm:text-title"
                 >
-                  <Icon
-                    size={16}
-                    strokeWidth={1.75}
-                    style={{ color: "var(--color-brand-strong)" }}
-                  />
+                  {fullName}
+                </h1>
+                <p className="mt-1 truncate text-sm text-[var(--muted)]">
+                  {summary.primaryEvent}
+                  {classLine ? ` · ${classLine}` : ""}
+                </p>
+              </div>
+            </div>
+            <div
+              className="grid h-14 w-14 shrink-0 place-items-center rounded-full p-1"
+              style={ringStyle}
+              aria-label={`Profile readiness ${summary.readinessPct}%`}
+            >
+              <div className="grid h-full w-full place-items-center rounded-full bg-[var(--card-bg)]">
+                <span className="font-mono text-xs font-semibold tabular-nums text-[var(--foreground)]">
+                  {summary.readinessPct}%
                 </span>
-                <span className="flex-1 min-w-0">
-                  <span className="block text-sm font-semibold text-[var(--color-text-primary)]">
-                    {link.label}
-                  </span>
-                  <span className="block text-xs text-[var(--color-text-secondary)] mt-0.5">
-                    {link.description}
-                  </span>
-                </span>
-                <ChevronRight
-                  size={16}
-                  strokeWidth={1.75}
-                  aria-hidden="true"
-                  className="shrink-0 text-[var(--color-text-secondary)]"
-                />
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-5 flex flex-wrap gap-2">
+            {profile.events.length > 0 ? (
+              profile.events.map((event) => (
+                <EventPill key={event} label={formatEventType(event)} />
+              ))
+            ) : (
+              <EventPill label="Choose events" muted />
+            )}
+          </div>
+
+          <div className="mt-5 grid grid-cols-3 gap-2">
+            <PassportStat
+              label="Ready"
+              value={`${summary.completedSections}/${summary.totalSections}`}
+            />
+            <PassportStat label="Training" value={summary.trainingAge} />
+            <PassportStat
+              label="Health"
+              value={summary.activeInjuries > 0 ? `${summary.activeInjuries} flag` : "Clear"}
+              tone={summary.activeInjuries > 0 ? "warning" : "success"}
+            />
+          </div>
+        </div>
+
+        <div className="grid border-t border-[var(--card-border)] sm:grid-cols-3">
+          <QuickLink
+            href="/athlete/settings"
+            icon={Settings}
+            label="Settings"
+            description="Security, theme, notifications"
+          />
+          <QuickLink
+            href="/athlete/settings/notifications"
+            icon={Mail}
+            label="Notifications"
+            description="Training and reminder rhythm"
+          />
+          <QuickLink
+            href="/athlete/feedback"
+            icon={MessageCircle}
+            label="Feedback"
+            description="Send what feels off"
+          />
+        </div>
+      </div>
+
+      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <SignalTile
+          icon={Trophy}
+          label="Top PR"
+          value={summary.topPR ? `${summary.topPR.distance.toFixed(2)}m` : "No PR yet"}
+          detail={
+            summary.topPR
+              ? `${formatEventType(summary.topPR.event)} · ${summary.topPR.implement}`
+              : "Log a mark to start"
+          }
+          tone="brand"
+        />
+        <SignalTile
+          icon={Wrench}
+          label="Implements"
+          value={summary.equipmentCount > 0 ? `${summary.equipmentCount}` : "Unset"}
+          detail={
+            summary.equipmentCount > 0 ? "Available weights saved" : "Tell the engine what you own"
+          }
+        />
+        <SignalTile
+          icon={Dumbbell}
+          label="Strength"
+          value={summary.hasAnyLift ? "Logged" : "Missing"}
+          detail={summary.hasAnyLift ? "Transfer numbers are available" : "Add one key lift"}
+        />
+        <SignalTile
+          icon={ShieldCheck}
+          label="Restrictions"
+          value={summary.activeInjuries > 0 ? "Review" : "Clear"}
+          detail={
+            summary.activeInjuries > 0
+              ? "Active injury flags need context"
+              : "No active injury flags"
+          }
+          tone={summary.activeInjuries > 0 ? "warning" : "success"}
+        />
+      </div>
     </section>
   );
 }
 
-function MoreMenu() {
+function EventPill({ label, muted = false }: { label: string; muted?: boolean }) {
   return (
-    <div className="space-y-6">
-      <MenuSection title="Account" links={PRIMARY_LINKS} />
+    <span
+      className={cn(
+        "inline-flex min-h-8 items-center rounded-full border px-3 text-xs font-semibold",
+        muted
+          ? "border-dashed border-[var(--card-border)] text-[var(--muted)]"
+          : "border-primary-500/25 bg-primary-500/10 text-primary-600 dark:text-primary-300"
+      )}
+    >
+      {label}
+    </span>
+  );
+}
 
-      <div className="pt-2">
-        <Link
-          href="/athlete/feedback"
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-        >
-          <MessageCircle size={14} strokeWidth={1.75} aria-hidden="true" />
-          Send feedback
-        </Link>
+function PassportStat({
+  label,
+  value,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string;
+  tone?: "success" | "warning" | "neutral";
+}) {
+  const toneClass =
+    tone === "success"
+      ? "text-success-500"
+      : tone === "warning"
+        ? "text-warning-500"
+        : "text-[var(--foreground)]";
+
+  return (
+    <div className="min-w-0">
+      <p className="text-nano font-semibold uppercase tracking-[0.14em] text-[var(--muted)]">
+        {label}
+      </p>
+      <p className={cn("mt-1 truncate font-mono text-lg font-semibold tabular-nums", toneClass)}>
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function QuickLink({
+  href,
+  icon: Icon,
+  label,
+  description,
+}: {
+  href: string;
+  icon: LucideIcon;
+  label: string;
+  description: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="flex min-h-[64px] items-center gap-3 border-b border-[var(--card-border)] px-5 py-3 transition-colors hover:bg-surface-50 last:border-b-0 sm:border-b-0 sm:border-r sm:last:border-r-0 dark:hover:bg-surface-900"
+    >
+      <span
+        className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-[var(--muted-bg)] text-[var(--foreground)]"
+        aria-hidden="true"
+      >
+        <Icon size={17} strokeWidth={1.75} />
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-semibold text-[var(--foreground)]">{label}</span>
+        <span className="mt-0.5 block truncate text-xs text-[var(--muted)]">{description}</span>
+      </span>
+      <ChevronRight size={16} strokeWidth={1.75} className="shrink-0 text-[var(--muted)]" />
+    </Link>
+  );
+}
+
+function SignalTile({
+  icon: Icon,
+  label,
+  value,
+  detail,
+  tone = "neutral",
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+  detail: string;
+  tone?: "brand" | "success" | "warning" | "neutral";
+}) {
+  const toneClass =
+    tone === "brand"
+      ? "text-primary-600 dark:text-primary-300"
+      : tone === "success"
+        ? "text-success-500"
+        : tone === "warning"
+          ? "text-warning-500"
+          : "text-[var(--foreground)]";
+
+  return (
+    <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-4">
+      <div className="flex items-center gap-2 text-[var(--muted)]">
+        <Icon size={16} strokeWidth={1.75} aria-hidden="true" />
+        <p className="text-nano font-semibold uppercase tracking-[0.16em]">{label}</p>
       </div>
+      <p className={cn("mt-3 truncate font-mono text-xl font-semibold tabular-nums", toneClass)}>
+        {value}
+      </p>
+      <p className="mt-1 text-sm leading-snug text-[var(--muted)]">{detail}</p>
     </div>
   );
 }
