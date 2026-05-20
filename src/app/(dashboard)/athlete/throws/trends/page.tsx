@@ -1,9 +1,18 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, type ReactNode } from "react";
 import Link from "next/link";
 import { EmptyState } from "@/components/ui/EmptyState";
 import dynamic from "next/dynamic";
+import {
+  Award,
+  BarChart3,
+  ChevronRight,
+  Gauge,
+  Scale,
+  TrendingDown,
+  TrendingUp,
+} from "lucide-react";
 import {
   useEventChartSettings,
   rangeStartDate,
@@ -111,6 +120,19 @@ function fmtDateLong(d: string) {
     day: "numeric",
     year: "numeric",
   });
+}
+
+function eventLabel(event: string) {
+  return EVENT_META[event]?.label ?? event.replaceAll("_", " ").toLowerCase();
+}
+
+function signedDistanceLabel(formatDist: (value: number) => string, value: number) {
+  if (Math.abs(value) < 0.01) return formatDist(0);
+  return `${value > 0 ? "+" : "-"}${formatDist(Math.abs(value))}`;
+}
+
+function sourceLabel(source: string) {
+  return source === "COMPETITION" ? "competition" : "training";
 }
 
 // ── Page ───────────────────────────────────────────────────────────────
@@ -231,6 +253,7 @@ export default function ThrowAnalysisPage() {
     <div className="animate-spring-up space-y-6 max-w-3xl mx-auto pb-8">
       <ThrowsChipNav />
       <Header />
+      <MobileAnalysisBrief data={data} formatDist={formatDist} />
 
       {/* ── Per-event chart cards ──────────────────────────────────── */}
       {eventsWithData.length === 0 ? (
@@ -238,9 +261,10 @@ export default function ThrowAnalysisPage() {
           <p className="text-sm text-muted text-center">No distance data logged yet.</p>
         </section>
       ) : (
-        eventsWithData.map((event) => (
+        eventsWithData.map((event, index) => (
           <EventChartCard
             key={event}
+            id={index === 0 ? "event-distance-charts" : undefined}
             event={event}
             trends={data.distanceTrends.filter((t) => t.event === event)}
             gender={data.gender}
@@ -438,16 +462,18 @@ export default function ThrowAnalysisPage() {
 
 function Header() {
   return (
-    <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-display font-heading text-[var(--foreground)]">Throw Analysis</h1>
+    <div className="flex items-start justify-between gap-4">
+      <div className="min-w-0">
+        <h1 className="text-title sm:text-display font-heading text-[var(--foreground)]">
+          Throw Analysis
+        </h1>
         <p className="text-sm text-surface-700 dark:text-surface-300">
           Distance trends, PRs, and implement breakdown
         </p>
       </div>
       <Link
         href="/athlete/throws"
-        className="text-sm text-primary-600 dark:text-primary-300 hover:underline"
+        className="inline-flex min-h-[44px] shrink-0 items-center whitespace-nowrap text-sm text-primary-600 hover:underline dark:text-primary-300"
       >
         &larr; Throws
       </Link>
@@ -455,16 +481,277 @@ function Header() {
   );
 }
 
+// ── Mobile analysis brief ────────────────────────────────────────────────
+
+function MobileAnalysisBrief({
+  data,
+  formatDist,
+}: {
+  data: AnalysisData;
+  formatDist: (value: number) => string;
+}) {
+  const brief = useMemo(() => {
+    const byEvent = new Map<
+      string,
+      {
+        event: string;
+        points: TrendPoint[];
+        best: TrendPoint;
+      }
+    >();
+
+    for (const point of data.distanceTrends) {
+      const current = byEvent.get(point.event);
+      if (!current) {
+        byEvent.set(point.event, { event: point.event, points: [point], best: point });
+        continue;
+      }
+      current.points.push(point);
+      if (point.distance > current.best.distance) current.best = point;
+    }
+
+    const eventRows = Array.from(byEvent.values()).map((row) => {
+      const sorted = [...row.points].sort((a, b) => a.date.localeCompare(b.date));
+      const first = sorted[0] ?? null;
+      const latest = sorted[sorted.length - 1] ?? null;
+      return {
+        ...row,
+        points: sorted,
+        first,
+        latest,
+        delta: first && latest ? latest.distance - first.distance : null,
+      };
+    });
+
+    const trendRow =
+      eventRows
+        .filter((row) => row.points.length >= 2 && row.delta !== null)
+        .sort((a, b) => Math.abs(b.delta ?? 0) - Math.abs(a.delta ?? 0))[0] ?? null;
+
+    const bestThrow =
+      data.distanceTrends.length > 0
+        ? data.distanceTrends.reduce((best, point) =>
+            point.distance > best.distance ? point : best
+          )
+        : null;
+
+    const recentPr =
+      data.prTimeline.length > 0
+        ? [...data.prTimeline].sort((a, b) => b.date.localeCompare(a.date))[0]
+        : null;
+
+    const topImplement =
+      data.implementDistribution.length > 0
+        ? [...data.implementDistribution].sort((a, b) => b.throwCount - a.throwCount)[0]
+        : null;
+
+    const practiceCount = data.competitionVsPractice.practice.count;
+    const competitionCount = data.competitionVsPractice.competition.count;
+    const total = practiceCount + competitionCount;
+    const practicePct = total > 0 ? Math.round((practiceCount / total) * 100) : 0;
+    const compPct = total > 0 ? 100 - practicePct : 0;
+
+    return {
+      trendRow,
+      bestThrow,
+      recentPr,
+      topImplement,
+      practiceCount,
+      competitionCount,
+      practicePct,
+      compPct,
+    };
+  }, [data]);
+
+  const trendDirection =
+    brief.trendRow?.delta == null || Math.abs(brief.trendRow.delta) < 0.01
+      ? "flat"
+      : brief.trendRow.delta > 0
+        ? "up"
+        : "down";
+  const TrendIcon = trendDirection === "down" ? TrendingDown : TrendingUp;
+  const trendDates = brief.trendRow
+    ? {
+        first: brief.trendRow.first?.date ?? brief.trendRow.latest?.date ?? "",
+        latest: brief.trendRow.latest?.date ?? brief.trendRow.first?.date ?? "",
+      }
+    : null;
+
+  return (
+    <section className="md:hidden space-y-3" aria-labelledby="mobile-analysis-heading">
+      <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className="text-nano font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+              Analysis brief
+            </p>
+            <h2
+              id="mobile-analysis-heading"
+              className="mt-1 font-heading text-section font-semibold leading-[1.15] text-[var(--foreground)]"
+            >
+              What changed first.
+            </h2>
+          </div>
+          <span
+            className={`grid h-11 w-11 shrink-0 place-items-center rounded-2xl ${
+              trendDirection === "down"
+                ? "bg-danger-500/10 text-danger-500"
+                : trendDirection === "up"
+                  ? "bg-success-500/10 text-success-500"
+                  : "bg-primary-500/10 text-primary-500"
+            }`}
+          >
+            <TrendIcon className="h-5 w-5" strokeWidth={2} aria-hidden="true" />
+          </span>
+        </div>
+
+        <div className="mt-4">
+          {brief.trendRow && trendDates ? (
+            <>
+              <p
+                className={`font-mono text-2xl font-semibold tabular-nums ${
+                  trendDirection === "down" ? "text-danger-500" : "text-success-500"
+                }`}
+              >
+                {signedDistanceLabel(formatDist, brief.trendRow.delta ?? 0)}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">
+                {eventLabel(brief.trendRow.event)} from {fmtDate(trendDates.first)} to{" "}
+                {fmtDate(trendDates.latest)} across {brief.trendRow.points.length} logged throws.
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="font-heading text-xl font-semibold text-[var(--foreground)]">
+                Not enough paired throws yet.
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-[var(--muted)]">
+                Log at least two throws in the same event and this becomes a real trend, not a chart
+                to decode.
+              </p>
+            </>
+          )}
+        </div>
+
+        <Link
+          href="#event-distance-charts"
+          className="mt-3 inline-flex min-h-[44px] w-full items-center justify-between rounded-xl border border-[var(--card-border)] px-4 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-surface-50 dark:hover:bg-surface-900"
+        >
+          Open event charts
+          <ChevronRight className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
+        </Link>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <MobileSignalStat
+          icon={<Award className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />}
+          label="Best mark"
+          value={brief.bestThrow ? formatDist(brief.bestThrow.distance) : "—"}
+          detail={
+            brief.bestThrow
+              ? `${eventLabel(brief.bestThrow.event)} · ${sourceLabel(brief.bestThrow.source)}`
+              : "Log throws to rank marks"
+          }
+        />
+        <MobileSignalStat
+          icon={<Gauge className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />}
+          label="Latest PR"
+          value={brief.recentPr ? formatDist(brief.recentPr.distance) : "—"}
+          detail={
+            brief.recentPr
+              ? `${eventLabel(brief.recentPr.event)} · ${fmtDate(brief.recentPr.date)}`
+              : "PRs land here"
+          }
+        />
+      </div>
+
+      <div className="rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-3.5">
+        <div className="flex items-center gap-2">
+          <BarChart3
+            className="h-4 w-4 text-[var(--muted)]"
+            strokeWidth={1.75}
+            aria-hidden="true"
+          />
+          <p className="text-nano font-semibold uppercase tracking-[0.18em] text-[var(--muted)]">
+            Training mix
+          </p>
+        </div>
+        <div className="mt-3 grid grid-cols-[1fr_auto] items-center gap-3">
+          <div className="h-3 overflow-hidden rounded-full bg-[var(--muted-bg)]">
+            <div
+              className="h-full rounded-full bg-info-500"
+              style={{ width: `${brief.practicePct}%` }}
+            />
+          </div>
+          <span className="font-mono text-sm font-semibold tabular-nums text-[var(--foreground)]">
+            {brief.practicePct}%
+          </span>
+        </div>
+        <p className="mt-2 text-sm leading-relaxed text-[var(--muted)]">
+          {brief.practiceCount} training / {brief.competitionCount} competition throws.{" "}
+          {brief.compPct >= 35
+            ? "Good meet exposure for comparing practice transfer."
+            : "Mostly training data; meet transfer needs more comp marks."}
+        </p>
+      </div>
+
+      <MobileSignalStat
+        icon={<Scale className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />}
+        label="Most used implement"
+        value={brief.topImplement?.implement ?? "—"}
+        detail={
+          brief.topImplement
+            ? `${brief.topImplement.throwCount} throws · best ${formatDist(brief.topImplement.bestDistance)}`
+            : "Weights appear after logged throws"
+        }
+        wide
+      />
+    </section>
+  );
+}
+
+function MobileSignalStat({
+  icon,
+  label,
+  value,
+  detail,
+  wide = false,
+}: {
+  icon: ReactNode;
+  label: string;
+  value: string;
+  detail: string;
+  wide?: boolean;
+}) {
+  return (
+    <div
+      className={`rounded-2xl border border-[var(--card-border)] bg-[var(--card-bg)] p-3.5 ${
+        wide ? "col-span-2" : ""
+      }`}
+    >
+      <div className="flex items-center gap-2 text-[var(--muted)]">
+        {icon}
+        <p className="text-nano font-semibold uppercase tracking-[0.18em]">{label}</p>
+      </div>
+      <p className="mt-2 truncate font-mono text-xl font-semibold tabular-nums text-[var(--foreground)]">
+        {value}
+      </p>
+      <p className="mt-1 text-sm leading-snug text-[var(--muted)]">{detail}</p>
+    </div>
+  );
+}
+
 // ── Per-Event Chart Card ────────────────────────────────────────────────
 
 interface EventChartCardProps {
+  id?: string;
   event: string;
   trends: TrendPoint[];
   gender: "MALE" | "FEMALE" | null;
   athleteId: string | null;
 }
 
-function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProps) {
+function EventChartCard({ id, event, trends, gender, athleteId }: EventChartCardProps) {
   const meta = EVENT_META[event];
   const compLabel = compLabelFor(event, gender);
   const compKg = compKgFor(event, gender);
@@ -542,7 +829,7 @@ function EventChartCard({ event, trends, gender, athleteId }: EventChartCardProp
   const hasAnyVisibleData = chartData.length > 0 && visibleImplementKeys.length > 0;
 
   return (
-    <section className="card !p-5 space-y-4">
+    <section id={id} className="card !p-5 space-y-4 scroll-mt-24">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-2">
