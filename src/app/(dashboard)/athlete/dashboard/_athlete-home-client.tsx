@@ -2,7 +2,19 @@
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { Trophy, CheckCircle2, Flame, Play, ChevronRight, Sparkles } from "lucide-react";
+import {
+  Trophy,
+  CheckCircle2,
+  Flame,
+  Play,
+  ChevronRight,
+  Sparkles,
+  MessageSquare,
+  CalendarPlus,
+  Video,
+  RefreshCw,
+  Flag,
+} from "lucide-react";
 import { AnimatedNumber } from "@/components/ui/AnimatedNumber";
 import { NumberFlow } from "@/components/ui/NumberFlow";
 import { PerformanceTestsTile } from "@/components/performance-tests/PerformanceTestsTile";
@@ -15,11 +27,16 @@ import type {
   WeekDayDTO,
   LastPRDTO,
   LastSessionDTO,
+  CoachUpdateDTO,
+  CoachUpdateKind,
 } from "@/lib/athlete/dashboard-data";
 
 interface Props {
   initial: AthleteDashboardDTO;
   hour: number;
+  /** Server-rendered "now" timestamp. Threaded so relative labels match
+   *  between SSR HTML and the first client paint (avoids hydration drift). */
+  nowMs: number;
   athleteId: string;
   masterProfileComplete: boolean;
 }
@@ -38,7 +55,13 @@ const EVENT_LABEL: Record<string, string> = {
  * lives in the AthleteShell wrapper and triggers router.refresh(); we re-key the
  * subtree on the DTO timestamp so entrance animations replay after a refresh.
  */
-export function AthleteHomeClient({ initial, hour, athleteId, masterProfileComplete }: Props) {
+export function AthleteHomeClient({
+  initial,
+  hour,
+  nowMs,
+  athleteId,
+  masterProfileComplete,
+}: Props) {
   const greeting = useMemo(() => timeGreeting(hour), [hour]);
 
   return (
@@ -60,6 +83,9 @@ export function AthleteHomeClient({ initial, hour, athleteId, masterProfileCompl
       )}
       <MigrationBanner athleteId={athleteId} />
       {!masterProfileComplete && <MasterProfileBanner />}
+      {initial.coachUpdates.length > 0 && (
+        <CoachUpdates updates={initial.coachUpdates} nowMs={nowMs} />
+      )}
       <SectionHeader label="This week" trailingHref="/athlete/sessions" trailingLabel="See plan" />
       <WeekStrip strip={initial.week} />
       <SectionHeader label="Performance" />
@@ -610,6 +636,88 @@ function MomentRow({
       />
     </Link>
   );
+}
+
+// ── Coach updates ───────────────────────────────────────────────────────────
+
+function CoachUpdates({ updates, nowMs }: { updates: CoachUpdateDTO[]; nowMs: number }) {
+  return (
+    <>
+      <SectionHeader
+        label="From your coach"
+        trailingHref="/athlete/notifications"
+        trailingLabel="See all"
+      />
+      <div className="space-y-2.5 px-4">
+        {updates.map((u) => (
+          <CoachUpdateRow key={u.id} update={u} nowMs={nowMs} />
+        ))}
+      </div>
+    </>
+  );
+}
+
+function CoachUpdateRow({ update, nowMs }: { update: CoachUpdateDTO; nowMs: number }) {
+  return (
+    <MomentRow
+      href={update.href}
+      tone="brand"
+      icon={iconForCoachUpdate(update.kind)}
+      head={`${headForCoachUpdate(update.kind)} · ${relativeLabel(update.createdAt, nowMs)}`}
+      body={<span className="text-[var(--foreground)]">{update.title}</span>}
+      meta={update.body ? truncate(update.body, 80) : null}
+    />
+  );
+}
+
+function iconForCoachUpdate(kind: CoachUpdateKind) {
+  const props = { className: "h-4 w-4", strokeWidth: 1.75, "aria-hidden": true } as const;
+  switch (kind) {
+    case "COMMENT_ADDED":
+      return <MessageSquare {...props} />;
+    case "WORKOUT_ASSIGNED":
+      return <CalendarPlus {...props} />;
+    case "VIDEO_SHARED":
+      return <Video {...props} />;
+    case "COMPLEX_ROTATED":
+      return <RefreshCw {...props} />;
+    case "PROGRAM_CHECKPOINT":
+      return <Flag {...props} />;
+  }
+}
+
+function headForCoachUpdate(kind: CoachUpdateKind): string {
+  switch (kind) {
+    case "COMMENT_ADDED":
+      return "COACH COMMENT";
+    case "WORKOUT_ASSIGNED":
+      return "NEW SESSION";
+    case "VIDEO_SHARED":
+      return "DRILL VIDEO";
+    case "COMPLEX_ROTATED":
+      return "PROGRAM UPDATE";
+    case "PROGRAM_CHECKPOINT":
+      return "CHECKPOINT";
+  }
+}
+
+function relativeLabel(iso: string, nowMs: number): string {
+  const then = new Date(iso).getTime();
+  const diffMs = nowMs - then;
+  if (Number.isNaN(then) || diffMs < 0) return "JUST NOW";
+  const minutes = Math.floor(diffMs / 60000);
+  if (minutes < 1) return "JUST NOW";
+  if (minutes < 60) return `${minutes}M AGO`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}H AGO`;
+  const days = Math.floor(hours / 24);
+  if (days < 7) return days === 1 ? "YESTERDAY" : `${days}D AGO`;
+  return `${Math.floor(days / 7)}W AGO`;
+}
+
+function truncate(s: string, max: number): string {
+  if (s.length <= max) return s;
+  return s.slice(0, max - 1).trimEnd() + "…";
 }
 
 // ── Master profile nudge ────────────────────────────────────────────────────
