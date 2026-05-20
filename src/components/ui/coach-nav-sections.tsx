@@ -108,6 +108,17 @@ export function getCoachNavSections(
       ],
     },
     {
+      label: "Builder",
+      href: "/coach/builder",
+      icon: <Wrench {...iconSize} />,
+      matchPaths: [
+        "/coach/builder",
+        "/coach/throws/builder",
+        "/coach/plans/new",
+        "/coach/plans/generate",
+      ],
+    },
+    {
       label: "Library",
       href: "/coach/library",
       icon: <Library {...iconSize} />,
@@ -118,17 +129,6 @@ export function getCoachNavSections(
         "/coach/throws/library",
         "/coach/throws/drills",
         "/coach/videos/drills",
-      ],
-    },
-    {
-      label: "Builder",
-      href: "/coach/builder",
-      icon: <Wrench {...iconSize} />,
-      matchPaths: [
-        "/coach/builder",
-        "/coach/throws/builder",
-        "/coach/plans/new",
-        "/coach/plans/generate",
       ],
     },
   ];
