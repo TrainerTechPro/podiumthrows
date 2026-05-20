@@ -217,7 +217,7 @@ function CoachTopBar({
 }) {
   return (
     <header
-      className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--card-border)] px-4 sm:px-6 min-h-[3.5rem] flex items-center gap-4 shrink-0"
+      className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--card-border)] px-4 sm:px-6 min-h-[3.5rem] flex items-center gap-4 shrink-0 max-sm:relative"
       style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
     >
       <HamburgerButton open={sidebarOpen} onClick={onToggleSidebar} />
@@ -253,12 +253,16 @@ function CoachTopBar({
       {actions && <div className="flex items-center gap-2">{actions}</div>}
 
       {user.role === "COACH" && user.trainingEnabled && (
-        <ModeToggle activeMode={(user.activeMode as "COACH" | "TRAINING") ?? "COACH"} />
+        <ModeToggle
+          activeMode={(user.activeMode as "COACH" | "TRAINING") ?? "COACH"}
+          compact
+          className="max-sm:absolute max-sm:left-1/2 max-sm:-translate-x-1/2"
+        />
       )}
 
       <NotificationBell initialCount={notificationCount ?? 0} role={user.role} />
 
-      <CoachFeedbackInboxIcon />
+      <CoachFeedbackInboxIcon className="max-sm:hidden" />
 
       <UserMenu user={user} settingsHref="/coach/settings" />
     </header>
@@ -383,7 +387,7 @@ function AthleteTopBar({
         // viewport matters when the primary CTA has to land in the thumb half
         // on iPhone SE (375x667). The bell + avatar buttons keep 44px hit
         // targets internally; this container just trims breathing room.
-        className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--color-border-default)] px-4 min-h-[3.25rem] flex items-center gap-3 shrink-0"
+        className="sticky top-0 z-20 bg-[var(--background)] border-b border-[var(--color-border-default)] px-4 min-h-[3.25rem] flex items-center gap-3 shrink-0 relative"
         style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
       >
         <LogoMark size={40} />
@@ -394,6 +398,7 @@ function AthleteTopBar({
           <ModeToggle
             activeMode={(user.activeMode as "COACH" | "TRAINING") ?? "TRAINING"}
             compact
+            className="absolute left-1/2 -translate-x-1/2"
           />
         )}
         <NotificationBell initialCount={notificationCount ?? 0} role={user.role} />

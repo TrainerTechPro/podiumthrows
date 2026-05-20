@@ -492,6 +492,7 @@ export function QuickActions({ role }: { role: "COACH" | "ATHLETE" }) {
         }}
         className={cn(
           "fixed z-[9995] w-14 h-14 rounded-full",
+          role === "COACH" && "max-sm:hidden",
           "flex items-center justify-center",
           "bg-primary-500 hover:bg-primary-600 active:scale-95",
           "text-[var(--color-text-on-brand)] shadow-xl shadow-primary-500/25",

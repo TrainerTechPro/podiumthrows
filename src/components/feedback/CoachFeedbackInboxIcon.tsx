@@ -15,12 +15,15 @@ import { Inbox } from "lucide-react";
  * When that endpoint lands, swap in a polling pattern matching
  * FeedbackInboxBadge (visibility-change refresh, no interval).
  */
-export function CoachFeedbackInboxIcon() {
+export function CoachFeedbackInboxIcon({ className }: { className?: string }) {
   return (
     <Link
       href="/coach/feedback-inbox"
       aria-label="Feedback inbox"
-      className="relative inline-flex items-center justify-center h-9 w-9 rounded-full text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors"
+      className={[
+        "relative inline-flex items-center justify-center h-9 w-9 rounded-full text-muted hover:text-[var(--foreground)] hover:bg-surface-100 dark:hover:bg-surface-800 transition-colors",
+        className ?? "",
+      ].join(" ")}
     >
       <Inbox className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
     </Link>
