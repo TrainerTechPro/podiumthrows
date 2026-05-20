@@ -274,7 +274,7 @@ export async function GET(req: NextRequest) {
         subtitle: [eventLabel(d.event), formatCategory(d.category), d.difficulty]
           .filter(Boolean)
           .join(" · "),
-        href: `/coach/throws/drills?focus=${d.id}`,
+        href: `/coach/library?view=drills&focus=${d.id}`,
         category: "drill" as const,
       })),
       ...eT.items.map((e) => ({
@@ -283,7 +283,7 @@ export async function GET(req: NextRequest) {
         subtitle: [eventLabel(e.event), formatCategory(e.category), e.equipment]
           .filter(Boolean)
           .join(" · "),
-        href: `/coach/exercises`,
+        href: `/coach/library?view=exercises`,
         category: "exercise" as const,
       })),
       ...vT.items.map((v) => ({

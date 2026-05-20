@@ -180,7 +180,7 @@ export async function emitPR(
         await sendPushToUser(userId, {
           title: `\uD83D\uDD25 ${name} hit a PR!`,
           body: `${distanceStr}m ${eventLabel}`,
-          url: "/athlete/team",
+          url: "/athlete/dashboard",
           tag,
           data: { type: "teammate_pr", athleteId },
         });

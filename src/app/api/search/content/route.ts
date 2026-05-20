@@ -321,7 +321,7 @@ export async function GET(req: NextRequest) {
         ]
           .filter(Boolean)
           .join(" · "),
-        href: `/coach/throws/drills?focus=${d.id}`,
+        href: `/coach/library?view=drills&focus=${d.id}`,
         score: scoreMatch({
           textLength: sourceText.length,
           matchOffset: inTitle ? titleOffset : bodyOffset,

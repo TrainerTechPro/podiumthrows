@@ -48,7 +48,7 @@ describe("notifyInsightsNew", () => {
       title: "New insight",
       body: "Best shot put follow 8kg weeks",
       athleteProfileId: "a1",
-      metadata: expect.objectContaining({ href: "/athlete/insights", insightCount: 1 }),
+      metadata: expect.objectContaining({ href: "/athlete/dashboard", insightCount: 1 }),
     });
 
     const coachCall = mocks.createNotification.mock.calls.find((c) => c[0].coachId === "c1");

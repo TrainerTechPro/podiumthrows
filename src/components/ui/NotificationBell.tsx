@@ -224,10 +224,10 @@ function resolveCommentUrl(
           : "/coach/athletes";
       case "practiceAttemptId": {
         const sessionId = meta?.practiceSessionId as string | undefined;
-        return sessionId ? `/coach/throws/practice/${sessionId}` : "/coach/throws/practice";
+        return sessionId ? `/coach/throws/practice/${sessionId}` : "/coach/calendar?view=live";
       }
       case "trainingSessionId":
-        return "/coach/sessions";
+        return "/coach/library?view=plans";
       case "throwLogId":
         return athleteId ? `/coach/athletes/${athleteId}` : "/coach/athletes";
       default:
