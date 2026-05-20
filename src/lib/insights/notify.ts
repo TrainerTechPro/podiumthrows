@@ -48,7 +48,7 @@ export async function notifyInsightsNew(
       metadata: {
         insightCount: newInsights.length,
         categories,
-        href: "/athlete/insights",
+        href: "/athlete/dashboard",
       },
     });
 

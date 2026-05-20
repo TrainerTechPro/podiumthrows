@@ -10,7 +10,6 @@ import type { FlagKey } from "@/lib/flags";
  */
 export const FLAG_GATED_ROUTES: { prefix: string; flag: FlagKey }[] = [
   { prefix: "/athlete/self-program", flag: "selfProgram" },
-  { prefix: "/coach/videos", flag: "videoAnnotator" },
   { prefix: "/coach/video-analysis", flag: "videoAnalysis" },
   { prefix: "/coach/architect", flag: "aiArchitect" },
   { prefix: "/coach/sideline", flag: "coachSideline" },

@@ -35,7 +35,7 @@ const ConfirmationHtml = (state: "ok" | "invalid"): string => {
   <div class="wrap">
     <h1>${heading}</h1>
     <p>${body}</p>
-    <a href="/athlete/settings/notifications">Open notification settings</a>
+    <a href="/athlete/settings?tab=notifications">Open notification settings</a>
   </div>
 </body>
 </html>`;

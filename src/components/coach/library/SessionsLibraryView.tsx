@@ -48,13 +48,13 @@ interface RosterAthlete {
 interface SessionsLibraryViewProps {
   /** Show the page-level heading. Tab consumers hide this; standalone routes show it. */
   showHeading?: boolean;
-  /** Builder href — used when /coach/throws/builder shifts to /coach/builder?type=session in commit 3. */
+  /** Canonical session builder URL — Library "New session" CTA points here. */
   builderHref?: string;
 }
 
 export function SessionsLibraryView({
   showHeading = false,
-  builderHref = "/coach/throws/builder",
+  builderHref = "/coach/builder?type=session",
 }: SessionsLibraryViewProps = {}) {
   const [sessions, setSessions] = useState<ThrowsSession[]>([]);
   const [loading, setLoading] = useState(true);

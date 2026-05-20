@@ -161,7 +161,7 @@ export function getNotificationHref(n: NotificationItem, role: "COACH" | "ATHLET
 
     case "INSIGHT_NEW":
       return role === "ATHLETE"
-        ? "/athlete/insights"
+        ? "/athlete/dashboard"
         : athleteId
           ? `/coach/athletes/${athleteId}/insights`
           : "/coach/athletes";
@@ -251,7 +251,7 @@ function resolveCommentHref(
         : "/coach/athletes";
     case "practiceAttemptId": {
       const sessionId = asString(meta.practiceSessionId);
-      return sessionId ? `/coach/throws/practice/${sessionId}` : "/coach/throws/practice";
+      return sessionId ? `/coach/throws/practice/${sessionId}` : "/coach/calendar?view=live";
     }
     case "trainingSessionId":
       return targetId ? `/coach/session/${targetId}` : "/coach/athletes";

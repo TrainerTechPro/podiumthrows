@@ -95,31 +95,31 @@ const GROUP_META: Record<
   session: {
     label: "Sessions",
     icon: <Calendar {...ICON_PROPS} />,
-    showMoreHref: "/coach/sessions",
+    showMoreHref: "/coach/calendar",
     order: 2,
   },
   program: {
     label: "Plans",
     icon: <ListChecks {...ICON_PROPS} />,
-    showMoreHref: "/coach/plans",
+    showMoreHref: "/coach/library?view=plans",
     order: 3,
   },
   drill: {
     label: "Drills",
     icon: <Activity {...ICON_PROPS} />,
-    showMoreHref: "/coach/drills",
+    showMoreHref: "/coach/library?view=drills",
     order: 4,
   },
   exercise: {
     label: "Exercises",
     icon: <Dumbbell {...ICON_PROPS} />,
-    showMoreHref: "/coach/exercises",
+    showMoreHref: "/coach/library?view=exercises",
     order: 5,
   },
   video: {
     label: "Video Analyses",
     icon: <Video {...ICON_PROPS} />,
-    showMoreHref: "/coach/videos",
+    showMoreHref: "/coach/video-analysis",
     order: 6,
   },
   note: {

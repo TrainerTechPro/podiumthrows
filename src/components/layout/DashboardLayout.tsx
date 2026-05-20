@@ -419,7 +419,6 @@ export const FOCUS_MODE_PREFIXES = [
   "/athlete/log-session",
   "/athlete/onboarding",
   "/athlete/self-program/create",
-  "/coach/log-session",
 ];
 
 export function isFocusMode(pathname: string | null | undefined): boolean {
