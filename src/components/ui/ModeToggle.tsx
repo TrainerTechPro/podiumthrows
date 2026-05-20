@@ -97,6 +97,7 @@ export function ModeToggle({ activeMode, compact = false, className }: ModeToggl
   const targetMode: Mode = optimisticMode === "COACH" ? "TRAINING" : "COACH";
   const current = MODE_CONFIG[optimisticMode];
   const target = MODE_CONFIG[targetMode];
+  const CurrentIcon = current.Icon;
   const TargetIcon = target.Icon;
 
   const iconTransition = reducedMotion
@@ -118,21 +119,21 @@ export function ModeToggle({ activeMode, compact = false, className }: ModeToggl
           "transition-transform duration-150 hover:-translate-y-0.5 active:translate-y-0",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[var(--background)]",
           "disabled:cursor-not-allowed disabled:opacity-70",
-          compact ? "min-w-[92px] px-2.5" : "min-w-[118px] px-3",
+          compact ? "min-w-[112px] px-2.5" : "min-w-[118px] px-3",
           className
         )}
       >
         <span className="inline-flex h-8 min-w-8 items-center justify-center rounded-full bg-primary-500 text-[var(--color-text-on-brand)]">
           <AnimatePresence mode="wait" initial={false}>
             <motion.span
-              key={targetMode}
+              key={optimisticMode}
               initial={reducedMotion ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.7 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={reducedMotion ? { opacity: 0, scale: 1 } : { opacity: 0, scale: 0.7 }}
               transition={iconTransition}
               className="flex items-center justify-center"
             >
-              <TargetIcon size={15} strokeWidth={2} aria-hidden="true" />
+              <CurrentIcon size={15} strokeWidth={2} aria-hidden="true" />
             </motion.span>
           </AnimatePresence>
         </span>
@@ -142,7 +143,7 @@ export function ModeToggle({ activeMode, compact = false, className }: ModeToggl
             compact ? "text-xs font-semibold" : "text-sm font-semibold"
           )}
         >
-          {switching ? "Switching…" : target.shortLabel}
+          {switching ? "Switching…" : current.shortLabel}
         </span>
         {!compact && (
           <span className="hidden xl:inline-flex items-center text-muted">

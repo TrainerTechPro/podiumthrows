@@ -13,8 +13,8 @@ import { useHaptic } from "@/lib/hooks/useHaptic";
    paradigm rather than pretending athletes want a desktop sidebar.
 
    The center "Log" action is the canonical entry point for logging a
-   throwing session. Elevating it visually enforces that everything
-   else ladders up to that moment.
+   throwing session. It stays in the same rail as the other tabs so the
+   mobile shell does not grow a floating bumper at the bottom edge.
 
    Everything not in these five tabs lives inside the tabs: roster and
    self-program under Training; history, trends, PRs, competitions,
@@ -133,7 +133,6 @@ export function BottomTabBar() {
               "flex-1 min-h-[44px] px-1",
               "transition-colors duration-150",
               "focus:outline-none focus-visible:ring-2 focus-visible:ring-primary-500/50 rounded-lg",
-              tab.primary && "-mt-3",
               active
                 ? "text-[var(--foreground)]"
                 : "text-[var(--color-text-secondary)] hover:text-[var(--foreground)]"
@@ -142,14 +141,15 @@ export function BottomTabBar() {
             {tab.primary ? (
               <span
                 className={cn(
-                  "flex items-center justify-center w-12 h-12 rounded-full",
-                  "bg-primary-500 text-surface-950",
-                  "shadow-[0_4px_14px_0_rgba(255,200,0,0.35)]",
-                  "transition-transform duration-150 active:scale-95"
+                  "flex h-8 w-12 items-center justify-center rounded-full",
+                  active
+                    ? "bg-primary-500 text-surface-950"
+                    : "bg-primary-500/12 text-primary-600 dark:text-primary-400",
+                  "transition-[background-color,color,transform] duration-150 active:scale-95"
                 )}
                 aria-hidden="true"
               >
-                <Icon size={24} strokeWidth={1.75} />
+                <Icon size={22} strokeWidth={2} />
               </span>
             ) : (
               <Icon
@@ -165,7 +165,6 @@ export function BottomTabBar() {
             <span
               className={cn(
                 "text-nano leading-none tracking-wide",
-                tab.primary && "mt-1",
                 active ? "font-semibold" : "font-medium"
               )}
             >
