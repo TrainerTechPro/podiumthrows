@@ -20,7 +20,7 @@ import { useHaptic } from "@/lib/hooks/useHaptic";
    self-program under Training; history, trends, PRs, competitions,
    readiness, and achievements under Throws; wellness check-in under Home
    (it gates today's training decision, not a profile setting); notifications,
-   settings, and profile under Me. /athlete/availability and
+   settings, and profile under Profile. /athlete/availability and
    /athlete/integrations are deep-link only with no tab highlight. If a
    surface can't be reached from these five tabs (directly or via deep
    link), it shouldn't be a standalone page.
@@ -82,12 +82,12 @@ const TABS: Tab[] = [
   },
   {
     href: "/athlete/profile",
-    label: "Me",
+    label: "Profile",
     icon: UserCircle,
     // Profile + account/settings only. Wellness moved to Home tab (canonical
     // entry is the readiness ring). Availability + integrations remain
     // deep-link-only (coach calendar, wearable banners) and still highlight
-    // Me for context — they're settings-shape pages.
+    // Profile for context — they're settings-shape pages.
     matchPaths: [
       "/athlete/profile",
       "/athlete/settings",
