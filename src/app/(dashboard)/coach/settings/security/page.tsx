@@ -159,7 +159,7 @@ export default function SecuritySettingsPage() {
     <div className="max-w-2xl mx-auto p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
-        <Link href="/coach/settings" className="text-muted hover:text-foreground">
+        <Link href="/coach/settings" className="text-muted hover:text-[var(--foreground)]">
           <svg
             className="w-5 h-5"
             fill="none"
@@ -278,7 +278,7 @@ export default function SecuritySettingsPage() {
                 setSetupCode("");
                 setError("");
               }}
-              className="text-sm text-muted hover:text-foreground"
+              className="text-sm text-muted hover:text-[var(--foreground)]"
             >
               Back to QR code
             </button>

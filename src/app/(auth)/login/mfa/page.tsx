@@ -221,7 +221,7 @@ export default function MfaLoginPage() {
 
       <Link
         href="/login"
-        className="text-sm text-muted hover:text-foreground text-center inline-flex items-center justify-center min-h-[44px] px-3 mx-auto"
+        className="text-sm text-muted hover:text-[var(--foreground)] text-center inline-flex items-center justify-center min-h-[44px] px-3 mx-auto"
       >
         Back to login
       </Link>

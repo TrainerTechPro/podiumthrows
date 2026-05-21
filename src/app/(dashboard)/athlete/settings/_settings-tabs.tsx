@@ -180,9 +180,29 @@ export function AthleteSettingsTabs({
         </TabPanel>
 
         {/* ── Privacy ─────────────────────────────────────────────────── */}
+        {/* Scope: "what other people see." Feed-sharing toggles + haptic
+            feedback. Destructive data actions (export, delete) moved to
+            Account — by user intent, those belong with "I own this account"
+            not "what teammates see in the feed." */}
         <TabPanel id="privacy" className="pt-6 space-y-6">
           <FeedPrivacySettings />
           <HapticsSettings />
+        </TabPanel>
+
+        {/* ── Account ─────────────────────────────────────────────────── */}
+        {/* Scope: "I own this account." Identity overview + data export +
+            account deletion + feedback. The destructive actions live here
+            because a user looking to download or delete their data thinks
+            of it as an account-level action, not a privacy toggle. */}
+        <TabPanel id="account" className="pt-6 space-y-6">
+          <section className="card p-5 space-y-2">
+            <p className="text-xs font-semibold text-muted uppercase tracking-wider">Account</p>
+            <p className="text-sm font-semibold text-[var(--foreground)]">
+              {profile.firstName} {profile.lastName}
+            </p>
+            <p className="text-sm text-muted">{profile.email}</p>
+            <p className="text-xs text-muted">Member since {formatDate(profile.memberSince)}</p>
+          </section>
 
           <section className="card p-5 space-y-3">
             <header className="space-y-1">
@@ -199,18 +219,6 @@ export function AthleteSettingsTabs({
           </section>
 
           <DeleteAccountSection role="ATHLETE" />
-        </TabPanel>
-
-        {/* ── Account ─────────────────────────────────────────────────── */}
-        <TabPanel id="account" className="pt-6 space-y-6">
-          <section className="card p-5 space-y-2">
-            <p className="text-xs font-semibold text-muted uppercase tracking-wider">Account</p>
-            <p className="text-sm font-semibold text-[var(--foreground)]">
-              {profile.firstName} {profile.lastName}
-            </p>
-            <p className="text-sm text-muted">{profile.email}</p>
-            <p className="text-xs text-muted">Member since {formatDate(profile.memberSince)}</p>
-          </section>
 
           <section className="space-y-3">
             <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">Feedback</h2>

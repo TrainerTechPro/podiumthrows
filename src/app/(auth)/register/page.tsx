@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { focusFirstError } from "@/lib/forms/focus-first-error";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { validateNewPassword } from "@/lib/api-schemas";
 
 type Role = "COACH" | "ATHLETE";
 type StandardField = "firstName" | "lastName" | "email" | "password" | "confirmPassword";
@@ -120,8 +121,11 @@ export default function RegisterPage() {
       return;
     }
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    // Mirror server password policy (length + uppercase + digit) so the user
+    // gets the specific rule before the round-trip rejects it.
+    const policyError = validateNewPassword(password);
+    if (policyError) {
+      setError(policyError);
       setInvalidField("password");
       queueMicrotask(() => focusFirstError(standardFormRef.current));
       return;
@@ -205,8 +209,9 @@ export default function RegisterPage() {
       return;
     }
 
-    if (claimPassword.length < 8) {
-      setClaimError("Password must be at least 8 characters.");
+    const claimPolicyError = validateNewPassword(claimPassword);
+    if (claimPolicyError) {
+      setClaimError(claimPolicyError);
       setClaimInvalidField("claimPassword");
       queueMicrotask(() => focusFirstError(claimFormRef.current));
       return;

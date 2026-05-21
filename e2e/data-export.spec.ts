@@ -8,9 +8,11 @@ import { loginAsAthlete, login, COACH } from "./helpers/auth";
  * so we can assert response shape and headers.
  */
 test.describe("Data export — athlete", () => {
-  test("Privacy tab surfaces a Download my data button", async ({ page }) => {
+  test("Account tab surfaces a Download my data button", async ({ page }) => {
+    // Moved from Privacy → Account alongside the Danger zone — both are
+    // account-ownership actions, not feed-privacy toggles.
     await loginAsAthlete(page);
-    await page.goto("/athlete/settings?tab=privacy");
+    await page.goto("/athlete/settings?tab=account");
     await expect(page.getByRole("button", { name: /Download my data/i })).toBeVisible();
     await expect(page.getByText(/Other athletes' data is never included/i)).toBeVisible();
   });

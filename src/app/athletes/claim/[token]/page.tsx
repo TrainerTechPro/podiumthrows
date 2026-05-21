@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Mail, Trophy, AlertTriangle, LogOut } from "lucide-react";
+import { Mail, Trophy, AlertTriangle } from "lucide-react";
 import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { hashInvitationToken } from "@/lib/invitation-token";
+import { LogoutButton } from "./_logout-button";
 
 export const metadata = { title: "Claim your profile — Podium Throws" };
 
@@ -154,7 +155,7 @@ function ValidCard({
       </div>
 
       {session ? (
-        <LoggedInWarning session={session} />
+        <LoggedInWarning session={session} token={token} />
       ) : (
         <Link href={`/register?invite=${token}`} className="btn-primary w-full justify-center">
           Set up my account →
@@ -169,7 +170,13 @@ function ValidCard({
   );
 }
 
-function LoggedInWarning({ session }: { session: { role: string; email: string } }) {
+function LoggedInWarning({
+  session,
+  token,
+}: {
+  session: { role: string; email: string };
+  token: string;
+}) {
   return (
     <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 space-y-3">
       <div className="flex items-start gap-2">
@@ -181,14 +188,11 @@ function LoggedInWarning({ session }: { session: { role: string; email: string }
         <div className="text-sm text-[var(--foreground)]">
           <p className="font-semibold">You&apos;re signed in as {session.email}</p>
           <p className="text-xs text-muted mt-1">
-            To claim this profile, log out first and then return to this link.
+            To claim this profile, log out first — we&apos;ll bring you right back here.
           </p>
         </div>
       </div>
-      <Link href="/api/auth/logout" className="btn-secondary w-full justify-center text-sm gap-2">
-        <LogOut className="w-4 h-4" strokeWidth={1.75} aria-hidden="true" />
-        Log out
-      </Link>
+      <LogoutButton returnHref={`/athletes/claim/${token}`} />
     </div>
   );
 }
