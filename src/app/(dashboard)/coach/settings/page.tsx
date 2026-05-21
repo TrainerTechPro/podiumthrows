@@ -133,6 +133,18 @@ interface CoachPreferences {
   };
 }
 
+const LEGACY_DEFAULT_PAGE_MAP: Record<string, string> = {
+  "/coach/throws": "/coach/athletes/throws",
+  "/coach/throws/builder": "/coach/builder?type=session",
+  "/coach/throws/practice": "/coach/calendar?view=live",
+  "/coach/throws/analyze": "/coach/video-analysis",
+};
+
+function canonicalDefaultPage(href: string | undefined, fallback: string) {
+  const value = href ?? fallback;
+  return LEGACY_DEFAULT_PAGE_MAP[value] ?? value;
+}
+
 const PLAN_LIMITS: Record<string, number> = {
   FREE: 3,
   PRO: 25,
@@ -242,6 +254,11 @@ export default function CoachSettingsPage() {
   const [enabledModules, setEnabledModules] = useState<string[]>(["general", "throws"]);
   const [trainingEnabled, setTrainingEnabled] = useState(false);
   const [trainingEnabling, setTrainingEnabling] = useState(false);
+  const globalDefaultPage = canonicalDefaultPage(preferences.globalDefaultPage, "/coach");
+  const throwsDefaultPage = canonicalDefaultPage(
+    preferences.workspaceDefaults?.throws,
+    "/coach/athletes/throws"
+  );
 
   useEffect(() => {
     fetch("/api/auth/me")
@@ -1272,7 +1289,7 @@ export default function CoachSettingsPage() {
                 Choose which page opens when you first launch the app.
               </p>
               <RadioGroup
-                value={preferences.globalDefaultPage ?? "/coach"}
+                value={globalDefaultPage}
                 onChange={(next) => handleSavePreferences({ globalDefaultPage: next })}
                 aria-label="Default page"
                 className="space-y-2"
@@ -1284,7 +1301,7 @@ export default function CoachSettingsPage() {
                     desc: "General overview and metrics",
                   },
                   {
-                    href: "/coach/throws",
+                    href: "/coach/athletes/throws",
                     label: "Throws Roster",
                     desc: "Throws roster pulse view",
                   },
@@ -1295,7 +1312,7 @@ export default function CoachSettingsPage() {
                     key={page.href}
                     value={page.href}
                     className={`flex items-start gap-3 p-3 rounded-xl transition-colors w-full ${
-                      preferences.globalDefaultPage === page.href
+                      globalDefaultPage === page.href
                         ? "bg-[rgba(212,168,67,0.08)] border border-primary-500/30"
                         : "border border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
                     }`}
@@ -1323,7 +1340,7 @@ export default function CoachSettingsPage() {
                   <div>
                     <p className="label mb-3">Podium Throws</p>
                     <RadioGroup
-                      value={preferences.workspaceDefaults?.throws ?? "/coach/throws"}
+                      value={throwsDefaultPage}
                       onChange={(next) =>
                         handleSavePreferences({ workspaceDefaults: { throws: next } })
                       }
@@ -1331,16 +1348,16 @@ export default function CoachSettingsPage() {
                       className="grid grid-cols-1 sm:grid-cols-2 gap-2 !space-y-0"
                     >
                       {[
-                        { href: "/coach/throws", label: "Throws Roster" },
-                        { href: "/coach/throws/builder", label: "Session Builder" },
-                        { href: "/coach/throws/practice", label: "Practice" },
-                        { href: "/coach/throws/analyze", label: "Analysis" },
+                        { href: "/coach/athletes/throws", label: "Throws Roster" },
+                        { href: "/coach/builder?type=session", label: "Session Builder" },
+                        { href: "/coach/calendar?view=live", label: "Practice" },
+                        { href: "/coach/video-analysis", label: "Analysis" },
                       ].map((page) => (
                         <Radio
                           key={page.href}
                           value={page.href}
                           className={`flex items-center gap-2.5 p-3 rounded-xl transition-colors w-full ${
-                            (preferences.workspaceDefaults?.throws ?? "/coach/throws") === page.href
+                            throwsDefaultPage === page.href
                               ? "bg-[rgba(212,168,67,0.08)] border border-primary-500/30"
                               : "border border-[var(--card-border)] hover:border-[var(--color-border-strong)]"
                           }`}

@@ -605,10 +605,10 @@ export function OnboardingChecklist({
           {dismissing ? "Dismissing…" : "Skip setup — I'll explore on my own"}
         </button>
         <Link
-          href="/coach/throws"
+          href="/coach/athletes/throws"
           className="text-sm font-medium text-primary-600 dark:text-primary-400 hover:underline"
         >
-          Explore Throws Hub &rarr;
+          Open Throws Roster &rarr;
         </Link>
       </div>
     </div>

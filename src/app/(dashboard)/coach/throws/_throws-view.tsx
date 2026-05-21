@@ -502,7 +502,7 @@ export function ThrowsView({
           </p>
           <div className="flex flex-col gap-2">
             <Link
-              href={`/coach/throws/profile?athleteId=${row.athleteId}`}
+              href={`/coach/athletes/${row.athleteId}`}
               className="btn-secondary text-xs py-1.5 text-center"
               onClick={(e) => e.stopPropagation()}
             >
@@ -592,7 +592,7 @@ export function ThrowsView({
         </div>
         <div className="flex flex-wrap gap-2 self-start sm:self-auto">
           <Link
-            href="/coach/throws/invite"
+            href="/coach/athletes/invitations"
             className="btn-secondary whitespace-nowrap flex items-center gap-1.5"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -646,7 +646,7 @@ export function ThrowsView({
           </div>
         </Link>
         <Link
-          href="/coach/throws/invite"
+          href="/coach/athletes/invitations"
           className="card card-interactive !p-4 flex items-center gap-3 group"
         >
           <div className="w-10 h-10 rounded-xl bg-primary-100 dark:bg-primary-900/30 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
@@ -763,7 +763,7 @@ export function ThrowsView({
             <p className="text-sm text-surface-700 dark:text-surface-300 mb-3">
               No athletes enrolled yet.
             </p>
-            <Link href="/coach/throws/invite" className="btn-primary inline-block">
+            <Link href="/coach/athletes/invitations" className="btn-primary inline-block">
               Invite Athletes
             </Link>
           </div>
@@ -948,7 +948,7 @@ export function ThrowsView({
                         )}
                         <div className="flex gap-2 pt-1">
                           <Link
-                            href={`/coach/throws/profile?athleteId=${row.athleteId}`}
+                            href={`/coach/athletes/${row.athleteId}`}
                             className="btn-secondary text-xs py-2.5 flex-1 text-center"
                             onClick={(e) => e.stopPropagation()}
                           >

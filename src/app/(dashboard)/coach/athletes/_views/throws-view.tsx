@@ -214,10 +214,10 @@ export function ThrowsView({ teamId }: { teamId: string | null }) {
           Manage Podium Throws enrollments and view deficit profiles.
         </p>
         <Link
-          href="/coach/throws"
+          href="/coach/athletes/invitations"
           className="text-sm text-primary-600 dark:text-primary-300 hover:underline font-medium"
         >
-          Throws Hub →
+          Invitations →
         </Link>
       </div>
 

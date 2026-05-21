@@ -35,7 +35,7 @@ export function PRBoard({ prs }: PRBoardProps) {
           </div>
         </div>
         <Link
-          href="/coach/throws"
+          href="/coach/athletes/throws"
           className="text-xs font-medium text-muted hover:text-[var(--foreground)] transition-colors"
         >
           View all

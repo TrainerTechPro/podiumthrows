@@ -48,7 +48,7 @@ For each route listed, the "Inbound evidence" column names at least one `file.ex
 | `/coach/settings/notifications`               | `src/app/(dashboard)/coach/settings/page.tsx`                                                             | strong |
 | `/coach/team`                                 | Sidebar "Team Feed" entry                                                                                  | WEAK — sidebar-only |
 | `/coach/teams`                                | Sidebar "Groups" entry                                                                                     | WEAK — sidebar-only |
-| `/coach/throws`                               | `src/components/ui/Sidebar.tsx` Training parent; `coach/dashboard/_onboarding-checklist.tsx`              | strong |
+| `/coach/throws`                               | **DECIDED**. 308 → `/coach/dashboard`; active dashboard/onboarding/settings CTAs now point to canonical children. | n/a |
 | `/coach/throws/[id]`                          | `src/app/api/athlete/session-recap/[sessionId]/notify-coach/route.ts:106` notification link               | strong |
 | `/coach/throws/analyze`                       | `coach/throws/analyze/[id]/page.tsx:167,216`; `analyze/history/page.tsx:68,118`                           | strong |
 | `/coach/throws/analyze/[id]`                  | `coach/throws/analyze/page.tsx:175` router.push template literal                                           | strong |
@@ -56,12 +56,12 @@ For each route listed, the "Inbound evidence" column names at least one `file.ex
 | `/coach/throws/assessment/[athleteId]`        | `src/app/(dashboard)/coach/athletes/[id]/page.tsx:503` template literal                                    | strong |
 | `/coach/throws/builder`                       | Sidebar "Drill Builder" + `coach/throws/library/page.tsx:214`                                              | strong |
 | `/coach/throws/drills`                        | Sidebar "Drills" entry; `coach/drill-videos/page.tsx` 307 target                                          | strong |
-| `/coach/throws/invite`                        | `coach/athletes/_views/throws-view.tsx:432,814`; `coach/throws/_throws-view.tsx:357,411,528`              | strong |
+| `/coach/throws/invite`                        | **DECIDED**. 308 → `/coach/athletes/invitations`; active and legacy view CTAs now use the canonical route. | n/a |
 | `/coach/throws/library`                       | Sidebar entry; `coach/throws/builder/page.tsx:280` router.push                                             | strong |
 | `/coach/throws/practice`                      | Sidebar "Live Practice"; `coach/throws/practice/[sessionId]/page.tsx:905,980`                             | strong |
 | `/coach/throws/practice/[sessionId]`          | `coach/throws/practice/page.tsx:69,260` template-literal href + router.push                                | strong |
-| `/coach/throws/profile`                       | `coach/athletes/_views/throws-view.tsx:282,941`; `coach/throws/_throws-view.tsx:712,1026`                 | strong |
-| `/coach/throws/profile/typing`                | `coach/throws/profile/page.tsx:942,1253,1357` template-literal href                                        | strong |
+| `/coach/throws/profile`                       | **DECIDED**. 308 → `/coach/athletes` or `/coach/athletes/:athleteId`; remaining code links to athlete detail directly. | n/a |
+| `/coach/throws/profile/typing`                | **DECIDED**. 308 → `/coach/athletes` or `/coach/athletes/:athleteId/assessments`; page files removed. | n/a |
 | `/coach/throws/programming`                   | **DECIDED — Commit 9**. 307 → `/coach/plans/generate`; page deleted.                                      | n/a |
 | `/coach/tools`                                | `src/components/ui/QuickActions.tsx:136` href                                                              | WEAK — quick-action-only |
 | `/coach/video-analysis`                       | `coach/video-analysis/[id]/_analysis-workspace.tsx`; `live/_live-capture.tsx`; `upload/page.tsx`          | strong |

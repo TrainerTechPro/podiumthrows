@@ -195,7 +195,7 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
           </Link>
 
           <Link
-            href="/coach/throws"
+            href="/coach/athletes/throws"
             className="card card-interactive p-4 sm:p-5 group hover:border-primary-500/40 transition-colors"
           >
             <div className="w-10 h-10 rounded-xl bg-primary-500/10 flex items-center justify-center text-primary-500 mb-3">
@@ -210,7 +210,7 @@ export function WelcomeClient({ firstName, planName, deficitData }: WelcomeClien
               </svg>
             </div>
             <p className="font-heading font-semibold text-sm text-[var(--foreground)] group-hover:text-primary-500 transition-colors">
-              Explore Throws Hub
+              Open Throws Roster
             </p>
             <p className="text-xs text-muted mt-1">Sessions, analytics, and Bondarchuk tools.</p>
             <span className="inline-flex items-center gap-1 text-xs text-primary-500 mt-3 font-medium">

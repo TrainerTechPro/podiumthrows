@@ -4,7 +4,6 @@
  *   Shared JS (all routes):  199 kB
  *   Middleware:                85.9 kB
  *   Heaviest pages (first load JS):
- *     /coach/throws/profile       349 kB
  *     /athlete/throws/log         317 kB
  *     /athlete/throws/analysis    315 kB
  *     /coach/dashboard            263 kB
