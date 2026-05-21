@@ -41,6 +41,8 @@ import { DistanceTrend } from "./_distance-trend";
 import { CoachActionBar } from "./_action-bar";
 import { AthleteAvatarControl } from "./_avatar-control";
 import { CoachInsightsSection } from "./_coach-insights-section";
+import { FeedbackSection } from "./_feedback-section";
+import { fetchAthleteFeedback } from "@/lib/data/athlete-feedback";
 import { toWire } from "@/lib/insights/serialize";
 import { PerformanceTestsSection } from "@/components/performance-tests/PerformanceTestsSection";
 import { MigrationBanner } from "@/components/throws/MigrationBanner";
@@ -57,6 +59,7 @@ const VALID_SECTIONS = [
   "performance",
   "readiness",
   "wellness",
+  "feedback",
   "goals",
   "insights",
 ];
@@ -1666,6 +1669,7 @@ export default async function AthleteProfilePage({
     getAthleteAttendanceStats(athlete.id, 30),
     getAthleteNextSession(athlete.id),
     getAthleteLatestNote(athlete.id, coach.id),
+    fetchAthleteFeedback(athlete.id, 10),
   ]);
 
   const acwr =
@@ -1702,6 +1706,11 @@ export default async function AthleteProfilePage({
   const nextSession =
     results[10].status === "fulfilled" ? (results[10].value as NextSession) : null;
   const latestNote = results[11].status === "fulfilled" ? (results[11].value as LatestNote) : null;
+  const feedbackItems =
+    results[12].status === "fulfilled"
+      ? (results[12].value as Awaited<ReturnType<typeof fetchAthleteFeedback>>)
+      : [];
+  const nowMs = Date.now();
 
   const bondarchukType = latestAssessment?.athleteType ?? null;
   const lastAssessmentDate = latestAssessment?.completedAt ?? null;
@@ -1818,6 +1827,19 @@ export default async function AthleteProfilePage({
       >
         <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Wellness</h2>
         <WellnessTab trend={trend} />
+      </section>
+
+      <section
+        id="feedback"
+        className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8 space-y-3"
+      >
+        <h2 className="text-lg font-bold font-heading text-[var(--foreground)]">Feedback</h2>
+        <FeedbackSection
+          athleteId={athlete.id}
+          athleteName={athleteName}
+          items={feedbackItems}
+          nowMs={nowMs}
+        />
       </section>
 
       <section id="goals" className="scroll-mt-20 border-t border-[var(--card-border)] pt-8 mt-8">

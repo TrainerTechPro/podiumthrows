@@ -51,6 +51,8 @@ import { AdaptationProgress } from "./_adaptation-progress";
 import type { AdaptationRow } from "./_adaptation-progress";
 import { AnalyticsSection } from "./_analytics-section";
 import { ThisWeek } from "./_this-week";
+import { FeedbackQueue } from "./_feedback-queue";
+import { fetchCoachFeedbackInbox } from "@/lib/data/coach-feedback-inbox";
 
 import { logger } from "@/lib/logger";
 /* ─── Coach Dashboard — editorial, scientific, back-office ────────────────────
@@ -668,6 +670,7 @@ export default async function CoachDashboardPage() {
     seasonGainsResult,
     teamAttendanceResult,
     thisWeekResult,
+    feedbackInboxResult,
   ] = await withTiming("coach-dashboard-data", () =>
     Promise.allSettled([
       cachedGetCoachStats(coach.id),
@@ -684,6 +687,7 @@ export default async function CoachDashboardPage() {
       getSeasonGains(coach.id, analyticsPeriod),
       getTeamAttendanceStats(coach.id, 7),
       getThisWeekSummary(coach.id),
+      fetchCoachFeedbackInbox(coach.id),
     ])
   );
 
@@ -740,6 +744,23 @@ export default async function CoachDashboardPage() {
           missingReadiness: 0,
           needsReview: 0,
         };
+  // Dashboard cut of the feedback inbox: at-most-5 athletes whose
+  // engagement with coach feedback needs a look. Pushback (thumbs-down)
+  // ranks above plain unread; older-than-30d acks fall off because
+  // they're caught-up, not action surface.
+  const feedbackInboxFull =
+    feedbackInboxResult.status === "fulfilled" ? feedbackInboxResult.value : [];
+  const feedbackQueueRows = feedbackInboxFull
+    .filter((r) => r.thumbsDown > 0 || r.unread > 0)
+    .sort((a, b) => {
+      if (b.thumbsDown !== a.thumbsDown) return b.thumbsDown - a.thumbsDown;
+      if (b.unread !== a.unread) return b.unread - a.unread;
+      const at = a.lastFeedbackAt ? new Date(a.lastFeedbackAt).getTime() : 0;
+      const bt = b.lastFeedbackAt ? new Date(b.lastFeedbackAt).getTime() : 0;
+      return bt - at;
+    })
+    .slice(0, 5);
+  const nowMs = Date.now();
 
   // Adaptation progress — Training Block + Advanced depth only
   const adaptationRows: AdaptationRow[] = [];
@@ -903,6 +924,16 @@ export default async function CoachDashboardPage() {
         />
         <ActivityFeed items={activity} />
       </section>
+
+      {feedbackQueueRows.length > 0 && (
+        <section aria-labelledby="feedback-queue-heading">
+          <SectionHeader
+            title="Feedback queue"
+            action={{ label: "Inbox", href: "/coach/feedback-inbox" }}
+          />
+          <FeedbackQueue rows={feedbackQueueRows} nowMs={nowMs} />
+        </section>
+      )}
 
       <section aria-labelledby="load-heading">
         <SectionHeader title="Training load" />
