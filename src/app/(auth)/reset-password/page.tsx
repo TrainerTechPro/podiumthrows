@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { csrfHeaders } from "@/lib/csrf-client";
 import { focusFirstError } from "@/lib/forms/focus-first-error";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { validateNewPassword } from "@/lib/api-schemas";
 
 type ResetField = "password" | "confirmPassword";
 
@@ -55,8 +56,11 @@ export default function ResetPasswordPage() {
     setError("");
     setInvalidField(null);
 
-    if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
+    // Mirror server password policy so the user sees the specific rule
+    // (uppercase, digit) before submit instead of after a 400.
+    const policyError = validateNewPassword(password);
+    if (policyError) {
+      setError(policyError);
       setInvalidField("password");
       queueMicrotask(() => focusFirstError(formRef.current));
       return;

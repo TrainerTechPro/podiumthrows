@@ -31,7 +31,10 @@ export async function POST() {
     if (!APP_URL && process.env.NODE_ENV === "production") {
       throw new Error("NEXT_PUBLIC_APP_URL must be set in production");
     }
-    const returnUrl = `${APP_URL || "http://localhost:3000"}/coach/settings`;
+    // Land them back on the Billing tab they came from — not the default
+    // Profile tab — so the post-portal state (new plan, updated card) is
+    // immediately visible.
+    const returnUrl = `${APP_URL || "http://localhost:3000"}/coach/settings?tab=billing`;
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: coach.stripeCustomerId,

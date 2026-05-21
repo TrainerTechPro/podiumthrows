@@ -1165,10 +1165,13 @@ export default function CoachSettingsPage() {
           </div>
         )}
 
-        {/* Activity log — surfaced inside the Security tab so coaches can
-            triage logins/account events alongside MFA + password tools. */}
+        {/* Security tab — one consolidated panel: activity log (diagnostic),
+            then MFA + password tools (the security/page.tsx client), then
+            data export, then danger-zone delete. Was four separate
+            `activeTab === "security"` blocks split across the JSX tree —
+            same render output, much harder to reason about. */}
         {activeTab === "security" && (
-          <div className="animate-spring-up">
+          <div className="animate-spring-up space-y-6">
             <div className="card">
               <h2 className="text-lg font-semibold text-[var(--foreground)] mb-4">
                 Recent Activity
@@ -1235,6 +1238,24 @@ export default function CoachSettingsPage() {
                 </div>
               )}
             </div>
+
+            <CoachSecurityClient />
+
+            <section className="card p-5 space-y-3">
+              <header className="space-y-1">
+                <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
+                  Your data
+                </h2>
+                <p className="text-sm text-[var(--foreground)]">
+                  Download everything we&apos;ve stored about you — your roster, programs, notes,
+                  settings. Athletes export their own data from their own accounts.
+                </p>
+              </header>
+              <ExportDataButton />
+              <p className="text-xs text-muted">Limited to one download per day.</p>
+            </section>
+
+            <DeleteAccountSection role="COACH" />
           </div>
         )}
 
@@ -1568,38 +1589,9 @@ export default function CoachSettingsPage() {
         )}
       </div>
 
-      {/* Security Tab — mounts the existing /coach/settings/security client
-          alongside the activity log block above. The activity log itself
-          renders inside `activeTab === "security"` further up. */}
-      {activeTab === "security" && (
-        <div className="max-w-2xl animate-spring-up mt-6">
-          <CoachSecurityClient />
-        </div>
-      )}
-
-      {activeTab === "security" && (
-        <div className="max-w-2xl animate-spring-up mt-6">
-          <section className="card p-5 space-y-3">
-            <header className="space-y-1">
-              <h2 className="text-sm font-semibold text-muted uppercase tracking-wider">
-                Your data
-              </h2>
-              <p className="text-sm text-[var(--foreground)]">
-                Download everything we&apos;ve stored about you — your roster, programs, notes,
-                settings. Athletes export their own data from their own accounts.
-              </p>
-            </header>
-            <ExportDataButton />
-            <p className="text-xs text-muted">Limited to one download per day.</p>
-          </section>
-        </div>
-      )}
-
-      {activeTab === "security" && (
-        <div className="max-w-2xl animate-spring-up mt-6">
-          <DeleteAccountSection role="COACH" />
-        </div>
-      )}
+      {/* Security tab content (activity + MFA/password + export + delete)
+          all renders inside the consolidated block within the max-w-2xl
+          wrapper above. */}
 
       {/* Profile Picture Editor Modal */}
       {showPhotoEditor && (
