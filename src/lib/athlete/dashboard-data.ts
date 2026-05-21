@@ -1,6 +1,8 @@
 import "server-only";
 import prisma from "@/lib/prisma";
 import { getStreakState } from "@/lib/athlete/streak-engine";
+import { getNotificationHref } from "@/lib/notifications/deep-links";
+import type { NotificationItem } from "@/lib/notifications";
 
 /**
  * Athlete home/dashboard DTO. Drives the front-door surface — greeting +
@@ -16,7 +18,38 @@ export type AthleteDashboardDTO = {
   today: TodayCardDTO | null;
   week: WeekStripDTO;
   recent: RecentMomentsDTO;
+  /** Recent coach-originated activity (comments, new sessions, drill videos, programming
+   *  changes). Empty array → section hidden on Home. Capped at 3. */
+  coachUpdates: CoachUpdateDTO[];
 };
+
+/** Surfaces coach communication on Home so the athlete sees it in the daily loop
+ *  instead of only via the top-bar bell. Filtered to types where the source is a
+ *  coach action — never system pings (PR_ALERT, STREAK_BROKEN, WEEKLY_RECAP). */
+export type CoachUpdateKind =
+  | "COMMENT_ADDED"
+  | "WORKOUT_ASSIGNED"
+  | "VIDEO_SHARED"
+  | "COMPLEX_ROTATED"
+  | "PROGRAM_CHECKPOINT";
+
+export type CoachUpdateDTO = {
+  id: string;
+  kind: CoachUpdateKind;
+  title: string;
+  body: string;
+  href: string;
+  createdAt: string;
+  isUnread: boolean;
+};
+
+const COACH_UPDATE_TYPES: CoachUpdateKind[] = [
+  "COMMENT_ADDED",
+  "WORKOUT_ASSIGNED",
+  "VIDEO_SHARED",
+  "COMPLEX_ROTATED",
+  "PROGRAM_CHECKPOINT",
+];
 
 export type TodayCardDTO = {
   sessionId: string;
@@ -100,83 +133,112 @@ export async function loadAthleteDashboard(
   const endOfToday = addDays(startOfToday, 1);
   const startOfWeek = startOfMonday(now);
   const endOfWeek = addDays(startOfWeek, 7);
+  // Coach-update window: 14 days back. Anything older has stopped being
+  // a "from your coach" signal and belongs in the notifications inbox.
+  const coachUpdatesSince = addDays(startOfToday, -14);
 
-  const [latestReadiness, todaySession, weekSessions, lastPR, lastCompletedSession, streakState] =
-    await Promise.all([
-      prisma.readinessCheckIn.findFirst({
-        where: { athleteId: athleteProfileId },
-        orderBy: { date: "desc" },
-        select: { overallScore: true, date: true, source: true },
-      }),
-      prisma.trainingSession.findFirst({
-        where: {
-          athleteId: athleteProfileId,
-          scheduledDate: { gte: startOfToday, lt: endOfToday },
-        },
-        orderBy: { scheduledDate: "asc" },
-        select: {
-          id: true,
-          status: true,
-          scheduledDate: true,
-          plan: {
-            select: {
-              name: true,
-              description: true,
-              event: true,
-              blocks: {
-                orderBy: { order: "asc" },
-                select: {
-                  order: true,
-                  blockType: true,
-                  name: true,
-                  exercises: {
-                    orderBy: { order: "asc" },
-                    select: { implementKg: true, sets: true, exercise: { select: { name: true } } },
-                  },
+  const [
+    latestReadiness,
+    todaySession,
+    weekSessions,
+    lastPR,
+    lastCompletedSession,
+    streakState,
+    coachUpdateRows,
+  ] = await Promise.all([
+    prisma.readinessCheckIn.findFirst({
+      where: { athleteId: athleteProfileId },
+      orderBy: { date: "desc" },
+      select: { overallScore: true, date: true, source: true },
+    }),
+    prisma.trainingSession.findFirst({
+      where: {
+        athleteId: athleteProfileId,
+        scheduledDate: { gte: startOfToday, lt: endOfToday },
+      },
+      orderBy: { scheduledDate: "asc" },
+      select: {
+        id: true,
+        status: true,
+        scheduledDate: true,
+        plan: {
+          select: {
+            name: true,
+            description: true,
+            event: true,
+            blocks: {
+              orderBy: { order: "asc" },
+              select: {
+                order: true,
+                blockType: true,
+                name: true,
+                exercises: {
+                  orderBy: { order: "asc" },
+                  select: { implementKg: true, sets: true, exercise: { select: { name: true } } },
                 },
               },
             },
           },
         },
-      }),
-      prisma.trainingSession.findMany({
-        where: {
-          athleteId: athleteProfileId,
-          scheduledDate: { gte: startOfWeek, lt: endOfWeek },
+      },
+    }),
+    prisma.trainingSession.findMany({
+      where: {
+        athleteId: athleteProfileId,
+        scheduledDate: { gte: startOfWeek, lt: endOfWeek },
+      },
+      orderBy: { scheduledDate: "asc" },
+      select: { id: true, scheduledDate: true, status: true },
+    }),
+    prisma.throwLog.findFirst({
+      where: { athleteId: athleteProfileId, isPersonalBest: true, distance: { not: null } },
+      orderBy: { date: "desc" },
+      select: {
+        id: true,
+        event: true,
+        distance: true,
+        date: true,
+        competitionId: true,
+        competition: { select: { name: true } },
+      },
+    }),
+    prisma.trainingSession.findFirst({
+      where: {
+        athleteId: athleteProfileId,
+        status: { in: ["COMPLETED", "IN_PROGRESS"] },
+        scheduledDate: { lt: startOfToday },
+      },
+      orderBy: { scheduledDate: "desc" },
+      select: {
+        id: true,
+        scheduledDate: true,
+        plan: { select: { event: true } },
+        throwLogs: {
+          select: { distance: true, rpe: true },
         },
-        orderBy: { scheduledDate: "asc" },
-        select: { id: true, scheduledDate: true, status: true },
-      }),
-      prisma.throwLog.findFirst({
-        where: { athleteId: athleteProfileId, isPersonalBest: true, distance: { not: null } },
-        orderBy: { date: "desc" },
-        select: {
-          id: true,
-          event: true,
-          distance: true,
-          date: true,
-          competitionId: true,
-          competition: { select: { name: true } },
-        },
-      }),
-      prisma.trainingSession.findFirst({
-        where: {
-          athleteId: athleteProfileId,
-          status: { in: ["COMPLETED", "IN_PROGRESS"] },
-          scheduledDate: { lt: startOfToday },
-        },
-        orderBy: { scheduledDate: "desc" },
-        select: {
-          id: true,
-          scheduledDate: true,
-          plan: { select: { event: true } },
-          throwLogs: {
-            select: { distance: true, rpe: true },
-          },
-        },
-      }),
-      getStreakState(athleteProfileId),
-    ]);
+      },
+    }),
+    getStreakState(athleteProfileId),
+    prisma.notification.findMany({
+      where: {
+        athleteProfileId,
+        type: { in: COACH_UPDATE_TYPES },
+        createdAt: { gte: coachUpdatesSince },
+      },
+      orderBy: { createdAt: "desc" },
+      take: 3,
+      select: {
+        id: true,
+        type: true,
+        title: true,
+        body: true,
+        read: true,
+        createdAt: true,
+        metadata: true,
+        athleteProfileId: true,
+      },
+    }),
+  ]);
 
   // Previous-best lookup runs only if we have a PR — keeps the always-on
   // query count tight (one extra round-trip in the rare PR-on-file path).
@@ -213,6 +275,40 @@ export async function loadAthleteDashboard(
         ? { count: streakState.currentStreak, longest: streakState.longestStreak }
         : null,
     },
+    coachUpdates: coachUpdateRows.map(buildCoachUpdate),
+  };
+}
+
+function buildCoachUpdate(row: {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  read: boolean;
+  createdAt: Date;
+  metadata: unknown;
+  athleteProfileId: string | null;
+}): CoachUpdateDTO {
+  // Reuse the canonical deep-link resolver so a tap on Home lands on the same
+  // surface as a tap from the notifications inbox.
+  const itemForHref: NotificationItem = {
+    id: row.id,
+    type: row.type,
+    title: row.title,
+    body: row.body,
+    read: row.read,
+    athleteProfileId: row.athleteProfileId,
+    metadata: (row.metadata as Record<string, unknown> | null) ?? null,
+    createdAt: row.createdAt.toISOString(),
+  };
+  return {
+    id: row.id,
+    kind: row.type as CoachUpdateKind,
+    title: row.title,
+    body: row.body,
+    href: getNotificationHref(itemForHref, "ATHLETE"),
+    createdAt: row.createdAt.toISOString(),
+    isUnread: !row.read,
   };
 }
 
