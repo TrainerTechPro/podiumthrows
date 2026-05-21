@@ -110,7 +110,7 @@ export function BottomTabBar() {
   return (
     <nav
       className={cn(
-        "fixed bottom-0 inset-x-0 z-30",
+        "shrink-0 w-full z-30",
         "bg-[var(--color-bg-surface)] border-t border-[var(--color-border-default)]",
         "flex items-stretch justify-around",
         "min-h-16"

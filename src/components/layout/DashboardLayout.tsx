@@ -454,12 +454,10 @@ function AthleteShell({ user, children, className, notificationCount }: Dashboar
       <main
         id="main-content"
         className={cn("flex-1 overflow-y-auto custom-scrollbar", "px-4 sm:px-6 py-5", className)}
-        // In focus mode the tab bar is hidden, so main only needs safe-area padding.
-        // Otherwise reserve tab-bar height (64) + safe-area + breathing room.
+        // The tab bar is a real shell row, not a viewport-fixed overlay, so
+        // main only needs breathing room plus safe-area in focused flows.
         style={{
-          paddingBottom: focusMode
-            ? "calc(1rem + env(safe-area-inset-bottom, 0px))"
-            : "calc(5rem + env(safe-area-inset-bottom, 0px))",
+          paddingBottom: focusMode ? "calc(1rem + env(safe-area-inset-bottom, 0px))" : "1rem",
         }}
       >
         <PullToRefresh
