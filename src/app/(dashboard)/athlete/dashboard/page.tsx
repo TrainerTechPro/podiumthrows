@@ -18,10 +18,13 @@ export default async function AthleteDashboardPage() {
 
   const dto = await loadAthleteDashboard(athlete.id, athlete.firstName);
 
+  const now = new Date();
+
   return (
     <AthleteHomeClient
       initial={dto}
-      hour={new Date().getHours()}
+      hour={now.getHours()}
+      nowMs={now.getTime()}
       athleteId={athlete.id}
       masterProfileComplete={athlete.masterProfileCompletedAt != null}
     />
