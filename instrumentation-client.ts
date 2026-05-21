@@ -13,11 +13,10 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
 
-  integrations: [
-    Sentry.replayIntegration(),
-    Sentry.browserTracingIntegration(),
-  ],
+  integrations: [Sentry.replayIntegration(), Sentry.browserTracingIntegration()],
 
   // Don't send PII by default — coaches manage athlete data
   sendDefaultPii: false,
 });
+
+export const onRouterTransitionStart = Sentry.captureRouterTransitionStart;

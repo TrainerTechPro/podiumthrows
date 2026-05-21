@@ -275,6 +275,8 @@
 
   html {
     @apply antialiased;
+    min-height: 100%;
+    background: var(--background);
   }
 
   /* Touch device detection — show controls that are hidden behind hover */
@@ -286,6 +288,8 @@
 
   body {
     @apply bg-[var(--background)] text-[var(--foreground)] font-body;
+    min-height: var(--podium-viewport-height, 100dvh);
+    overscroll-behavior-y: none;
   }
 
   h1,

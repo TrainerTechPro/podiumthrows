@@ -125,6 +125,9 @@ export default async function RootLayout({
             {`(function(){try{if(window.matchMedia('(prefers-color-scheme: dark)').matches){document.documentElement.classList.add('dark');}}catch(e){}})();`}
           </Script>
         )}
+        <Script id="viewport-height-init" strategy="beforeInteractive">
+          {`(function(){try{var r=document.documentElement;function set(){var h=(window.visualViewport&&window.visualViewport.height)||window.innerHeight;if(h){r.style.setProperty('--podium-viewport-height',h+'px');}}set();requestAnimationFrame(set);setTimeout(set,250);setTimeout(set,1000);window.addEventListener('resize',set,{passive:true});window.addEventListener('orientationchange',function(){setTimeout(set,250);},{passive:true});if(window.visualViewport){window.visualViewport.addEventListener('resize',set,{passive:true});window.visualViewport.addEventListener('scroll',set,{passive:true});}}catch(e){}})();`}
+        </Script>
       </head>
       <body>
         <ServiceWorkerProvider>{children}</ServiceWorkerProvider>

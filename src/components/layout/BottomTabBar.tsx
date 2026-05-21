@@ -113,9 +113,12 @@ export function BottomTabBar() {
         "fixed bottom-0 inset-x-0 z-30",
         "bg-[var(--color-bg-surface)] border-t border-[var(--color-border-default)]",
         "flex items-stretch justify-around",
-        "h-16"
+        "min-h-16"
       )}
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      style={{
+        height: "calc(4rem + env(safe-area-inset-bottom, 0px))",
+        paddingBottom: "env(safe-area-inset-bottom, 0px)",
+      }}
       aria-label="Primary"
     >
       {TABS.map((tab) => {
