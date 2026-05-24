@@ -53,8 +53,7 @@ Engineering / testing / DB / design / docs protocols live in `CLAUDE-standards.m
 - Cloudflare R2 video storage
 - Tailwind 3.4, custom theme, `darkMode: "class"`
 - Custom component library (~23 components) — **no shadcn, no MUI, no Chakra, no new UI deps**
-- Fonts: Plus Jakarta Sans (headings) + DM Sans (body) + JetBrains Mono (data only).
-  Historical note: heading + mono fonts were swapped 2026-05-23 (was Chakra Petch + IBM Plex Mono). CSS variable names `--font-chakra-petch` and `--font-ibm-plex-mono` were kept in place to avoid touching ~40 marketing files; the underlying loaded font is now Plus Jakarta / JetBrains. A future cleanup PR can rename the vars.
+- Fonts: Chakra Petch (headings) + DM Sans (body) + IBM Plex Mono (data only)
 - Brand: amber/gold `#FFC800`
 
 ### Directories
@@ -391,9 +390,9 @@ If you need to add hex outside the allowlist, **first** check whether a token wo
 
 ### Typography
 
-- Headings: `font-heading` (Plus Jakarta Sans, auto h1-h6).
+- Headings: `font-heading` (Chakra Petch, auto h1-h6).
 - Body: `font-body` (DM Sans, auto on body).
-- Data: `font-mono` (JetBrains Mono — distances, timestamps, stats, IDs only).
+- Data: `font-mono` (IBM Plex Mono — distances, timestamps, stats, IDs only).
 - Section headers: `text-sm font-semibold text-muted uppercase tracking-wider`.
 - Numerics: `tabular-nums`.
 - **Never `font-mono` for prose, labels, or marketing.**

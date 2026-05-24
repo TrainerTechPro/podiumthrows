@@ -102,14 +102,11 @@
 
     /* Surfaces.  Canvas = page background.  Surface = card.  Raised =
        overlay/modal/popover (MUST be opaque — see design-system rules).
-       Sunken = muted section background (input wells, code, quote).
-       Light theme retuned 2026-05-23 to a warm neumorphic gray. Cards share
-       the same surface — shadows (--neo-raised / --neo-inset) define the edge,
-       not borders. */
-    --color-bg-canvas:          #E0E5EC;
-    --color-bg-surface:         #E0E5EC;
-    --color-bg-surface-raised:  #E8EDF4;
-    --color-bg-surface-sunken:  #D1D9E6;
+       Sunken = muted section background (input wells, code, quote). */
+    --color-bg-canvas:          var(--palette-neutral-50);
+    --color-bg-surface:         var(--palette-neutral-0);
+    --color-bg-surface-raised:  var(--palette-neutral-0);
+    --color-bg-surface-sunken:  var(--palette-neutral-100);
 
     /* Decorative translucency — opt-in only. Never use on overlay content
        where the parent isn't guaranteed opaque. See CLAUDE.md overlay rule. */
@@ -160,24 +157,23 @@
     --surface-overlay:  var(--color-bg-surface-raised);
     --surface-glass:    var(--color-bg-glass);
 
-    /* Neomorphic shadow tokens — tuned 2026-05-23 to mockup strength.
-       The illusion needs a warm-gray surface (not near-white) for the
-       white highlight to read. Light-mode canvas was retuned to #E0E5EC
-       in the bg-canvas block above. Shadow offsets ~2x, blur ~2x prior. */
-    --neo-highlight: rgba(255, 255, 255, 0.55);
-    --neo-depth: rgba(163, 177, 198, 0.65);
+    /* Neomorphic shadow tokens — theme-dependent because the highlight
+       and depth values depend on surface luminance. Light mode: strong
+       white highlight + soft neutral depth on near-white surfaces. */
+    --neo-highlight: rgba(255, 255, 255, 1);
+    --neo-depth: rgba(17, 17, 22, 0.08);
     --neo-raised:
-      -9px -9px 16px var(--neo-highlight),
-      9px 9px 16px var(--neo-depth);
+      -4px -4px 10px var(--neo-highlight),
+      4px 4px 14px var(--neo-depth);
     --neo-raised-sm:
-      -5px -5px 10px var(--neo-highlight),
-      5px 5px 10px var(--neo-depth);
+      -2px -2px 5px var(--neo-highlight),
+      2px 2px 7px var(--neo-depth);
     --neo-inset:
-      inset 6px 6px 10px var(--neo-depth),
-      inset -6px -6px 10px var(--neo-highlight);
+      inset 3px 3px 7px var(--neo-depth),
+      inset -3px -3px 7px var(--neo-highlight);
     --neo-inset-sm:
-      inset 3px 3px 6px var(--neo-depth),
-      inset -3px -3px 6px var(--neo-highlight);
+      inset 2px 2px 4px var(--neo-depth),
+      inset -2px -2px 4px var(--neo-highlight);
     --neo-glow-primary: 0 0 14px rgba(255, 200, 0, 0.28);
     --neo-glow-primary-strong: 0 0 20px rgba(255, 200, 0, 0.4);
 
@@ -321,8 +317,7 @@
      Use for any rounded surface that ISN'T clip-path'd (the cyberpunk
      .card variant keeps its cut corners + hairline border). */
   .card-rounded {
-    @apply bg-[var(--card-bg)];
-    border-radius: 2rem; /* 32px — neumorphic pillow radius (2026-05-23) */
+    @apply bg-[var(--card-bg)] rounded-2xl;
     box-shadow: var(--neo-raised);
   }
 
