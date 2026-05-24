@@ -210,11 +210,15 @@
   /* Only override tokens that CHANGE. Layer 3 aliases cascade automatically
      because custom properties resolve at use-site. */
   .dark {
-    /* Surfaces.  Ratios: primary text on surface → 14.8:1  AAA */
-    --color-bg-canvas:          var(--palette-neutral-900);
-    --color-bg-surface:         var(--palette-dark-surface);
-    --color-bg-surface-raised:  var(--palette-dark-surface-raised);
-    --color-bg-surface-sunken:  var(--palette-dark-surface-sunken);
+    /* Surfaces — retuned 2026-05-23 for amber-tinted dark neumorphism.
+       Canvas lifted off near-black (#22262F) so the upper-left highlight
+       has contrast room. Cards share canvas; sunken is deeper for inset
+       wells; raised is lighter for opaque overlays (modals/popovers).
+       Ratios on #22262F: primary text #e8e8ea → 13.4:1 AAA. */
+    --color-bg-canvas:          #22262F;
+    --color-bg-surface:         #22262F;
+    --color-bg-surface-raised:  #2C313D;
+    --color-bg-surface-sunken:  #1B1E26;
     --color-bg-glass:           rgba(255, 255, 255, 0.04);
 
     /* Borders — amber-tinted hairlines to feel branded on dark surfaces. */
@@ -245,10 +249,13 @@
     --color-status-info-fg:     var(--palette-info-vivid);
     --color-status-info-bg:     rgba(96, 165, 250, 0.10);
 
-    /* Neomorphic shadow overrides — base is already near-black so we lean
-       on a glowier highlight rather than a deeper shadow for depth. */
-    --neo-highlight: rgba(255, 255, 255, 0.035);
-    --neo-depth: rgba(0, 0, 0, 0.65);
+    /* Neomorphic shadow overrides — amber-tinted highlight ties dark
+       mode to the Podium brand identity (instead of generic dark UI).
+       Same approach the landing pages use via --landing-neo-highlight.
+       Depth softened to 0.50 since the offset bump (9/9/16) was making
+       0.65 read as a heavy halo on the warm-dark surface. */
+    --neo-highlight: rgba(255, 200, 0, 0.04);
+    --neo-depth: rgba(0, 0, 0, 0.50);
     --neo-glow-primary: 0 0 14px rgba(255, 200, 0, 0.3);
     --neo-glow-primary-strong: 0 0 22px rgba(255, 200, 0, 0.5);
     /* --neo-raised, --neo-inset, etc. reference --neo-highlight/--neo-depth
