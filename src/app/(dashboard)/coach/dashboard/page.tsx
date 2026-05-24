@@ -53,8 +53,6 @@ import { AnalyticsSection } from "./_analytics-section";
 import { ThisWeek } from "./_this-week";
 import { FeedbackQueue } from "./_feedback-queue";
 import { fetchCoachFeedbackInbox } from "@/lib/data/coach-feedback-inbox";
-import { NeoStat } from "@/components/ui/NeoStat";
-import { NeoCard } from "@/components/ui/NeoCard";
 
 import { logger } from "@/lib/logger";
 /* ─── Coach Dashboard — editorial, scientific, back-office ────────────────────
@@ -97,6 +95,40 @@ function formatEventName(event: string): string {
     .replace(/_/g, " ")
     .toLowerCase()
     .replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
+/* ─── Editorial Section Header ───────────────────────────────────────────
+   One consistent pattern for every section. No uppercase tracking-wider —
+   that register is reserved for labels, not headings. Editorial weight. */
+function SectionHeader({
+  title,
+  context,
+  action,
+}: {
+  title: string;
+  context?: string;
+  action?: { label: string; href: string };
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3 mb-4 pb-3 border-b border-[var(--color-border-default)]">
+      <div className="flex items-baseline gap-2.5 min-w-0">
+        <h2 className="font-heading text-body-lg font-semibold text-[var(--color-text-primary)] tracking-tight">
+          {title}
+        </h2>
+        {context && (
+          <span className="text-xs text-[var(--color-text-secondary)] truncate">{context}</span>
+        )}
+      </div>
+      {action && (
+        <Link
+          href={action.href}
+          className="text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors shrink-0"
+        >
+          {action.label} →
+        </Link>
+      )}
+    </div>
+  );
 }
 
 /* ─── Activity Feed ──────────────────────────────────────────────────────── */
@@ -361,143 +393,201 @@ function ReadinessSparkline({
 function ReadinessWidget({ entries }: { entries: TeamReadinessEntry[] }) {
   if (entries.length === 0) {
     return (
-      <p className="text-sm text-[var(--color-text-secondary)] py-2">
-        No check-ins yet — readiness sparks land here once your athletes start logging.
-      </p>
+      <section aria-labelledby="readiness-heading">
+        <SectionHeader title="Team readiness" context="last 28 days" />
+        <p className="text-sm text-[var(--color-text-secondary)] py-2">
+          No check-ins yet — readiness sparks land here once your athletes start logging.
+        </p>
+      </section>
     );
   }
 
   return (
-    <ul className="divide-y divide-[var(--color-border-default)]">
-      {entries.map((entry) => {
-        const pct =
-          entry.maxScore > 0 && entry.latestScore !== null
-            ? (entry.latestScore / entry.maxScore) * 100
-            : 0;
-        const strokeVar =
-          pct >= 70
-            ? "var(--color-status-success-fg)"
-            : pct >= 40
-              ? "var(--color-status-warning-fg)"
-              : "var(--color-status-danger-fg)";
+    <section aria-labelledby="readiness-heading">
+      <SectionHeader title="Team readiness" context="last 28 days" />
+      <ul className="divide-y divide-[var(--color-border-default)]">
+        {entries.map((entry) => {
+          const pct =
+            entry.maxScore > 0 && entry.latestScore !== null
+              ? (entry.latestScore / entry.maxScore) * 100
+              : 0;
+          const strokeVar =
+            pct >= 70
+              ? "var(--color-status-success-fg)"
+              : pct >= 40
+                ? "var(--color-status-warning-fg)"
+                : "var(--color-status-danger-fg)";
 
-        return (
-          <li key={entry.athleteId}>
-            <Link
-              href={`/coach/athletes/${entry.athleteId}`}
-              className="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded hover:bg-[var(--color-bg-surface-sunken)] transition-colors"
-            >
-              <Avatar name={entry.athleteName} src={entry.avatarUrl} size="sm" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
-                  {entry.athleteName}
-                </p>
-                <div className="mt-0.5">
-                  <ReadinessSparkline
-                    series={entry.series}
-                    maxScore={entry.maxScore}
-                    strokeVar={strokeVar}
-                  />
+          return (
+            <li key={entry.athleteId}>
+              <Link
+                href={`/coach/athletes/${entry.athleteId}`}
+                className="flex items-center gap-3 py-2.5 -mx-2 px-2 rounded hover:bg-[var(--color-bg-surface-sunken)] transition-colors"
+              >
+                <Avatar name={entry.athleteName} src={entry.avatarUrl} size="sm" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-[var(--color-text-primary)] truncate">
+                    {entry.athleteName}
+                  </p>
+                  <div className="mt-0.5">
+                    <ReadinessSparkline
+                      series={entry.series}
+                      maxScore={entry.maxScore}
+                      strokeVar={strokeVar}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <TrendIcon trend={entry.trend} />
-                <span className="text-sm font-semibold tabular-nums" style={{ color: strokeVar }}>
-                  {entry.latestScore !== null ? entry.latestScore.toFixed(1) : "—"}
-                </span>
-                <span className="text-nano text-[var(--color-text-secondary)]">
-                  / {entry.maxScore}
-                </span>
-              </div>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <TrendIcon trend={entry.trend} />
+                  <span className="text-sm font-semibold tabular-nums" style={{ color: strokeVar }}>
+                    {entry.latestScore !== null ? entry.latestScore.toFixed(1) : "—"}
+                  </span>
+                  <span className="text-nano text-[var(--color-text-secondary)]">
+                    / {entry.maxScore}
+                  </span>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }
 
-/* ─── Stat Grid — the page's top-of-fold metrics in NeoStat tiles ─────────
-   Five neumorphic tiles. The whole tile is a Link so the data point is
-   the navigation target — same surfaces the old inline MetaBar pointed at. */
+/* ─── Meta Bar — the editorial page header ──────────────────────────────
+   Dense, one-line (wraps on narrow), fact-first. No greeting. The date
+   is the heading; every number stands on its own weight. Color is reserved
+   for signals the coach needs to act on (PR, warning, danger). */
 
-function complianceTone(rate: number | null): "success" | "danger" | "muted" {
-  if (rate == null) return "muted";
-  if (rate >= 80) return "success";
-  if (rate < 60) return "danger";
-  return "muted";
-}
-
-function attendanceTone(rate: number): "success" | "danger" | "muted" {
-  if (rate >= 90) return "success";
-  if (rate >= 75) return "muted";
-  return "danger";
-}
-
-function StatGrid({
+function MetaBar({
+  today,
   totalAthletes,
   sessionsToday,
   complianceRate,
   throwsThisWeek,
   attendance,
 }: {
+  today: string;
   totalAthletes: number;
   sessionsToday: number;
   complianceRate: number | null;
   throwsThisWeek: number;
-  attendance: { rate: number; totalPractices: number } | null;
+  attendance: {
+    rate: number;
+    totalPractices: number;
+    flaggedCount: number;
+  } | null;
 }) {
+  // Editorial-grade link: looks like the surrounding text, underlines on hover.
+  // Every linked number lands on a filtered surface — see tasks/mvp-weekly-loop.md.
+  const linkCls =
+    "hover:underline underline-offset-2 decoration-[var(--color-text-secondary)] focus-visible:outline-none focus-visible:underline";
   return (
-    <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-      <Link href="/coach/athletes" aria-label={`${totalAthletes} athletes — open roster`}>
-        <NeoStat
-          label="Roster"
-          value={totalAthletes}
-          unit={totalAthletes === 1 ? "athlete" : "athletes"}
-        />
-      </Link>
+    <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1.5 text-sm text-[var(--color-text-secondary)]">
+      <span className="text-[var(--color-text-primary)] font-medium">{today}</span>
 
-      <Link href="/coach/calendar" aria-label={`${sessionsToday} sessions today — open calendar`}>
-        <NeoStat
-          label="Today"
-          value={sessionsToday}
-          unit={sessionsToday === 1 ? "session" : "sessions"}
-          accent={sessionsToday > 0}
-        />
-      </Link>
-
-      <NeoStat
-        label="Compliance"
-        value={complianceRate ?? "—"}
-        unit={complianceRate != null ? "%" : undefined}
-        sublabel="last 30 days"
-        sublabelVariant={complianceTone(complianceRate)}
-      />
+      <Dot />
 
       <Link
-        href="/coach/athletes?tab=throws"
-        aria-label={`${throwsThisWeek} throws this week — open team throws view`}
+        href="/coach/athletes"
+        className={linkCls}
+        aria-label={`${totalAthletes} athletes — open roster`}
       >
-        <NeoStat label="Throws" value={throwsThisWeek} sublabel="this week" />
+        <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">
+          {totalAthletes}
+        </span>{" "}
+        athlete{totalAthletes === 1 ? "" : "s"}
       </Link>
 
-      {attendance !== null && attendance.totalPractices > 0 ? (
-        <Link
-          href="/coach/calendar"
-          aria-label={`${attendance.rate}% attendance this week — open calendar`}
-        >
-          <NeoStat
-            label="Attendance"
-            value={attendance.rate}
-            unit="%"
-            sublabel="this week"
-            sublabelVariant={attendanceTone(attendance.rate)}
-          />
-        </Link>
-      ) : (
-        <NeoStat label="Attendance" value="—" sublabel="no practices yet" />
+      {sessionsToday > 0 && (
+        <>
+          <Dot />
+          <Link
+            href="/coach/calendar"
+            className={linkCls}
+            aria-label={`${sessionsToday} sessions today — open calendar`}
+          >
+            <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">
+              {sessionsToday}
+            </span>{" "}
+            session{sessionsToday === 1 ? "" : "s"} today
+          </Link>
+        </>
+      )}
+
+      {complianceRate !== null && (
+        <>
+          <Dot />
+          <span>
+            <span
+              className="font-semibold tabular-nums"
+              style={{
+                color:
+                  complianceRate >= 80
+                    ? "var(--color-status-success-fg)"
+                    : complianceRate < 60
+                      ? "var(--color-status-warning-fg)"
+                      : "var(--color-text-primary)",
+              }}
+            >
+              {complianceRate}%
+            </span>{" "}
+            compliance · 30d
+          </span>
+        </>
+      )}
+
+      {throwsThisWeek > 0 && (
+        <>
+          <Dot />
+          <Link
+            href="/coach/athletes?tab=throws"
+            className={linkCls}
+            aria-label={`${throwsThisWeek} throws this week — open team throws view`}
+          >
+            <span className="font-semibold tabular-nums text-[var(--color-text-primary)]">
+              {throwsThisWeek}
+            </span>{" "}
+            throws this week
+          </Link>
+        </>
+      )}
+
+      {attendance !== null && attendance.totalPractices > 0 && (
+        <>
+          <Dot />
+          <Link
+            href="/coach/calendar"
+            className={linkCls}
+            aria-label={`${attendance.rate}% attendance this week — open calendar`}
+          >
+            <span
+              className="font-semibold tabular-nums"
+              style={{
+                color:
+                  attendance.rate >= 90
+                    ? "var(--color-status-success-fg)"
+                    : attendance.rate >= 75
+                      ? "var(--color-status-warning-fg)"
+                      : "var(--color-status-danger-fg)",
+              }}
+            >
+              {attendance.rate}%
+            </span>{" "}
+            attendance · this week
+          </Link>
+        </>
       )}
     </div>
+  );
+}
+
+function Dot() {
+  return (
+    <span aria-hidden="true" className="opacity-40">
+      ·
+    </span>
   );
 }
 
@@ -775,98 +865,96 @@ export default async function CoachDashboardPage() {
           <ModeSelector mode={mode} depth={depth} />
         </div>
 
-        <p className="text-sm text-[var(--color-text-secondary)]">{today}</p>
+        <MetaBar
+          today={today}
+          totalAthletes={stats.totalAthletes}
+          sessionsToday={stats.sessionsToday}
+          complianceRate={stats.complianceRate}
+          throwsThisWeek={stats.throwsThisWeek}
+          attendance={
+            teamAttendance
+              ? {
+                  rate: teamAttendance.rate,
+                  totalPractices: teamAttendance.totalPractices,
+                  flaggedCount: teamAttendance.flaggedAthletes.length,
+                }
+              : null
+          }
+        />
       </header>
-
-      <StatGrid
-        totalAthletes={stats.totalAthletes}
-        sessionsToday={stats.sessionsToday}
-        complianceRate={stats.complianceRate}
-        throwsThisWeek={stats.throwsThisWeek}
-        attendance={
-          teamAttendance
-            ? { rate: teamAttendance.rate, totalPractices: teamAttendance.totalPractices }
-            : null
-        }
-      />
 
       {/* ── Triage: injuries ─────────────────────────────────────────── */}
       <InjuryAlert injured={injuredAthletes} />
 
       {/* ── Above the fold ──────────────────────────────────────────────
-          Action queue → readiness risk → this week → PRs → comps. */}
+          Order matches the goal: action queue → roster readiness risk →
+          today's sessions → recent PRs → upcoming competition. Each
+          section uses one SectionHeader pattern. ───────────────────── */}
 
-      <NeoCard label="Action queue">
-        <ActionCards actions={coachingActions} depth={depth} />
-      </NeoCard>
+      {/* 1. Action queue — "who needs me today?" */}
+      <ActionCards actions={coachingActions} depth={depth} />
 
-      <NeoCard label="Team readiness · last 28 days">
-        <ReadinessWidget entries={readiness} />
-      </NeoCard>
+      {/* 2. Roster readiness risk — sparkline list of lowest scores first */}
+      <ReadinessWidget entries={readiness} />
 
-      <NeoCard label="This week">
-        <ThisWeek summary={thisWeek} />
-      </NeoCard>
+      {/* 3. Today + this week — sessions/practices grid */}
+      <ThisWeek summary={thisWeek} />
 
-      <NeoCard label="Recent team PRs">
+      {/* 4. Recent PRs */}
+      <section aria-labelledby="prs-heading">
+        <SectionHeader title="Recent team PRs" />
         <PRBoard prs={teamPRs} />
-      </NeoCard>
+      </section>
 
+      {/* 5. Upcoming competition — always render in competition mode,
+            otherwise only when something is on the calendar. */}
       {(mode === "competition" || competitions.length > 0) && (
-        <NeoCard label="Upcoming competition">
-          <CompetitionCountdown competitions={competitions} />
-        </NeoCard>
+        <CompetitionCountdown competitions={competitions} />
       )}
 
-      {/* ── Slower lens — activity, load, analytics. */}
+      {/* ── Slower lens ────────────────────────────────────────────────
+          Activity stream + training load + analytics live below the
+          fold; coaches who want context scroll, coaches who want a
+          decision get one in the first viewport. ───────────────────── */}
 
-      <NeoCard
-        label="Recent activity"
-        action={
-          <Link
-            href="/coach/athletes"
-            className="text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-          >
-            All athletes →
-          </Link>
-        }
-      >
+      <section aria-labelledby="activity-heading">
+        <SectionHeader
+          title="Recent activity"
+          action={{ label: "All athletes", href: "/coach/athletes" }}
+        />
         <ActivityFeed items={activity} />
-      </NeoCard>
+      </section>
 
       {feedbackQueueRows.length > 0 && (
-        <NeoCard
-          label="Feedback queue"
-          action={
-            <Link
-              href="/coach/feedback-inbox"
-              className="text-xs font-medium text-[var(--color-text-secondary)] hover:text-[var(--color-text-primary)] transition-colors"
-            >
-              Inbox →
-            </Link>
-          }
-        >
+        <section aria-labelledby="feedback-queue-heading">
+          <SectionHeader
+            title="Feedback queue"
+            action={{ label: "Inbox", href: "/coach/feedback-inbox" }}
+          />
           <FeedbackQueue rows={feedbackQueueRows} nowMs={nowMs} />
-        </NeoCard>
+        </section>
       )}
 
-      <NeoCard label="Training load">
+      <section aria-labelledby="load-heading">
+        <SectionHeader title="Training load" />
         <LoadOverview entries={teamLoad} depth={depth} />
-      </NeoCard>
+      </section>
 
       {mode === "training" && depth === "advanced" && adaptationRows.length > 0 && (
-        <NeoCard label="Adaptation status · advanced">
+        <section aria-labelledby="adaptation-heading">
+          <SectionHeader title="Adaptation status" context="advanced" />
           <AdaptationProgress rows={adaptationRows} />
-        </NeoCard>
+        </section>
       )}
-
       {mode === "competition" && (
-        <NeoCard label="Peaking status">
+        <section aria-labelledby="peaking-heading">
+          <SectionHeader title="Peaking status" />
           <PeakingStatus competitions={competitions} readiness={readiness} />
-        </NeoCard>
+        </section>
       )}
 
-      <NeoCard label={`Analytics · last ${analyticsPeriod} days`}>
+      <section aria-labelledby="analytics-heading">
+        <SectionHeader title="Analytics" context={`last ${analyticsPeriod} days`} />
         <AnalyticsSection
           period={analyticsPeriod}
           distanceDelta={distanceDelta}
@@ -876,7 +964,7 @@ export default async function CoachDashboardPage() {
           weeklyVolume={weeklyVolume}
           seasonGains={seasonGains}
         />
-      </NeoCard>
+      </section>
     </div>
   );
 }

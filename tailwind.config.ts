@@ -168,12 +168,6 @@ const config: Config = {
         // CTAs, sticky bars, and surfaces that need to feel "lifted" without
         // radiating amber.
         "warm-md": "0 4px 12px -2px rgb(255 200 0 / 0.08), 0 2px 4px -1px rgb(0 0 0 / 0.3)",
-        "neo-raised": "var(--neo-raised)",
-        "neo-raised-sm": "var(--neo-raised-sm)",
-        "neo-inset": "var(--neo-inset)",
-        "neo-inset-sm": "var(--neo-inset-sm)",
-        "neo-glow": "var(--neo-glow-primary)",
-        "neo-glow-strong": "var(--neo-glow-primary-strong)",
       },
       keyframes: {
         // Existing animations
