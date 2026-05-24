@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Chakra_Petch, DM_Sans, IBM_Plex_Mono } from "next/font/google";
+import { Plus_Jakarta_Sans, DM_Sans, JetBrains_Mono } from "next/font/google";
 import Script from "next/script";
 import { cookies } from "next/headers";
 import { ServiceWorkerProvider } from "@/components/pwa/ServiceWorkerProvider";
@@ -20,11 +20,16 @@ const AxeReporter =
         ssr: false,
       });
 
-const chakraPetch = Chakra_Petch({
+// Brand font swap (2026-05-23): Chakra Petch → Plus Jakarta Sans for headings,
+// IBM Plex Mono → JetBrains Mono for numerics/data. DM Sans body unchanged.
+// CSS variable names are kept (--font-chakra-petch, --font-ibm-plex-mono) so
+// existing references in marketing components keep resolving — the names are
+// historical, the underlying font is now Plus Jakarta / JetBrains Mono.
+const chakraPetch = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-chakra-petch",
   display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: ["500", "600", "700", "800"],
 });
 
 const dmSans = DM_Sans({
@@ -34,7 +39,7 @@ const dmSans = DM_Sans({
   weight: ["400", "500", "600"],
 });
 
-const ibmPlexMono = IBM_Plex_Mono({
+const ibmPlexMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-ibm-plex-mono",
   display: "swap",
