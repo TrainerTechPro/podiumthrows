@@ -25,7 +25,9 @@ function getUpstashLimiter(maxAttempts: number, windowMs: number): Ratelimit {
       const url = process.env.UPSTASH_REDIS_REST_URL;
       const token = process.env.UPSTASH_REDIS_REST_TOKEN;
       if (!url || !token) {
-        throw new Error("UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set when USE_UPSTASH is enabled");
+        throw new Error(
+          "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set when USE_UPSTASH is enabled"
+        );
       }
       redis = new Redis({ url, token });
     }
@@ -89,21 +91,10 @@ interface RateLimitResult {
   retryAfter: number;
 }
 
-export async function rateLimit(
+function memoryLimit(
   identifier: string,
   { maxAttempts, windowMs }: RateLimitOptions
-): Promise<RateLimitResult> {
-  if (USE_UPSTASH) {
-    const limiter = getUpstashLimiter(maxAttempts, windowMs);
-    const { success, remaining, reset } = await limiter.limit(identifier);
-    return {
-      success,
-      remaining,
-      retryAfter: success ? 0 : Math.max(0, reset - Date.now()),
-    };
-  }
-
-  // In-memory fallback
+): RateLimitResult {
   const { count, resetIn } = memoryStore.increment(identifier, windowMs);
   const allowed = count <= maxAttempts;
   return {
@@ -111,4 +102,33 @@ export async function rateLimit(
     remaining: allowed ? maxAttempts - count : 0,
     retryAfter: allowed ? 0 : resetIn,
   };
+}
+
+export async function rateLimit(
+  identifier: string,
+  options: RateLimitOptions
+): Promise<RateLimitResult> {
+  const { maxAttempts, windowMs } = options;
+
+  if (USE_UPSTASH) {
+    try {
+      const limiter = getUpstashLimiter(maxAttempts, windowMs);
+      const { success, remaining, reset } = await limiter.limit(identifier);
+      return {
+        success,
+        remaining,
+        retryAfter: success ? 0 : Math.max(0, reset - Date.now()),
+      };
+    } catch {
+      // Degrade to per-instance in-memory limiting rather than fail-closed:
+      // an Upstash outage/quota error must not 500 every mutation in the app.
+      // Still enforces a (weaker, per-instance) limit instead of failing open.
+      // Deliberately unlogged — this module is imported by middleware, which
+      // keeps its bundle lean and edge-safe (no logger/Sentry, matching
+      // auth-edge/csrf/flags). The degraded result is itself the handling.
+      return memoryLimit(identifier, options);
+    }
+  }
+
+  return memoryLimit(identifier, options);
 }
