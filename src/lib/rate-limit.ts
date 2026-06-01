@@ -6,9 +6,14 @@ import { Redis } from "@upstash/redis";
 // Config
 // ---------------------------------------------------------------------------
 
-const USE_UPSTASH = Boolean(
-  process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-);
+// Accept either the upstream Upstash names or the names Vercel's Upstash
+// (KV) marketplace integration provisions (KV_REST_API_URL / KV_REST_API_TOKEN).
+// The KV_REST_API_* pair is the same REST endpoint + token the @upstash/redis
+// client needs, just under Vercel's KV naming convention.
+const UPSTASH_URL = process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;
+const UPSTASH_TOKEN = process.env.UPSTASH_REDIS_REST_TOKEN || process.env.KV_REST_API_TOKEN;
+
+const USE_UPSTASH = Boolean(UPSTASH_URL && UPSTASH_TOKEN);
 
 // ---------------------------------------------------------------------------
 // Upstash backend (production)
@@ -22,14 +27,12 @@ function getUpstashLimiter(maxAttempts: number, windowMs: number): Ratelimit {
   let limiter = upstashLimiters.get(key);
   if (!limiter) {
     if (!redis) {
-      const url = process.env.UPSTASH_REDIS_REST_URL;
-      const token = process.env.UPSTASH_REDIS_REST_TOKEN;
-      if (!url || !token) {
+      if (!UPSTASH_URL || !UPSTASH_TOKEN) {
         throw new Error(
-          "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set when USE_UPSTASH is enabled"
+          "UPSTASH_REDIS_REST_URL/KV_REST_API_URL and matching token must be set when USE_UPSTASH is enabled"
         );
       }
-      redis = new Redis({ url, token });
+      redis = new Redis({ url: UPSTASH_URL, token: UPSTASH_TOKEN });
     }
     limiter = new Ratelimit({
       redis,

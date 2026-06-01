@@ -6,8 +6,11 @@ let rateLimit: typeof import("../rate-limit").rateLimit;
 
 beforeEach(async () => {
   // Clear env vars BEFORE resetting modules so the fresh module sees no Upstash config
+  // (both the upstream Upstash names and Vercel's KV integration names).
   delete process.env.UPSTASH_REDIS_REST_URL;
   delete process.env.UPSTASH_REDIS_REST_TOKEN;
+  delete process.env.KV_REST_API_URL;
+  delete process.env.KV_REST_API_TOKEN;
   vi.resetModules();
   const mod = await import("../rate-limit");
   rateLimit = mod.rateLimit;
