@@ -8,6 +8,19 @@
  *
  * Full signature verification happens here AND in getSession() (Node.js server
  * context). Middleware uses this to make trustworthy routing/role decisions.
+ *
+ * ⚠️ CONSTRAINT — this does NOT check the logout/rotation token blacklist.
+ * The blacklist lives in Postgres (src/lib/token-blacklist.ts) and the Edge
+ * Runtime can't cheaply hit Prisma on every request, so a token that's been
+ * revoked at logout still passes verifyTokenEdge until its 7-day expiry.
+ * Blacklist enforcement lives ONLY in getSession() (Node runtime).
+ *
+ * Therefore: "verifyTokenEdge returned a payload" means "signature + expiry are
+ * valid," NOT "this session is live." Middleware may use it for routing/role
+ * redirects, but it is NOT sufficient to authorize access to data. Every page
+ * server-component and API route that returns sensitive data MUST call
+ * getSession() itself — never rely on middleware alone as the auth gate, or a
+ * replayed post-logout token will reach the backend.
  */
 
 import * as Sentry from "@sentry/nextjs";
