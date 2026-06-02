@@ -3,6 +3,7 @@ import { requireCoachApi, AuthError, getCoachVideos } from "@/lib/data/coach";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { parseBody, CoachVideoCreateSchema } from "@/lib/api-schemas";
+import { toServeUrl } from "@/lib/r2";
 
 export async function GET(req: NextRequest) {
   try {
@@ -16,7 +17,14 @@ export async function GET(req: NextRequest) {
       search: url.searchParams.get("search") || undefined,
     };
 
-    const videos = await getCoachVideos(coach.id, filters);
+    const rows = await getCoachVideos(coach.id, filters);
+    const videos = await Promise.all(
+      rows.map(async (v) => ({
+        ...v,
+        url: (await toServeUrl(v.url, { key: v.storageKey })) ?? v.url,
+        thumbnailUrl: await toServeUrl(v.thumbnailUrl),
+      }))
+    );
     return NextResponse.json({ success: true, data: { videos } });
   } catch (err) {
     if (err instanceof AuthError) {

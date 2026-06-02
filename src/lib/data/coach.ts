@@ -2906,6 +2906,8 @@ export type VideoListItem = {
   id: string;
   title: string | null;
   url: string;
+  /** R2 object key for the video, when stored in R2. Used to mint presigned GETs. */
+  storageKey: string | null;
   thumbnailUrl: string | null;
   event: string | null;
   category: string | null;
@@ -2978,6 +2980,7 @@ export async function getCoachVideos(
       id: true,
       title: true,
       url: true,
+      storageKey: true,
       thumbnailUrl: true,
       event: true,
       category: true,
@@ -2999,6 +3002,7 @@ export async function getCoachVideos(
       id: v.id,
       title: v.title,
       url: v.url,
+      storageKey: v.storageKey,
       thumbnailUrl: v.thumbnailUrl,
       event: (v.event as string) ?? null,
       category: v.category,

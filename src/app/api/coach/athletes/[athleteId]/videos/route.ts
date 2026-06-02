@@ -8,6 +8,7 @@ import {
   isR2Configured,
   ALLOWED_VIDEO_TYPES,
   MAX_VIDEO_SIZE_MB,
+  toServeUrl,
 } from "@/lib/r2";
 
 export async function POST(
@@ -34,10 +35,7 @@ export async function POST(
   const formData = await request.formData();
   const file = formData.get("video") as File | null;
   if (!file) {
-    return NextResponse.json(
-      { success: false, error: "No video file provided" },
-      { status: 400 }
-    );
+    return NextResponse.json({ success: false, error: "No video file provided" }, { status: 400 });
   }
 
   if (!ALLOWED_VIDEO_TYPES.includes(file.type)) {
@@ -117,5 +115,13 @@ export async function GET(
     take: 50,
   });
 
-  return NextResponse.json({ success: true, data: videos });
+  const data = await Promise.all(
+    videos.map(async (v) => ({
+      ...v,
+      url: (await toServeUrl(v.url, { key: v.r2Key })) ?? v.url,
+      thumbnailUrl: await toServeUrl(v.thumbnailUrl),
+    }))
+  );
+
+  return NextResponse.json({ success: true, data });
 }

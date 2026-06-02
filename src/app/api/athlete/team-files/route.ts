@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/lib/auth";
 import { logger } from "@/lib/logger";
 import { getTeamFiles } from "@/lib/data/team-hub";
+import { toServeUrl } from "@/lib/r2";
 
 /* ─── GET — list team files visible to the authenticated athlete ─────────── */
 
@@ -22,13 +23,19 @@ export async function GET() {
     }
 
     // Athletes see their coach's files (read-only)
-    const data = await getTeamFiles(athlete.coachId);
+    const rows = await getTeamFiles(athlete.coachId);
+    const data = await Promise.all(
+      rows.map(async (f) => ({
+        ...f,
+        fileUrl: (await toServeUrl(f.fileUrl, { key: f.fileKey })) ?? f.fileUrl,
+      }))
+    );
     return NextResponse.json({ success: true, data });
   } catch (err) {
     logger.error("GET /api/athlete/team-files", { context: "api", error: err });
     return NextResponse.json(
       { success: false, error: "Couldn’t fetch team files." },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

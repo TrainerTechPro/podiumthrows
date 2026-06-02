@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireCoachApi, AuthError } from "@/lib/data/coach";
 import { getTeamFiles, createTeamFile } from "@/lib/data/team-hub";
 import { logger } from "@/lib/logger";
+import { toServeUrl } from "@/lib/r2";
 
 const ALLOWED_MIME_TYPES = [
   "application/pdf",
@@ -23,17 +24,20 @@ const MAX_FILE_SIZE = 25 * 1024 * 1024; // 25MB
 export async function GET() {
   try {
     const { coach } = await requireCoachApi();
-    const files = await getTeamFiles(coach.id);
+    const rows = await getTeamFiles(coach.id);
+    const files = await Promise.all(
+      rows.map(async (f) => ({
+        ...f,
+        fileUrl: (await toServeUrl(f.fileUrl, { key: f.fileKey })) ?? f.fileUrl,
+      }))
+    );
     return NextResponse.json({ success: true, data: files });
   } catch (err) {
     if (err instanceof AuthError) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/coach/team-files", { context: "api", error: err });
-    return NextResponse.json(
-      { success: false, error: "Couldn’t fetch files" },
-      { status: 500 },
-    );
+    return NextResponse.json({ success: false, error: "Couldn’t fetch files" }, { status: 500 });
   }
 }
 
@@ -61,21 +65,18 @@ export async function POST(req: NextRequest) {
     ) {
       return NextResponse.json(
         { success: false, error: "name, fileKey, fileUrl, fileSize, mimeType required" },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
     if (!ALLOWED_MIME_TYPES.includes(body.mimeType)) {
-      return NextResponse.json(
-        { success: false, error: "File type not allowed" },
-        { status: 400 },
-      );
+      return NextResponse.json({ success: false, error: "File type not allowed" }, { status: 400 });
     }
 
     if (body.fileSize > MAX_FILE_SIZE) {
       return NextResponse.json(
         { success: false, error: `File too large (max ${MAX_FILE_SIZE / 1024 / 1024}MB)` },
-        { status: 400 },
+        { status: 400 }
       );
     }
 
@@ -94,9 +95,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("POST /api/coach/team-files", { context: "api", error: err });
-    return NextResponse.json(
-      { success: false, error: "Couldn’t register file" },
-      { status: 500 },
-    );
+    return NextResponse.json({ success: false, error: "Couldn’t register file" }, { status: 500 });
   }
 }

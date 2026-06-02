@@ -5,7 +5,13 @@ import { randomUUID } from "crypto";
 import prisma from "@/lib/prisma";
 import { getCurrentUser, canActAsAthlete } from "@/lib/auth";
 import { canAccessAthlete } from "@/lib/authorize";
-import { isR2Configured, uploadSingleFile, getPublicUrl, saveFileLocally } from "@/lib/r2";
+import {
+  isR2Configured,
+  uploadSingleFile,
+  getPublicUrl,
+  saveFileLocally,
+  toServeUrl,
+} from "@/lib/r2";
 import { logger } from "@/lib/logger";
 
 const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB
@@ -109,10 +115,14 @@ export async function GET(request: NextRequest) {
     const pageRows = hasMore ? rows.slice(0, limit) : rows;
     const nextCursor = hasMore ? pageRows[pageRows.length - 1].id : null;
 
-    const videos = pageRows.map((v) => ({
-      ...v,
-      videoUrl: v.filePath.startsWith("http") ? v.filePath : `/api/drill-videos/serve?id=${v.id}`,
-    }));
+    const videos = await Promise.all(
+      pageRows.map(async (v) => ({
+        ...v,
+        videoUrl: v.filePath.startsWith("http")
+          ? ((await toServeUrl(v.filePath)) ?? v.filePath)
+          : `/api/drill-videos/serve?id=${v.id}`,
+      }))
+    );
 
     return NextResponse.json({ success: true, data: { videos, nextCursor } });
   } catch (error) {
