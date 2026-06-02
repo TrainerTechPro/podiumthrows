@@ -4,6 +4,7 @@ import { sendPushToUser } from "@/lib/push";
 import { getPushPreferences } from "@/lib/push/preferences";
 import { logger } from "@/lib/logger";
 import { combineLocalDateTime, resolveTimezone } from "@/lib/dates";
+import { assertCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -20,15 +21,8 @@ export const maxDuration = 60;
  * prior notification rather than stacking a duplicate.
  */
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret) {
-    return NextResponse.json({ success: false, error: "CRON_SECRET not configured" }, { status: 500 });
-  }
-  if (authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = assertCronAuth(req);
+  if (denied) return denied;
 
   try {
     const now = new Date();
@@ -106,9 +100,7 @@ export async function GET(req: NextRequest) {
       }
 
       const title = "Practice in 30 minutes";
-      const body = practice.location
-        ? `${practice.title} — ${practice.location}`
-        : practice.title;
+      const body = practice.location ? `${practice.title} — ${practice.location}` : practice.title;
 
       for (const athlete of eligibleAthletes) {
         try {

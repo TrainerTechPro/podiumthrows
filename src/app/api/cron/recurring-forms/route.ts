@@ -5,6 +5,7 @@ import type { RecurrenceFrequency } from "@/lib/forms/types";
 import { logger } from "@/lib/logger";
 import { getCoachTimezone, getLocalDayOfWeek } from "@/lib/dates";
 import { notifyAthleteQuestionnaireAssigned } from "@/lib/notifications";
+import { assertCronAuth } from "@/lib/cron-auth";
 
 export const maxDuration = 60;
 
@@ -14,19 +15,8 @@ export const maxDuration = 60;
  * Creates assignments for all active recurring schedules that are due today.
  */
 export async function GET(req: NextRequest) {
-  // Verify cron secret (Vercel sets this header for cron jobs)
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret) {
-    return NextResponse.json(
-      { success: false, error: "CRON_SECRET not configured" },
-      { status: 500 }
-    );
-  }
-  if (authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = assertCronAuth(req);
+  if (denied) return denied;
 
   try {
     const now = new Date();

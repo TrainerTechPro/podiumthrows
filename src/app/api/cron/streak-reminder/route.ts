@@ -4,6 +4,7 @@ import { sendPushToUser } from "@/lib/push";
 import { getPushPreferences } from "@/lib/push/preferences";
 import { logger } from "@/lib/logger";
 import { getLocalDate, getLocalHour, resolveTimezone } from "@/lib/dates";
+import { assertCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -29,18 +30,8 @@ const REMIND_HOUR_START = 19; // 7pm local, inclusive
 const REMIND_HOUR_END = 21; //   9pm local, exclusive
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret) {
-    return NextResponse.json(
-      { success: false, error: "CRON_SECRET not configured" },
-      { status: 500 }
-    );
-  }
-  if (authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = assertCronAuth(req);
+  if (denied) return denied;
 
   try {
     const now = new Date();

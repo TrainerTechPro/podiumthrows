@@ -14,20 +14,13 @@ import { NextRequest, NextResponse } from "next/server";
 import { hardDeleteEligibleUsers } from "@/lib/account-delete/helpers";
 import { logAudit } from "@/lib/audit";
 import { logger } from "@/lib/logger";
+import { assertCronAuth } from "@/lib/cron-auth";
 
 export const maxDuration = 60;
 
 export async function GET(req: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    return NextResponse.json(
-      { success: false, error: "CRON_SECRET not configured" },
-      { status: 500 }
-    );
-  }
-  if (req.headers.get("authorization") !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = assertCronAuth(req);
+  if (denied) return denied;
 
   try {
     const startedAt = Date.now();

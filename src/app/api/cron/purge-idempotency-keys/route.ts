@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
+import { assertCronAuth } from "@/lib/cron-auth";
 
 export const maxDuration = 60;
 
@@ -21,16 +22,8 @@ const RETENTION_HOURS = 24;
  * for that one stale request, which is the same risk as no idempotency.
  */
 export async function GET(req: NextRequest) {
-  const cronSecret = process.env.CRON_SECRET;
-  if (!cronSecret) {
-    return NextResponse.json(
-      { success: false, error: "CRON_SECRET not configured" },
-      { status: 500 }
-    );
-  }
-  if (req.headers.get("authorization") !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = assertCronAuth(req);
+  if (denied) return denied;
 
   const cutoff = new Date(Date.now() - RETENTION_HOURS * 60 * 60 * 1000);
 

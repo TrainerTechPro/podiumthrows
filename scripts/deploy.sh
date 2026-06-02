@@ -74,6 +74,19 @@ echo "── Running migrations ──"
 npx prisma migrate deploy
 echo "  ✓ Migrations applied"
 
+# ── Step 3.5: Seed catalog tables (upsert-only, prod-safe) ─────────
+# Catalog tables (implements, performance-test types) are NOT touched by
+# `prisma migrate deploy`. They were historically reseeded only by the
+# dev seed (which wipes data), so new catalog rows never reached prod and
+# features shipped EMPTY (implements + perf-tests, 2026-04-30). These two
+# standalone scripts are upsert-only — no deleteMany — so they're safe to
+# run against prod on every deploy and produce zero diff when unchanged.
+echo ""
+echo "── Seeding catalog tables (idempotent) ──"
+npx tsx scripts/seed-implements.ts
+npx tsx scripts/seed-performance-test-types.ts
+echo "  ✓ Catalog seeds applied"
+
 # ── Step 4: Generate Prisma client (preview only) ──────────────────
 # Prod skips this — Vercel's cloud build runs `prisma generate` on
 # Linux via the postinstall hook, producing a native Linux engine
@@ -153,6 +166,19 @@ if $PROD_MODE; then
     echo "   Check Vercel logs for the failing deployment and fix before redeploying."
     exit 1
   }
+
+  echo ""
+  echo "── Smoke test: health ──"
+  # /api/health pings the DB (SELECT 1) and 503s if it's unreachable. First
+  # probe because a DB-down condition makes every subsequent probe a red
+  # herring — fail fast and roll back on the clearest possible signal.
+  HEALTH_STATUS=$(curl -sS -o /dev/null -w "%{http_code}" --max-time 10 "$SMOKE_URL/api/health" 2>/dev/null)
+  if [[ "$HEALTH_STATUS" == "200" ]]; then
+    echo "  ✓ /api/health 200 — DB reachable"
+  else
+    echo "  ❌ /api/health returned $HEALTH_STATUS, expected 200"
+    rollback_and_exit
+  fi
 
   echo ""
   echo "── Smoke test: auth API ──"
