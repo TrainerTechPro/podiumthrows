@@ -19,6 +19,66 @@ const EVENT_LABELS: Record<string, string> = {
   JAVELIN: "Javelin",
 };
 
+/**
+ * Required age attestation + consent at the point of account creation. Bundling
+ * the "13 or older" confirmation with the Terms/Privacy agreement into one
+ * affirmative checkbox keeps us out of COPPA scope (we don't knowingly collect
+ * data from under-13s) — see the Children's Privacy section of /privacy. Links
+ * open in a new tab so reading a policy doesn't wipe the filled-in form.
+ */
+function AgeConsentCheckbox({
+  id,
+  checked,
+  onChange,
+  invalid,
+}: {
+  id: string;
+  checked: boolean;
+  onChange: (value: boolean) => void;
+  invalid: boolean;
+}) {
+  return (
+    <label
+      htmlFor={id}
+      className="flex items-start gap-2.5 mt-5 cursor-pointer text-caption text-muted leading-relaxed"
+    >
+      <input
+        id={id}
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => onChange(e.target.checked)}
+        aria-invalid={invalid}
+        className="mt-0.5 h-4 w-4 flex-shrink-0 rounded border-surface-300 dark:border-surface-600 text-primary-500 focus:ring-2 focus:ring-primary-500/50"
+        required
+      />
+      <span>
+        I am at least 13 years old and agree to the{" "}
+        <Link
+          href="/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary-600 dark:text-primary-400 hover:underline"
+        >
+          Terms of Service
+        </Link>{" "}
+        and{" "}
+        <Link
+          href="/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-primary-600 dark:text-primary-400 hover:underline"
+        >
+          Privacy Policy
+        </Link>
+        .
+      </span>
+    </label>
+  );
+}
+
+const AGE_CONSENT_ERROR =
+  "Please confirm you are at least 13 years old and agree to the Terms of Service and Privacy Policy.";
+
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -37,8 +97,10 @@ export default function RegisterPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [ageConsent, setAgeConsent] = useState(false);
   const [error, setError] = useState("");
   const [invalidField, setInvalidField] = useState<StandardField | null>(null);
+  const [ageConsentInvalid, setAgeConsentInvalid] = useState(false);
   const [loading, setLoading] = useState(false);
   const standardFormRef = useRef<HTMLFormElement>(null);
 
@@ -54,9 +116,11 @@ export default function RegisterPage() {
   const [claimEmail, setClaimEmail] = useState("");
   const [claimPassword, setClaimPassword] = useState("");
   const [claimConfirmPassword, setClaimConfirmPassword] = useState("");
+  const [claimAgeConsent, setClaimAgeConsent] = useState(false);
   const [claimLoading, setClaimLoading] = useState(false);
   const [claimError, setClaimError] = useState("");
   const [claimInvalidField, setClaimInvalidField] = useState<ClaimField | null>(null);
+  const [claimAgeConsentInvalid, setClaimAgeConsentInvalid] = useState(false);
   const claimFormRef = useRef<HTMLFormElement>(null);
   const [inviteLoading, setInviteLoading] = useState(false);
   const [inviteError, setInviteError] = useState("");
@@ -101,6 +165,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
     setInvalidField(null);
+    setAgeConsentInvalid(false);
 
     const firstMissing: StandardField | null = !firstName
       ? "firstName"
@@ -140,6 +205,12 @@ export default function RegisterPage() {
 
     if (role === "ATHLETE" && !inviteToken) {
       setError("Athletes must register via an invitation link from their coach.");
+      return;
+    }
+
+    if (!ageConsent) {
+      setError(AGE_CONSENT_ERROR);
+      setAgeConsentInvalid(true);
       return;
     }
 
@@ -201,6 +272,7 @@ export default function RegisterPage() {
     e.preventDefault();
     setClaimError("");
     setClaimInvalidField(null);
+    setClaimAgeConsentInvalid(false);
 
     if (!claimEmail || !claimPassword) {
       setClaimError("Email and password are required.");
@@ -221,6 +293,12 @@ export default function RegisterPage() {
       setClaimError("Passwords do not match.");
       setClaimInvalidField("claimConfirmPassword");
       queueMicrotask(() => focusFirstError(claimFormRef.current));
+      return;
+    }
+
+    if (!claimAgeConsent) {
+      setClaimError(AGE_CONSENT_ERROR);
+      setClaimAgeConsentInvalid(true);
       return;
     }
 
@@ -495,6 +573,13 @@ export default function RegisterPage() {
               "Activate My Account"
             )}
           </button>
+
+          <AgeConsentCheckbox
+            id="claimAgeConsent"
+            checked={claimAgeConsent}
+            onChange={setClaimAgeConsent}
+            invalid={claimAgeConsentInvalid}
+          />
         </form>
       </div>
     );
@@ -713,6 +798,13 @@ export default function RegisterPage() {
             "Create Account"
           )}
         </button>
+
+        <AgeConsentCheckbox
+          id="ageConsent"
+          checked={ageConsent}
+          onChange={setAgeConsent}
+          invalid={ageConsentInvalid}
+        />
       </form>
 
       <p className="text-center text-sm text-muted mt-6">

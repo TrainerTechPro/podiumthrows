@@ -7,8 +7,14 @@ type Props = { params: Promise<{ id: string }> };
 
 export async function generateMetadata({ params }: Props) {
   const { id } = await params;
-  const meet = await prisma.throwsCompetition.findUnique({
-    where: { id },
+  const session = await getSession();
+  if (!session) return { title: "Meet — Podium Throws" };
+
+  // Scope the lookup to the requesting coach's own roster — otherwise the
+  // meet name leaks into the browser tab title for any logged-in coach who
+  // guesses an ID, even though the page body (below) correctly 404s them.
+  const meet = await prisma.throwsCompetition.findFirst({
+    where: { id, athlete: { coach: { userId: session.userId } } },
     select: { name: true },
   });
   return { title: meet ? `${meet.name} — Podium Throws` : "Meet — Podium Throws" };

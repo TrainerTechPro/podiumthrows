@@ -35,8 +35,15 @@ export async function blacklistToken(token: string): Promise<void> {
   const expiresAt = extractExpiry(token);
 
   try {
-    await prisma.tokenBlacklist.create({
-      data: { tokenHash, expiresAt },
+    // Idempotent: tokenHash is @unique, so a plain create() throws P2002 the
+    // second time the SAME token is blacklisted — which happens legitimately on
+    // a double sign-out, a logout retry, or two token-rotation flows racing.
+    // upsert makes "already invalidated" the success case instead of an error,
+    // so callers can treat any thrown exception as a genuine invalidation failure.
+    await prisma.tokenBlacklist.upsert({
+      where: { tokenHash },
+      create: { tokenHash, expiresAt },
+      update: {},
     });
   } catch (err) {
     logger.error("Failed to blacklist token — logout may not fully invalidate session", {

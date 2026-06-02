@@ -33,7 +33,7 @@ export default function PrivacyPolicyPage() {
             <h1 className="text-display-sm font-heading text-[var(--foreground)]">
               Privacy Policy
             </h1>
-            <p className="text-sm text-muted">Last updated: May 17, 2026</p>
+            <p className="text-sm text-muted">Last updated: June 1, 2026</p>
           </header>
 
           <div className="prose-custom space-y-6 text-sm text-[var(--foreground)] leading-relaxed">
@@ -172,7 +172,29 @@ export default function PrivacyPolicyPage() {
             </section>
 
             <section className="space-y-3">
-              <h2 className="text-lg font-semibold font-heading">8. Contact</h2>
+              <h2 className="text-lg font-semibold font-heading">8. Children&apos;s Privacy</h2>
+              <p className="text-muted">
+                Podium Throws is intended for users{" "}
+                <strong className="text-[var(--foreground)]">13 years of age or older</strong>. The
+                service is not directed to children under 13, and we do not knowingly collect
+                personal information from anyone under 13. Account creation requires confirming you
+                are at least 13.
+              </p>
+              <p className="text-muted">
+                If you believe a child under 13 has provided us personal information — or that a
+                coach has entered data about an athlete under 13 — contact us at{" "}
+                <a
+                  href="mailto:privacy@podiumthrows.com"
+                  className="text-primary-500 hover:text-primary-400 transition-colors"
+                >
+                  privacy@podiumthrows.com
+                </a>{" "}
+                and we will delete it promptly.
+              </p>
+            </section>
+
+            <section className="space-y-3">
+              <h2 className="text-lg font-semibold font-heading">9. Contact</h2>
               <p className="text-muted">
                 For privacy-related questions, contact us at{" "}
                 <a
