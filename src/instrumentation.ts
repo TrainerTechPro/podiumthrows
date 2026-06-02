@@ -2,10 +2,15 @@ import * as Sentry from "@sentry/nextjs";
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
-    // Fail loud at boot on missing critical env (DB/JWT); warn on degradable
-    // integrations. Edge runtime is skipped — it doesn't carry the full env set.
-    const { validateEnv } = await import("./lib/env");
-    validateEnv();
+    // Fail loud at runtime boot on missing critical env (DB/JWT); warn on
+    // degradable integrations. Edge runtime is skipped — it doesn't carry the
+    // full env set. Skipped during `next build` (page-data collection): the
+    // goal is to fail fast at server start, not to make builds depend on
+    // production secrets being present in the build environment.
+    if (process.env.NEXT_PHASE !== "phase-production-build") {
+      const { validateEnv } = await import("./lib/env");
+      validateEnv();
+    }
 
     await import("../sentry.server.config");
   }
