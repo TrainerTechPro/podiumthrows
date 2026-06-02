@@ -1,8 +1,34 @@
-import { PrismaClient } from "@prisma/client";
+import { Prisma, PrismaClient } from "@prisma/client";
+import { logger } from "@/lib/logger";
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined;
 };
+
+/**
+ * Slow-query threshold (ms). Queries at/over this are logged once, with the
+ * parameterized SQL + duration but NOT bound params (which can hold PII).
+ *
+ * This is the standing early-warning system for scalability regressions — the
+ * N+1, the unbounded scan, the query that's fine at 50 athletes and degrades at
+ * 5,000 — surfaced in prod against real data before it becomes an incident.
+ *
+ * Default: 1000ms in production, off elsewhere. Override with `DB_SLOW_QUERY_MS`
+ * (e.g. `500` to tighten, `0` to disable entirely — which also skips the query
+ * event emission so there's zero overhead when off).
+ */
+export function resolveSlowQueryMs(raw: string | undefined, isProd: boolean): number {
+  if (raw !== undefined) {
+    const n = Number(raw);
+    return Number.isFinite(n) && n > 0 ? n : 0;
+  }
+  return isProd ? 1000 : 0;
+}
+const SLOW_QUERY_MS = resolveSlowQueryMs(
+  process.env.DB_SLOW_QUERY_MS,
+  process.env.NODE_ENV === "production"
+);
+const slowQueryEnabled = SLOW_QUERY_MS > 0;
 
 /**
  * Append `key=value` to a connection URL only if that param isn't already
@@ -45,7 +71,31 @@ export function resolvePooledUrl(): string | undefined {
 
 function createPrismaClient(): PrismaClient {
   const url = resolvePooledUrl();
-  return url ? new PrismaClient({ datasources: { db: { url } } }) : new PrismaClient();
+  const client = new PrismaClient({
+    ...(url ? { datasources: { db: { url } } } : {}),
+    ...(slowQueryEnabled ? { log: [{ level: "query", emit: "event" }] } : {}),
+  });
+
+  if (slowQueryEnabled) {
+    // $on("query") is only typed when the client was built with the query-event
+    // log option; we build options dynamically, so assert the listener shape.
+    (
+      client as unknown as {
+        $on: (event: "query", cb: (e: Prisma.QueryEvent) => void) => void;
+      }
+    ).$on("query", (e) => {
+      if (e.duration >= SLOW_QUERY_MS) {
+        // e.query is parameterized SQL ($1, $2…); e.params (bound values) is
+        // intentionally NOT logged — it can contain PII.
+        logger.warn("slow DB query", {
+          context: "db",
+          metadata: { durationMs: e.duration, query: e.query, target: e.target },
+        });
+      }
+    });
+  }
+
+  return client;
 }
 
 export const prisma = globalForPrisma.prisma ?? createPrismaClient();
