@@ -1,7 +1,28 @@
 import { describe, it, expect, afterEach, vi } from "vitest";
-import { ensureUrlParam, resolvePooledUrl } from "@/lib/prisma";
+import { ensureUrlParam, resolvePooledUrl, resolveSlowQueryMs } from "@/lib/prisma";
 
 afterEach(() => vi.unstubAllEnvs());
+
+describe("resolveSlowQueryMs", () => {
+  it("defaults to 1000 in production when unset", () => {
+    expect(resolveSlowQueryMs(undefined, true)).toBe(1000);
+  });
+
+  it("defaults to 0 (off) outside production when unset", () => {
+    expect(resolveSlowQueryMs(undefined, false)).toBe(0);
+  });
+
+  it("honors an explicit numeric override in any environment", () => {
+    expect(resolveSlowQueryMs("500", false)).toBe(500);
+    expect(resolveSlowQueryMs("500", true)).toBe(500);
+  });
+
+  it("treats 0 / negative / non-numeric as disabled", () => {
+    expect(resolveSlowQueryMs("0", true)).toBe(0);
+    expect(resolveSlowQueryMs("-5", true)).toBe(0);
+    expect(resolveSlowQueryMs("abc", true)).toBe(0);
+  });
+});
 
 describe("ensureUrlParam", () => {
   it("appends with ? when the URL has no query string", () => {
