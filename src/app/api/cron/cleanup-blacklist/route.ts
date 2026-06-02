@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cleanupExpired } from "@/lib/token-blacklist";
 import { logger } from "@/lib/logger";
+import { assertCronAuth } from "@/lib/cron-auth";
 
 export const maxDuration = 60;
 
@@ -10,19 +11,15 @@ export const maxDuration = 60;
  * Deletes expired entries from the TokenBlacklist table.
  */
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret) {
-    return NextResponse.json({ success: false, error: "CRON_SECRET not configured" }, { status: 500 });
-  }
-  if (authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = assertCronAuth(req);
+  if (denied) return denied;
 
   try {
     const deleted = await cleanupExpired();
-    return NextResponse.json({ success: true, data: { deleted, timestamp: new Date().toISOString() } });
+    return NextResponse.json({
+      success: true,
+      data: { deleted, timestamp: new Date().toISOString() },
+    });
   } catch (err) {
     logger.error("Token blacklist cleanup cron error", { context: "api", error: err });
     return NextResponse.json({ success: false, error: "Internal server error" }, { status: 500 });

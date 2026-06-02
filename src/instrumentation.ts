@@ -2,6 +2,11 @@ import * as Sentry from "@sentry/nextjs";
 
 export async function register() {
   if (process.env.NEXT_RUNTIME === "nodejs") {
+    // Fail loud at boot on missing critical env (DB/JWT); warn on degradable
+    // integrations. Edge runtime is skipped — it doesn't carry the full env set.
+    const { validateEnv } = await import("./lib/env");
+    validateEnv();
+
     await import("../sentry.server.config");
   }
 

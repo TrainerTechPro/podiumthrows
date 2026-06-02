@@ -63,16 +63,26 @@ export async function POST(req: NextRequest) {
       implementId: string | null;
       notes: string | null;
     }> = [];
+    // Memoize catalog matches across the block. kg and unitSystem are derived
+    // purely from the implement string and throwType is constant per request,
+    // so the implement string is a sufficient cache key. A block is almost
+    // always logged on a single implement — this collapses N identical catalog
+    // findMany queries (one per throw) down to one per DISTINCT implement.
+    const matchCache = new Map<string, string | null>();
     for (const t of throws) {
       let implementId: string | null = null;
       const kg = parseImplementKg(t.implement);
       if (throwType && kg != null && kg > 0) {
-        const isLb = /lbs?\b/i.test(t.implement);
-        const match = await findCatalogMatchForWeight(kg, throwType, {
-          unitSystem: isLb ? "imperial" : "metric",
-        });
-        if (match.kind === "exact" || match.kind === "tolerated") {
-          implementId = match.implement.id;
+        if (matchCache.has(t.implement)) {
+          implementId = matchCache.get(t.implement)!;
+        } else {
+          const isLb = /lbs?\b/i.test(t.implement);
+          const match = await findCatalogMatchForWeight(kg, throwType, {
+            unitSystem: isLb ? "imperial" : "metric",
+          });
+          implementId =
+            match.kind === "exact" || match.kind === "tolerated" ? match.implement.id : null;
+          matchCache.set(t.implement, implementId);
         }
       }
       throwsWithCatalog.push({

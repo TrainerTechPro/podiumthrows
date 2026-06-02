@@ -3,6 +3,7 @@ import prisma from "@/lib/prisma";
 import { sendPushToUser } from "@/lib/push";
 import { getPushPreferences } from "@/lib/push/preferences";
 import { logger } from "@/lib/logger";
+import { assertCronAuth } from "@/lib/cron-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
@@ -18,15 +19,8 @@ export const maxDuration = 60;
  * Athletes with `weeklyGoalReminder` preference disabled are skipped.
  */
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret) {
-    return NextResponse.json({ success: false, error: "CRON_SECRET not configured" }, { status: 500 });
-  }
-  if (authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = assertCronAuth(req);
+  if (denied) return denied;
 
   try {
     const now = new Date();

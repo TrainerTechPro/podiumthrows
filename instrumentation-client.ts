@@ -13,7 +13,17 @@ Sentry.init({
   replaysSessionSampleRate: 0.1,
   replaysOnErrorSampleRate: 1.0,
 
-  integrations: [Sentry.replayIntegration(), Sentry.browserTracingIntegration()],
+  integrations: [
+    // Athlete health/injury data flows through this app — pin masking explicitly
+    // rather than relying on SDK defaults, so a future SDK default change can't
+    // silently start capturing PII into Session Replay.
+    Sentry.replayIntegration({
+      maskAllText: true,
+      maskAllInputs: true,
+      blockAllMedia: true,
+    }),
+    Sentry.browserTracingIntegration(),
+  ],
 
   // Don't send PII by default — coaches manage athlete data
   sendDefaultPii: false,

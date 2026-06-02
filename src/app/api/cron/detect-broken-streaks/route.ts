@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
 import { notifyAthleteStreakBroken } from "@/lib/notifications";
+import { assertCronAuth } from "@/lib/cron-auth";
 
 export const maxDuration = 60;
 
@@ -26,18 +27,8 @@ const MIN_STREAK_FOR_NOTIFICATION = 3;
 const BREAK_THRESHOLD_MS = 48 * 60 * 60 * 1000;
 
 export async function GET(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret) {
-    return NextResponse.json(
-      { success: false, error: "CRON_SECRET not configured" },
-      { status: 500 }
-    );
-  }
-  if (authHeader !== `Bearer ${cronSecret}`) {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
+  const denied = assertCronAuth(req);
+  if (denied) return denied;
 
   try {
     const now = new Date();

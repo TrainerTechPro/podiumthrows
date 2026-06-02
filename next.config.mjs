@@ -23,7 +23,11 @@ const nextConfig = {
     // bcryptjs uses Node.js crypto — must run in Node.js runtime, not edge
     serverComponentsExternalPackages: ['bcryptjs'],
     serverActions: {
-      bodySizeLimit: '2gb',
+      // Server Actions in this app carry only small JSON/string payloads (e.g. the
+      // sideline view-toggle cookie). All file/video uploads go through API route
+      // handlers + presigned R2 PUTs, NOT Server Actions — so a large limit here is
+      // pure memory-exhaustion / DoS surface with no legitimate use. Keep it tight.
+      bodySizeLimit: '1mb',
     },
     // Tree-shake barrel exports from these libs on every import site. lucide-react
     // alone ships 1000+ icon modules behind a single barrel; without this, importing

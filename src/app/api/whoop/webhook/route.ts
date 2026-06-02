@@ -10,26 +10,28 @@ const WHOOP_WEBHOOK_SECRET = process.env.WHOOP_WEBHOOK_SECRET;
  * Verify the WHOOP webhook signature (HMAC-SHA256).
  * Returns true if valid or if no secret is configured (local dev).
  */
-async function verifyWhoopSignature(
-  rawBody: string,
-  signature: string | null
-): Promise<boolean> {
+async function verifyWhoopSignature(rawBody: string, signature: string | null): Promise<boolean> {
   if (!WHOOP_WEBHOOK_SECRET) {
-    // No secret configured — skip verification in local dev
-    logger.warn("WHOOP webhook: WHOOP_WEBHOOK_SECRET not set, skipping signature verification", {
-      context: "api",
-    });
+    // Fail CLOSED in production: an unsigned webhook with no configured secret
+    // would let anyone POST forged wellness data. Only skip verification in dev,
+    // matching the Stripe / video-processing webhooks. See CLAUDE.md security notes.
+    if (process.env.NODE_ENV === "production") {
+      logger.error("WHOOP webhook: WHOOP_WEBHOOK_SECRET not set in production — rejecting", {
+        context: "api",
+      });
+      return false;
+    }
+    logger.warn(
+      "WHOOP webhook: WHOOP_WEBHOOK_SECRET not set, skipping signature verification (dev only)",
+      {
+        context: "api",
+      }
+    );
     return true;
   }
   if (!signature) return false;
-  const expected = crypto
-    .createHmac("sha256", WHOOP_WEBHOOK_SECRET)
-    .update(rawBody)
-    .digest("hex");
-  return crypto.timingSafeEqual(
-    Buffer.from(signature),
-    Buffer.from(expected)
-  );
+  const expected = crypto.createHmac("sha256", WHOOP_WEBHOOK_SECRET).update(rawBody).digest("hex");
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected));
 }
 
 /**
