@@ -55,6 +55,10 @@ const nextConfig = {
     remotePatterns: [
       // Cloudflare R2 public buckets
       { protocol: 'https', hostname: '*.r2.dev' },
+      // R2 S3 endpoint — presigned GET URLs (private serving) resolve here.
+      // Needed so next/image can optimize presigned thumbnails when
+      // R2_PRIVATE_SERVING is on. Query-string signature doesn't affect matching.
+      { protocol: 'https', hostname: '*.r2.cloudflarestorage.com' },
       // AWS S3 (any region)
       { protocol: 'https', hostname: '*.s3.amazonaws.com' },
       { protocol: 'https', hostname: '*.s3.*.amazonaws.com' },

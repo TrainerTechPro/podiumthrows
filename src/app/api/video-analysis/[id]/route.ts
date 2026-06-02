@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/prisma";
 import { requireCoachApi } from "@/lib/data/coach";
 import { logger } from "@/lib/logger";
-import { deleteFile } from "@/lib/r2";
+import { deleteFile, toServeUrl } from "@/lib/r2";
 import { parseBody, VideoAnalysisPatchSchema } from "@/lib/api-schemas";
 
 /* ── GET — fetch single analysis ── */
@@ -24,16 +24,19 @@ export async function GET(_request: NextRequest, { params }: { params: Promise<{
       return NextResponse.json({ success: false, error: "Not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: analysis });
+    const data = {
+      ...analysis,
+      videoUrl: await toServeUrl(analysis.videoUrl),
+      thumbnailUrl: await toServeUrl(analysis.thumbnailUrl),
+    };
+
+    return NextResponse.json({ success: true, data });
   } catch (err) {
     if (err instanceof Error && err.name === "AuthError") {
       return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
     }
     logger.error("GET /api/video-analysis/[id]", { context: "api", error: err });
-    return NextResponse.json(
-      { success: false, error: "Couldn’t fetch analysis" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Couldn’t fetch analysis" }, { status: 500 });
   }
 }
 

@@ -9,6 +9,7 @@ import {
   getPublicUrl,
   uploadSingleFile,
   saveFileLocally,
+  toServeUrl,
 } from "@/lib/r2";
 
 /* ── GET — list codex entries for the current user ── */
@@ -42,7 +43,15 @@ export async function GET(request: NextRequest) {
       take: 200,
     });
 
-    return NextResponse.json({ success: true, data: entries });
+    const data = await Promise.all(
+      entries.map(async (e) => ({
+        ...e,
+        videoUrl: await toServeUrl(e.videoUrl),
+        thumbnailUrl: await toServeUrl(e.thumbnailUrl),
+      }))
+    );
+
+    return NextResponse.json({ success: true, data });
   } catch (err) {
     logger.error("GET /api/codex", { context: "api", error: err });
     return NextResponse.json(

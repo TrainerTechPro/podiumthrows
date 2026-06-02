@@ -6,6 +6,7 @@ import { sendCommentNotification } from "@/lib/notifications/comment";
 import { rateLimit } from "@/lib/rate-limit";
 import { type TargetField, isTargetField, verifyCommentAccess } from "@/lib/comments/access";
 import { parseBody, CommentCreateSchema } from "@/lib/api-schemas";
+import { toServeUrl } from "@/lib/r2";
 
 /* ─── GET — fetch comments for a target ──────────────────────────────────── */
 
@@ -57,36 +58,35 @@ export async function GET(req: NextRequest) {
     });
     const userMap = new Map(users.map((u) => [u.id, u]));
 
-    const enriched = comments.map((c) => {
-      const user = userMap.get(c.authorId);
-      const profile = c.authorRole === "COACH" ? user?.coachProfile : user?.athleteProfile;
-      const deleted = c.deletedAt != null;
-      return {
-        id: c.id,
-        authorId: c.authorId,
-        authorRole: c.authorRole,
-        authorName: profile
-          ? `${profile.firstName} ${profile.lastName}`
-          : (user?.email ?? "Unknown"),
-        authorAvatar: profile?.avatarUrl ?? null,
-        body: deleted ? "" : c.body,
-        audioUrl: deleted ? null : c.audioUrl,
-        audioDurationSec: deleted ? null : c.audioDurationSec,
-        readAt: c.readAt?.toISOString() ?? null,
-        reaction: c.reaction,
-        replyText: c.replyText,
-        deleted,
-        createdAt: c.createdAt.toISOString(),
-      };
-    });
+    const enriched = await Promise.all(
+      comments.map(async (c) => {
+        const user = userMap.get(c.authorId);
+        const profile = c.authorRole === "COACH" ? user?.coachProfile : user?.athleteProfile;
+        const deleted = c.deletedAt != null;
+        return {
+          id: c.id,
+          authorId: c.authorId,
+          authorRole: c.authorRole,
+          authorName: profile
+            ? `${profile.firstName} ${profile.lastName}`
+            : (user?.email ?? "Unknown"),
+          authorAvatar: profile?.avatarUrl ?? null,
+          body: deleted ? "" : c.body,
+          audioUrl: deleted ? null : await toServeUrl(c.audioUrl),
+          audioDurationSec: deleted ? null : c.audioDurationSec,
+          readAt: c.readAt?.toISOString() ?? null,
+          reaction: c.reaction,
+          replyText: c.replyText,
+          deleted,
+          createdAt: c.createdAt.toISOString(),
+        };
+      })
+    );
 
     return NextResponse.json({ success: true, data: enriched });
   } catch (err) {
     logger.error("GET /api/throws/comments", { context: "api", error: err });
-    return NextResponse.json(
-      { success: false, error: "Couldn’t fetch comments" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Couldn’t fetch comments" }, { status: 500 });
   }
 }
 
@@ -210,9 +210,6 @@ export async function POST(req: NextRequest) {
     );
   } catch (err) {
     logger.error("POST /api/throws/comments", { context: "api", error: err });
-    return NextResponse.json(
-      { success: false, error: "Couldn’t create comment" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: "Couldn’t create comment" }, { status: 500 });
   }
 }

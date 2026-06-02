@@ -356,6 +356,44 @@ export async function configureR2Cors(): Promise<void> {
 
 /* ─── Presigned Download ───────────────────────────────────────────────────── */
 
+/**
+ * Infer a response content-type from the object key's extension. We override
+ * ResponseContentType on the presigned GET because uploads deliberately omit
+ * ContentType from the PUT signature (the iOS 403 fix), so objects can land
+ * with a generic type that the browser then refuses to play/render. Defaults
+ * to video/mp4 to preserve prior behavior for unrecognized keys.
+ */
+function inferContentType(key: string): string {
+  const ext = key.slice(key.lastIndexOf(".") + 1).toLowerCase();
+  switch (ext) {
+    case "mov":
+      return "video/quicktime";
+    case "mp4":
+      return "video/mp4";
+    case "webm":
+      return "video/webm";
+    case "jpg":
+    case "jpeg":
+      return "image/jpeg";
+    case "png":
+      return "image/png";
+    case "webp":
+      return "image/webp";
+    case "gif":
+      return "image/gif";
+    case "mp3":
+      return "audio/mpeg";
+    case "m4a":
+      return "audio/mp4";
+    case "wav":
+      return "audio/wav";
+    case "ogg":
+      return "audio/ogg";
+    default:
+      return "video/mp4";
+  }
+}
+
 export async function getPresignedDownloadUrl(
   key: string,
   expiresIn: number = 3600
@@ -363,9 +401,57 @@ export async function getPresignedDownloadUrl(
   const command = new GetObjectCommand({
     Bucket: getBucket(),
     Key: key,
-    ResponseContentType: key.endsWith(".mov") ? "video/quicktime" : "video/mp4",
+    ResponseContentType: inferContentType(key),
   });
   return getSignedUrl(getClient(), command, { expiresIn });
+}
+
+/* ─── Private serving (presigned GET) ──────────────────────────────────────── */
+
+/**
+ * When `R2_PRIVATE_SERVING === "true"`, media read paths mint short-lived
+ * presigned GET URLs instead of handing back permanent public links. Default
+ * OFF so this deploys with zero behavior change — flip it on per-environment
+ * to verify every video surface (playback, thumbnails, the analysis canvas)
+ * BEFORE making the bucket private. Presigned GET works against a public bucket
+ * too, so the rollout is: deploy (off) → flip flag on → verify → make bucket
+ * private. Instant rollback by toggling the flag.
+ */
+export function isPrivateServingEnabled(): boolean {
+  return process.env.R2_PRIVATE_SERVING === "true";
+}
+
+/**
+ * Convert a stored media reference into the URL the browser should fetch.
+ *
+ * Private serving OFF (default): returns `stored` unchanged.
+ * Private serving ON: mints a presigned GET so the bytes are gated by the
+ *   already-authenticated route that calls this — closing the "permanent
+ *   public link" gap.
+ *
+ * `stored` may be a full public URL or a bare key. Prefer passing an explicit
+ * `key` for models that persist one (VideoUpload.storageKey, AthleteVideo.r2Key,
+ * TeamFile.fileKey); otherwise the key is recovered from the URL. Local /uploads
+ * paths and unrecoverable values pass through untouched. Fails OPEN to the
+ * stored URL on any signing error so playback is never hard-broken.
+ */
+export async function toServeUrl(
+  stored: string | null | undefined,
+  opts: { key?: string | null; expiresIn?: number } = {}
+): Promise<string | null | undefined> {
+  if (!stored) return stored;
+  if (!isPrivateServingEnabled() || !isR2Configured()) return stored;
+  const key = opts.key || extractR2KeyFromUrl(stored);
+  if (!key) return stored; // local path or non-R2 url — leave as-is
+  try {
+    return await getPresignedDownloadUrl(key, opts.expiresIn ?? 3600);
+  } catch (err) {
+    logger.error("toServeUrl: presign failed, falling back to stored url", {
+      context: "r2",
+      error: err,
+    });
+    return stored;
+  }
 }
 
 /* ─── Dev warning ──────────────────────────────────────────────────────────── */
