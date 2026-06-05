@@ -4,8 +4,9 @@ const FOOTER_COLS = [
   {
     heading: "Product",
     links: [
-      { href: "/#features", label: "Features" },
-      { href: "/#methodology", label: "Bondarchuk Methodology" },
+      { href: "/", label: "Coaching" },
+      { href: "/app#features", label: "Features" },
+      { href: "/app#methodology", label: "Bondarchuk Methodology" },
       { href: "/pricing", label: "Pricing" },
       { href: "/changelog", label: "Changelog" },
     ],

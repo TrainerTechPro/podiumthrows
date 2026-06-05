@@ -171,7 +171,7 @@ export default async function PricingPage() {
             errors before they reach your athletes.
           </p>
           <Link
-            href="/#methodology"
+            href="/app#methodology"
             className="inline-flex items-center gap-2 text-primary-500 hover:text-primary-400 font-medium transition-colors"
           >
             Learn about the Bondarchuk methodology
