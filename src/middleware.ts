@@ -11,6 +11,7 @@ const PUBLIC_PATHS = [
   "/register",
   "/forgot-password",
   "/reset-password",
+  "/app", // SaaS marketing home (relocated from "/") — marketing surface, must be public
   "/pricing",
   "/deficit-finder",
   "/privacy",
