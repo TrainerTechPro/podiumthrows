@@ -84,86 +84,6 @@ const HAMMER_ROWS: ResultRow[] = [
   },
 ];
 
-const RING_ROWS: ResultRow[] = [
-  {
-    event: "Discus",
-    athlete: "Senior, women's",
-    note: "NCAA West qualifier '26",
-    best2025: "47.62m",
-    ft2025: "156'3\"",
-    best2026: "49.90m",
-    ft2026: "163'8\"",
-    delta: "+2.28m",
-    deltaFt: "+7'6\"",
-  },
-  {
-    event: "Discus",
-    athlete: "Sophomore, men's",
-    note: "Big West runner-up '26",
-    best2025: "54.66m",
-    ft2025: "179'4\"",
-    best2026: "56.65m",
-    ft2026: "185'10\"",
-    delta: "+1.99m",
-    deltaFt: "+6'6\"",
-  },
-  {
-    event: "Shot Put",
-    athlete: "Sophomore, women's",
-    note: "lifetime PR",
-    best2025: "12.22m",
-    ft2025: "40'1\"",
-    best2026: "13.19m",
-    ft2026: "43'3\"",
-    delta: "+0.97m",
-    deltaFt: "+3'2\"",
-  },
-  {
-    event: "Discus",
-    athlete: "Senior, women's",
-    note: "lifetime PR",
-    best2025: "37.41m",
-    ft2025: "122'9\"",
-    best2026: "38.34m",
-    ft2026: "125'9\"",
-    delta: "+0.93m",
-    deltaFt: "+3'1\"",
-  },
-  {
-    event: "Shot Put",
-    athlete: "Senior, women's",
-    note: "Big West runner-up '26",
-    best2025: "15.30m",
-    ft2025: "50'2\"",
-    best2026: "16.03m",
-    ft2026: "52'7\"",
-    delta: "+0.73m",
-    deltaFt: "+2'5\"",
-  },
-  {
-    event: "Discus",
-    athlete: "Junior, men's",
-    note: "lifetime PR",
-    best2025: "41.69m",
-    ft2025: "136'9\"",
-    best2026: "42.26m",
-    ft2026: "138'8\"",
-    delta: "+0.57m",
-    deltaFt: "+1'10\"",
-  },
-  {
-    event: "Shot Put",
-    athlete: "Sophomore, men's",
-    note: "NCAA West qualifier '26",
-    best2025: "17.75m",
-    ft2025: "58'3\"",
-    best2026: "18.14m",
-    ft2026: "59'6\"",
-    delta: "+0.39m",
-    deltaFt: "+1'3\"",
-  },
-];
-
 const MAILTO =
   "mailto:toncamedia@gmail.com?subject=Founding%20Athlete%20Spot&body=Event%3A%0ACurrent%20PB%3A%0AGoal%3A";
 
@@ -353,15 +273,13 @@ export default function CoachingLanding() {
               ))}
             </div>
 
-            <h2 className="font-heading font-black uppercase text-[clamp(26px,3.6vw,38px)] mt-14 sm:mt-20">
-              The Rest of the Ring
-            </h2>
-            <p className="text-[var(--landing-text-secondary)] max-w-[640px] mt-3 mb-10">
-              Shot and discus moved too. Same comparison: 2025 season best vs. 2026 season best,
-              returning athletes only.
+            <p className="mt-7 text-[13px] italic text-[var(--landing-text-secondary)] max-w-[720px]">
+              It wasn&apos;t just hammer. Across shot and discus, returning throwers added another
+              7.86m combined, including a Big West discus runner-up (+1.99m). Four of the throwers
+              qualified for the NCAA West First Round, among them a sophomore who qualified in both
+              shot and discus.
             </p>
-            <ResultsTable rows={RING_ROWS} />
-            <p className="mt-6 text-[13px] italic text-[var(--landing-text-secondary)] max-w-[720px]">
+            <p className="mt-4 text-[13px] italic text-[var(--landing-text-secondary)] max-w-[720px]">
               All marks are outdoor season bests pulled from TFRRS (tfrrs.org), comparing each
               returning athlete&apos;s 2025 and 2026 seasons. Names withheld for athlete privacy.
               Full transparency: across all 18 event-season comparisons on the squad, 13 improved
@@ -370,6 +288,44 @@ export default function CoachingLanding() {
               won&apos;t pretend otherwise. But five hammer throwers gaining five meters in the same
               year is not luck. It&apos;s a system.
             </p>
+          </ScrollReveal>
+        </div>
+      </section>
+
+      {/* Lead magnet: Free Throw Breakdown */}
+      <section id="free-breakdown" className="border-t border-[var(--landing-border-light)]">
+        <div className="max-w-[1060px] mx-auto px-6 py-20">
+          <ScrollReveal>
+            <div className="rounded-[12px] border-2 border-[var(--landing-amber)] bg-[var(--landing-surface)] p-10 sm:p-12">
+              <MonoLabel>Free // Personal // Not a PDF</MonoLabel>
+              <h2 className="font-heading font-black uppercase text-[clamp(26px,3.6vw,38px)] mt-1">
+                Send Me One Throw. I&apos;ll Break It Down.
+              </h2>
+              <p className="text-[var(--landing-text-secondary)] max-w-[640px] mt-3 mb-8">
+                Not ready to commit, fair. Send one video of your throw and I&apos;ll send back a
+                personal breakdown: the three things costing you distance and the one cue to fix
+                first. Real human reply within 48 hours, no autoresponder. It&apos;s the closest thing
+                to a free session you&apos;ll get from a D1 coach.
+              </p>
+              <div className="flex flex-wrap items-center gap-4">
+                <Link
+                  href="/throw-breakdown"
+                  className="inline-block rounded-[10px] bg-[var(--landing-amber)] text-black font-mono font-bold text-sm uppercase tracking-[0.08em] px-8 py-4 hover:brightness-110 transition"
+                >
+                  Get My Free Breakdown
+                </Link>
+                <span className="font-mono text-xs text-[var(--landing-text-secondary)]">
+                  First <b className="text-[var(--landing-amber)]">10 each month</b> &middot; so every one gets real eyes
+                </span>
+              </div>
+              <p className="mt-6 text-[13px] italic text-[var(--landing-text-secondary)]">
+                Prefer instant? Run the self-serve{" "}
+                <Link href="/deficit-finder" className="text-[var(--landing-amber)] underline">
+                  Deficit Finder
+                </Link>{" "}
+                for a quick read on where your transfer is breaking down. No signup.
+              </p>
+            </div>
           </ScrollReveal>
         </div>
       </section>
@@ -394,13 +350,13 @@ export default function CoachingLanding() {
                 },
                 {
                   n: "02",
-                  h: "Weekly Film Review",
-                  p: "Send throws, get coaching. Frame-by-frame technical breakdown with specific cues and the one fix that matters this week, not twelve things to think about in the ring.",
+                  h: "Film Review, 48-Hour Turnaround",
+                  p: "Upload a session, get it back within 48 hours. Frame-by-frame technical breakdown with specific cues and the one fix that matters this week, not twelve things to think about in the ring.",
                 },
                 {
                   n: "03",
-                  h: "Async Access",
-                  p: "Questions between sessions get answered. Stuck on a cue, unsure about an adjustment, meet-week nerves: you message, I respond. No waiting for next month's call.",
+                  h: "Async Q&A",
+                  p: "Stuck on a cue, unsure about an adjustment, meet-week nerves: message me and I reply within 24 hours on weekdays. No waiting for next month's call.",
                 },
                 {
                   n: "04",
@@ -450,8 +406,8 @@ export default function CoachingLanding() {
                   <ul>
                     {[
                       "Individualized monthly program (Bondarchuk method)",
-                      "Weekly video review of your throws",
-                      "Async coaching access between sessions",
+                      "Film review on every session you upload, back within 48 hours",
+                      "Async Q&A, weekday replies within 24 hours",
                       "Podium Throws Elite included ($50/mo value)",
                       "Founding rate locked for life",
                     ].map((li) => (

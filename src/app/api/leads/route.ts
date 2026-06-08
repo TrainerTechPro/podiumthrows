@@ -165,6 +165,27 @@ function buildDeficitEmail(
 </html>`;
 }
 
+function buildBreakdownEmail(name: string | null): string {
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width" /></head>
+<body style="margin:0; padding:0; background:#0d0c09; font-family:'Segoe UI',Tahoma,sans-serif;">
+<div style="max-width:560px; margin:0 auto; padding:40px 24px; color:#e8e8ea;">
+  <div style="text-align:center; margin-bottom:28px;">
+    <span style="color:#f59e0b; font-size:20px; font-weight:700;">Podium Throws</span>
+  </div>
+  <p style="font-size:16px; line-height:1.6;">${greeting}</p>
+  <p style="font-size:16px; line-height:1.6;">Got it. Your throw is in my queue.</p>
+  <p style="font-size:16px; line-height:1.6;">Within 48 hours you&apos;ll get a breakdown back from me &mdash; just me talking over your throw, pointing at the three things costing you the most distance and the one I&apos;d fix first. Not twelve things. One.</p>
+  <p style="font-size:16px; line-height:1.6;">While you wait, do yourself a favor and film your next session from a second angle. Half the answer usually hides in the side view.</p>
+  <p style="font-size:16px; line-height:1.6;">Talk in 48.<br/>Coach Tony</p>
+</div>
+</body>
+</html>`;
+}
+
 export async function POST(request: Request) {
   try {
     const parsed = await parseBody(request, LeadCaptureSchema);
@@ -186,8 +207,9 @@ export async function POST(request: Request) {
       },
     });
 
-    // Send deficit report email via Resend
+    // Send confirmation email via Resend (branch by lead-magnet source)
     if (process.env.RESEND_API_KEY) {
+      const isBreakdown = (source || "deficit-finder") === "throw-breakdown";
       const primary = (deficitResult?.primary as string) || "none";
       const deficitLabel = DEFICIT_LABELS[primary] || "Analysis";
 
@@ -195,14 +217,16 @@ export async function POST(request: Request) {
         .send({
           from: FROM_EMAIL,
           to: lead.email,
-          subject: `Your Deficit Analysis: ${deficitLabel}`,
-          html: buildDeficitEmail(
-            lead.id,
-            lead.name,
-            event ?? null,
-            gender ?? null,
-            deficitResult ?? null
-          ),
+          subject: isBreakdown ? "Got your throw" : `Your Deficit Analysis: ${deficitLabel}`,
+          html: isBreakdown
+            ? buildBreakdownEmail(lead.name)
+            : buildDeficitEmail(
+                lead.id,
+                lead.name,
+                event ?? null,
+                gender ?? null,
+                deficitResult ?? null
+              ),
         })
         .catch((err) => {
           // Log but don't fail the request — the lead is already saved
