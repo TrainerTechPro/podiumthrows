@@ -109,15 +109,16 @@ export function ThrowBreakdownClient() {
             </ul>
             <div className="mt-8 flex items-center gap-4">
               <div
-                className="w-16 h-16 flex-shrink-0 rounded-full flex items-center justify-center font-mono text-nano text-center leading-tight"
+                role="img"
+                aria-label="Coach Tony Sommers at a track meet"
+                className="w-[88px] h-[88px] flex-shrink-0 rounded-full"
                 style={{
-                  background: "var(--landing-surface-3)",
                   border: "2px solid var(--landing-amber)",
-                  color: "var(--landing-text-secondary)",
+                  backgroundImage: "url('/coach-tony.jpg')",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center top",
                 }}
-              >
-                YOUR<br />PHOTO
-              </div>
+              />
               <div className="text-caption" style={{ color: "var(--landing-text-secondary)" }}>
                 <b className="font-heading" style={{ color: "var(--landing-text)" }}>
                   Coach Tony Sommers, M.S.

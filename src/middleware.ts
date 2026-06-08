@@ -14,6 +14,7 @@ const PUBLIC_PATHS = [
   "/app", // SaaS marketing home (relocated from "/") — marketing surface, must be public
   "/pricing",
   "/deficit-finder",
+  "/throw-breakdown", // lead-magnet squeeze page — public
   "/privacy",
   "/terms", // marketing surface per CLAUDE.md §"Marketing Routes — Always-Dark"
   "/changelog", // marketing surface per CLAUDE.md §"Marketing Routes — Always-Dark"
