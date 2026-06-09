@@ -35,6 +35,28 @@ One entry per stage VERIFY, with evidence. TODO(user) items accumulate at the bo
     (round-trip for all 12 payload schemas + rejection paths + state machine).
 - Contracts live in `src/lib/contracts/{pose,jobs,metrics,faults,narrative,calibration,report}.ts`.
 
+## Stage 2 — Eval harness (2026-06-09) ✅
+
+- `src/lib/analysis/eval/benchmark.ts`: PCK@0.05 (upper/lower split, norm = max GT
+  keypoint-bbox side), L/R swap rate (crossed-assignment test per pair), release-frame
+  error distribution (fps-scaled ±2@60fps tolerance), phase-boundary IoU (inclusive
+  ranges, missing predicted phase = 0). Fully deterministic, no LLM.
+- `scripts/eval/label-clips.ts`: interactive CLI → `<clip>.labels.json`
+  (GoldenLabelsSchema) + optional `--db` upsert into golden_set_clips. Keypoint GT
+  merges from an external annotator export via `--keypoints-from` (CLI keypoint entry
+  by hand is impractical; documented in the tool header).
+- `scripts/eval/run-benchmark.ts`: pose dir + labels dir (+ optional MetricsOutput
+  predictions dir) → gate table + report JSON.
+- `src/lib/analysis/eval/mediapipe-adapter.ts`: legacy 33-landmark MediaPipe
+  annotations → PoseOutput, so the old pipeline can be scored as the baseline row.
+- Found+fixed during VERIFY: zod v4 `z.record(enumKeys, …)` is exhaustive — partial
+  keypoint GT needs `z.partialRecord` (real bug, caught by the live CLI run).
+- **Baseline row blocked on data:** zero labeled golden-set clips exist. → TODO(user).
+- VERIFY evidence: 9/9 benchmark unit tests with hand-computed exact numbers
+  (PCK upper 1.0 / lower 0.5, swap 0.5, IoU 1/3 etc.); live CLI run on synthetic
+  fixture asserted equal to expectations by an independent script; tsc exit 0;
+  29/29 tests across contracts + eval.
+
 ## TODO(user)
 
 (accumulates as stages complete)
