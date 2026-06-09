@@ -23,6 +23,7 @@ CREATE TABLE "analysis_jobs" (
     "userId" TEXT NOT NULL,
     "athleteId" TEXT NOT NULL,
     "calibrationSessionId" TEXT,
+    "event" "EventType" NOT NULL,
     "clipPath" TEXT NOT NULL,
     "fpsDeclared" DOUBLE PRECISION,
     "fpsTrue" DOUBLE PRECISION,

@@ -46,6 +46,10 @@ const DEGRADABLE: { feature: string; keys: string[] }[] = [
     keys: ["UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN"],
   },
   { feature: "Sentry error tracking", keys: ["SENTRY_DSN"] },
+  {
+    feature: "Video Analysis 2.0 pose service (jobs stay QUEUED without it)",
+    keys: ["MODAL_POSE_URL", "MODAL_POSE_TOKEN", "POSE_WEBHOOK_SECRET"],
+  },
   { feature: "Encryption keys (MFA / wearable tokens)", keys: ["MFA_ENCRYPTION_KEY"] },
   { feature: "Web push (VAPID)", keys: ["VAPID_PUBLIC_KEY", "VAPID_PRIVATE_KEY"] },
 ];

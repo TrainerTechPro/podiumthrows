@@ -109,3 +109,10 @@ requires GPU weights impractical for local verification).
 - `pdf-lib`: PDF generation with zero native binaries (D10).
 - `@napi-rs/canvas` — **rejected**; keyframe rendering moved server-side to Python/OpenCV (D9), overlay player uses the browser canvas. No new canvas dep.
 - Python service deps (`modal`, `rtmlib`, `onnxruntime`, `opencv-python-headless`, `numpy`): isolated to `services/pose`, never installed in the Node build.
+
+## D14 — `event` column added to analysis_jobs
+
+PRD §7.1's field list omits `event`, but F5 (metric definitions), F6 (rules file),
+and F7 (narrative) all dispatch on event, and uncalibrated jobs (explicitly supported
+— "uncalibrated clips still get angles/timing") have no CalibrationSession to inherit
+it from. Added `event EventType NOT NULL` to the new table before it shipped anywhere.

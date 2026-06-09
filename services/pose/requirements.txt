@@ -1,0 +1,3 @@
+# Modal image deps are pinned in app.py (modal.Image.pip_install).
+# This file exists for IDE/reference only; deploy with: modal deploy app.py
+modal>=0.64

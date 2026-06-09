@@ -3569,6 +3569,9 @@ model AnalysisJob {
   calibrationSessionId String?
   calibrationSession   CalibrationSession? @relation(fields: [calibrationSessionId], references: [id], onDelete: SetNull)
 
+  // PRD §7.1 omits event here, but F5–F7 key on it and uncalibrated jobs
+  // have no CalibrationSession to inherit it from (decisions.md D14).
+  event       EventType
   clipPath    String
   fpsDeclared Float?
   fpsTrue     Float?

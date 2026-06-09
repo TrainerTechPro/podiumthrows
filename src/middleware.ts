@@ -54,7 +54,9 @@ export async function middleware(request: NextRequest) {
       const skipExternal =
         pathname.startsWith("/api/webhooks/") ||
         pathname.startsWith("/api/cron/") ||
-        pathname.startsWith("/api/whoop/webhook");
+        pathname.startsWith("/api/whoop/webhook") ||
+        // Modal pose-service callback: verified by HMAC signature in the route
+        pathname.startsWith("/api/analysis/webhooks/");
 
       if (!skipExternal) {
         // CSRF check

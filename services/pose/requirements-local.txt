@@ -1,0 +1,7 @@
+# CPU fallback path (local_run.py). Python ≥ 3.9.
+rtmlib==0.0.13
+onnxruntime>=1.16,<1.19
+opencv-python-headless>=4.9,<4.11
+numpy<2
+
+tqdm  # rtmlib undeclared runtime dep

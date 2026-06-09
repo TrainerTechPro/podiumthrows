@@ -57,6 +57,43 @@ One entry per stage VERIFY, with evidence. TODO(user) items accumulate at the bo
   fixture asserted equal to expectations by an independent script; tsc exit 0;
   29/29 tests across contracts + eval.
 
+## Stage 3 — Pose service + job state machine (2026-06-09) ✅
+
+- `services/pose/`: Modal app (`app.py`, T4 GPU, scales to zero) with shared
+  `pipeline.py` (ffmpeg frames → detect → top-down pose → PoseOutput JSON),
+  `models.py` (POSE_MODEL flag: rtmpose-l via rtmlib/ONNX, vitpose-l via HF
+  transformers + RT-DETR), HMAC webhook signer, `local_run.py` CPU fallback,
+  `DEPLOY.md` with exact commands. R2 creds never reach Modal (presigned GET/PUT).
+- D14: `event` column added to analysis_jobs (migration edited pre-ship, re-verified
+  from scratch on the local DB).
+- Next.js: `POST/GET /api/analysis/jobs`, `GET /api/analysis/jobs/[id]`,
+  `POST /api/analysis/webhooks/pose` (HMAC-signed, fail-closed, idempotent),
+  `POST /api/cron/requeue-stale-analysis` (D4 retry), `transitionJob()` chokepoint
+  enforcing the contract state machine, env registry + middleware CSRF-skip updated.
+- Real bugs caught by running it for real:
+  1. rtmlib `mode="performance"` silently loads rtmpose-**x** — POSE_MODEL flag
+     would have lied. Pinned the explicit rtmpose-l checkpoint.
+  2. Ambiguity guard fired on duplicate detections of the SAME person; fixed to
+     require comparable size AND low spatial overlap (IoU < 0.5).
+- VERIFY evidence:
+  - Local CPU run (real rtmpose-l ONNX inference on `fixtures/fixture-clip.mp4`,
+    a real-person clip): `VALID PoseOutput: 60 frames (60 with detections), model
+    rtmpose-l@body7-256x192-20230504/rtmlib-0.0.13, 30fps 720x720` via
+    `scripts/eval/validate-pose-json.ts`. Output committed as
+    `services/pose/fixtures/fixture-pose.json`.
+  - Webhook integration tests (real HMAC over raw body, mocked Prisma): 11/11 —
+    signature reject/missing/fail-closed, QUEUED walk-up, duplicate no-ops,
+    contract 400s, failure path. `tsc --noEmit` exit 0.
+- **NOT deployed to Modal** (external gate — needs your account): → TODO(user).
+
 ## TODO(user)
 
-(accumulates as stages complete)
+- [ ] **Deploy the pose service to Modal** — exact commands in
+      `services/pose/DEPLOY.md` (modal token new → modal secret create
+      pose-service → modal deploy app.py → set MODAL_POSE_URL /
+      MODAL_POSE_TOKEN / POSE_WEBHOOK_SECRET in Vercel + .env.local).
+- [ ] **Label golden-set clips** (50–60 per PRD §11) with
+      `npx tsx scripts/eval/label-clips.ts <clip> --event SHOT_PUT --db`,
+      then score the MediaPipe baseline row:
+      `npx tsx scripts/eval/run-benchmark.ts --pose <mediapipe-adapted-dir> --labels <labels-dir>`
+      (adapter: `src/lib/analysis/eval/mediapipe-adapter.ts`).
