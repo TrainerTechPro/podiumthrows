@@ -15,6 +15,26 @@ One entry per stage VERIFY, with evidence. TODO(user) items accumulate at the bo
   Stage 0 check is satisfied by the plan committing them to `src/lib/contracts`
   (typed, per-payload) — recorded here to keep the gate honest.
 
+## Stage 1 — Schema & contracts (2026-06-09) ✅
+
+- Prisma: +`AnalysisJobStatus` enum, +5 models (`CalibrationSession`, `AnalysisJob`,
+  `PoseArtifact`, `AnalysisResult`, `GoldenSetClip`), `@@map`'d to PRD snake_case
+  table names (D7). Only schema-file additions to existing models are back-relation
+  lists (no DB change). Migration `20260609120000_video_analysis_2_tables` generated
+  via schema→schema `migrate diff` because the repo's migration history has
+  **pre-existing drift** vs schema.prisma (trgm indexes, dropped legacy tables,
+  `Lead.email` unique, `event` column enum conversions — none mine, all excluded).
+  Evidence: drift statements appeared in `--from-migrations` diff but not in the
+  HEAD-schema→new-schema diff; final migration is 1 enum + 5 CREATE TABLE +
+  10 indexes + 7 FKs, zero ALTER/DROP on existing tables.
+- VERIFY evidence:
+  - `prisma migrate deploy` on local scratch DB `podium_va2_check` (full history +
+    new migration): "All migrations have been successfully applied."
+  - `tsc --noEmit`: exit 0.
+  - Contract round-trips: `vitest run src/lib/contracts` → 20/20 passed
+    (round-trip for all 12 payload schemas + rejection paths + state machine).
+- Contracts live in `src/lib/contracts/{pose,jobs,metrics,faults,narrative,calibration,report}.ts`.
+
 ## TODO(user)
 
 (accumulates as stages complete)

@@ -281,6 +281,10 @@ model User {
   recordedThrows   ThrowLog[] @relation("ThrowLogRecorder")
   lastEditedThrows ThrowLog[] @relation("ThrowLogLastEditor")
 
+  // Video Analysis 2.0 (creator may be coach or self-coached athlete)
+  calibrationSessions CalibrationSession[]
+  analysisJobs        AnalysisJob[]
+
   @@index([email])
   @@index([role])
   @@index([deleteScheduledFor])
@@ -581,6 +585,10 @@ model AthleteProfile {
 
   // Catalog-keyed PRs (one row per implement the athlete has thrown).
   athleteImplementPRs AthleteImplementPR[]
+
+  // Video Analysis 2.0
+  calibrationSessions CalibrationSession[]
+  analysisJobs        AnalysisJob[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -3506,4 +3514,133 @@ model ThrowLogBackfillAudit {
 
   @@index([kind])
   @@index([runAt])
+}
+
+// ─── VIDEO ANALYSIS 2.0 (Measurement Layer) ─────────────────────────────────
+// PRD: docs/PRD-video-analysis-2.md §7.1. Additive only; PascalCase models
+// @@map'd to the PRD's snake_case table names (docs/decisions.md D7).
+
+enum AnalysisJobStatus {
+  QUEUED
+  PROCESSING
+  POSE_COMPLETE
+  METRICS_COMPLETE
+  COMPLETE
+  FAILED
+  LOW_CONFIDENCE
+}
+
+/// One tripod setup at the ring. Produced by the calibration wizard (F1);
+/// clips uploaded inside the session window inherit it. Homography is
+/// computed server-side from the ring ellipse + known circle diameter.
+model CalibrationSession {
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  athleteId String?
+  athlete   AthleteProfile? @relation(fields: [athleteId], references: [id], onDelete: SetNull)
+
+  event                EventType
+  ringEllipse          Json // { cx, cy, rx, ry, rotation } in screen coords
+  deviceOrientation    Json? // { alpha, beta, gamma } | null when gyro denied
+  homography           Json? // { matrix[9], pixelsPerMeter, reprojectionError }
+  calibrationStillPath String?
+  validUntil           DateTime?
+  createdAt            DateTime  @default(now())
+
+  jobs AnalysisJob[]
+
+  @@index([userId])
+  @@index([athleteId])
+  @@index([userId, createdAt])
+  @@map("calibration_sessions")
+}
+
+/// The queue record AND state machine for one clip's analysis.
+/// QUEUED → PROCESSING → POSE_COMPLETE → METRICS_COMPLETE → COMPLETE,
+/// any state → FAILED; quality gate may park at LOW_CONFIDENCE (refilm).
+model AnalysisJob {
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  athleteId String
+  athlete   AthleteProfile @relation(fields: [athleteId], references: [id], onDelete: Cascade)
+
+  calibrationSessionId String?
+  calibrationSession   CalibrationSession? @relation(fields: [calibrationSessionId], references: [id], onDelete: SetNull)
+
+  clipPath    String
+  fpsDeclared Float?
+  fpsTrue     Float?
+  status      AnalysisJobStatus @default(QUEUED)
+  error       Json?
+  timings     Json? // { uploadedAt, poseStartedAt, poseFinishedAt, metricsAt, ... }
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  poseArtifact PoseArtifact?
+  result       AnalysisResult?
+
+  @@index([userId])
+  @@index([athleteId])
+  @@index([status])
+  @@index([userId, createdAt])
+  @@map("analysis_jobs")
+}
+
+/// Pose-service output references (R2 keys, never inline JSON — clips run
+/// 300-900 frames). Model id/version stamped for reproducibility; smoothed
+/// keypoints stored cross-clip-alignable (F10 ghost-overlay obligation).
+model PoseArtifact {
+  id    String      @id @default(cuid())
+  jobId String      @unique
+  job   AnalysisJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  rawPath             String
+  smoothedPath        String?
+  modelId             String
+  modelVersion        String
+  meanQuality         Float?
+  perFrameQualityPath String?
+  createdAt           DateTime @default(now())
+
+  @@map("pose_artifacts")
+}
+
+/// Everything shown to the user, with provenance. Every metric is
+/// { value, unit, confidence, frameRefs } (contracts/metrics.ts); rubric and
+/// rules versions stamped so a report is reproducible months later.
+model AnalysisResult {
+  id    String      @id @default(cuid())
+  jobId String      @unique
+  job   AnalysisJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  metrics         Json
+  phaseBoundaries Json
+  phaseScores     Json?
+  faults          Json?
+  narrative       Json?
+  keyframePaths   Json?
+  reportPdfPath   String?
+  rubricVersion   String
+  rulesVersion    String
+  createdAt       DateTime @default(now())
+
+  @@map("analysis_results")
+}
+
+/// Eval-gate ground truth (PRD §11). Labels: release frame, phase boundaries,
+/// keypoint GT at critical instants. difficulty/source tag reference-quality
+/// clips (F10 obligation). Not athlete data — admin/eval surface only.
+model GoldenSetClip {
+  id         String    @id @default(cuid())
+  clipPath   String
+  event      EventType
+  labels     Json?
+  difficulty String[]  @default([])
+  source     String?
+  createdAt  DateTime  @default(now())
+
+  @@index([event])
+  @@map("golden_set_clips")
 }
