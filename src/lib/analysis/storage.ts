@@ -9,7 +9,9 @@ import {
 /**
  * Artifact storage for the analysis pipeline: R2 when configured (presigned
  * server-side fetch — same client the rest of the repo uses), local
- * public/uploads fallback for dev, injectable for tests.
+ * .local-storage/ fallback for dev (served via /api/dev-artifacts, NEVER
+ * public/ — anything under public/ ships with every deploy), injectable
+ * for tests.
  */
 
 export interface AnalysisStorage {
@@ -18,8 +20,20 @@ export interface AnalysisStorage {
   putBytes(key: string, bytes: Uint8Array, contentType: string): Promise<void>;
 }
 
-function localPath(key: string): string {
-  return path.join(process.cwd(), "public", "uploads", key);
+/**
+ * Single source of truth for where a local-dev artifact key lives on disk.
+ * Keys are R2-style (`analysis/...`), so everything lands under
+ * .local-storage/analysis/.
+ */
+export function localArtifactPath(key: string): string {
+  return path.join(process.cwd(), ".local-storage", key);
+}
+
+/** Local-dev write used by the upload fallback route. */
+export function saveLocalArtifact(key: string, bytes: Uint8Array): void {
+  const p = localArtifactPath(key);
+  mkdirSync(path.dirname(p), { recursive: true });
+  writeFileSync(p, bytes);
 }
 
 export const defaultStorage: AnalysisStorage = {
@@ -30,7 +44,7 @@ export const defaultStorage: AnalysisStorage = {
       if (!res.ok) throw new Error(`Artifact fetch failed (${res.status}): ${key}`);
       return res.json();
     }
-    return JSON.parse(readFileSync(localPath(key), "utf8"));
+    return JSON.parse(readFileSync(localArtifactPath(key), "utf8"));
   },
 
   async putJson(key, data) {
@@ -49,8 +63,6 @@ export const defaultStorage: AnalysisStorage = {
       if (!res.ok) throw new Error(`Artifact upload failed (${res.status}): ${key}`);
       return;
     }
-    const p = localPath(key);
-    mkdirSync(path.dirname(p), { recursive: true });
-    writeFileSync(p, bytes);
+    saveLocalArtifact(key, bytes);
   },
 };

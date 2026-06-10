@@ -146,9 +146,9 @@ describe("GET /api/analysis/jobs/[id]/artifacts — key prefix re-check (IDOR, 4
     const json = await res.json();
     expect(res.status).toBe(200);
     expect(json.data).toEqual({
-      clipUrl: `/uploads/analysis/clips/${ME}/clip.mp4`,
-      smoothedPoseUrl: "/uploads/analysis/job_1/pose-smoothed.json",
-      reportPdfUrl: "/uploads/analysis/job_1/report.pdf",
+      clipUrl: `/api/dev-artifacts/analysis/clips/${ME}/clip.mp4`,
+      smoothedPoseUrl: "/api/dev-artifacts/analysis/job_1/pose-smoothed.json",
+      reportPdfUrl: "/api/dev-artifacts/analysis/job_1/report.pdf",
     });
   });
 });

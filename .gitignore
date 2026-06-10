@@ -100,3 +100,4 @@ public/uploads/cmm*/
 even-terminal-*.log
 .env*
 public/uploads/analysis/
+.local-storage/

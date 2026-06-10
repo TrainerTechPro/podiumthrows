@@ -10,8 +10,8 @@ import {
   createMultipartUpload,
   getPresignedUploadPartUrl,
   isR2Configured,
-  saveFileLocally,
 } from "@/lib/r2";
+import { saveLocalArtifact } from "@/lib/analysis/storage";
 
 /**
  * Resumable clip upload for analysis (F2, decisions.md D3): S3 multipart on
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: "Unsupported video format" }, { status: 400 });
     }
     const key = clipKey(session.userId, ext);
-    await saveFileLocally(key, Buffer.from(await file.arrayBuffer()));
+    saveLocalArtifact(key, Buffer.from(await file.arrayBuffer()));
     return NextResponse.json({ success: true, data: { key, mode: "local" } });
   }
 

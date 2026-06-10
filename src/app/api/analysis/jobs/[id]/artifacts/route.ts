@@ -7,12 +7,13 @@ import { getPresignedDownloadUrl, isR2Configured } from "@/lib/r2";
 /**
  * Resolves client-fetchable URLs for a job's artifacts: the smoothed pose
  * JSON (overlay player), the clip, and the PDF. R2 → short-lived presigned
- * GETs; local dev → /uploads/<key> (public dir).
+ * GETs; local dev → the guarded /api/dev-artifacts file server
+ * (.local-storage/, never public/).
  */
 async function toUrl(key: string | null): Promise<string | null> {
   if (!key) return null;
   if (isR2Configured()) return getPresignedDownloadUrl(key, 600);
-  return `/uploads/${key}`;
+  return `/api/dev-artifacts/${key}`;
 }
 
 export async function GET(

@@ -25,6 +25,7 @@ async function main() {
   const { transitionJob } = await import("@/lib/analysis/jobs");
   const { processPoseComplete } = await import("@/lib/analysis/process");
   const { checkAnalysisAllowance } = await import("@/lib/analysis/gating");
+  const { localArtifactPath } = await import("@/lib/analysis/storage");
 
   // ── Fixture actors (idempotent upserts; local DB only) ────────────────
   const coachUser = await prisma.user.upsert({
@@ -71,10 +72,9 @@ async function main() {
 
   // ── Step 2: "upload" the fixture clip + register the job ─────────────
   const clipKey = `analysis/clips/${coachUser.id}/walkthrough.mp4`;
-  const uploadsRoot = path.join(process.cwd(), "public", "uploads");
-  mkdirSync(path.dirname(path.join(uploadsRoot, clipKey)), { recursive: true });
+  mkdirSync(path.dirname(localArtifactPath(clipKey)), { recursive: true });
   writeFileSync(
-    path.join(uploadsRoot, clipKey),
+    localArtifactPath(clipKey),
     readFileSync(path.join(process.cwd(), "services/pose/fixtures/fixture-clip.mp4"))
   );
   const job = await prisma.analysisJob.create({
@@ -105,8 +105,8 @@ async function main() {
     })(),
   });
   const rawPath = `analysis/${job.id}/pose-raw.json`;
-  mkdirSync(path.dirname(path.join(uploadsRoot, rawPath)), { recursive: true });
-  writeFileSync(path.join(uploadsRoot, rawPath), JSON.stringify(rawPose));
+  mkdirSync(path.dirname(localArtifactPath(rawPath)), { recursive: true });
+  writeFileSync(localArtifactPath(rawPath), JSON.stringify(rawPose));
 
   assert.ok(await transitionJob(job.id, "PROCESSING"), "QUEUED→PROCESSING");
   assert.ok(await transitionJob(job.id, "POSE_COMPLETE"), "PROCESSING→POSE_COMPLETE");
@@ -118,15 +118,15 @@ async function main() {
   // ── Step 4: full pipeline with local-fs storage ───────────────────────
   const localStorage = {
     async getJson(key: string) {
-      return JSON.parse(readFileSync(path.join(uploadsRoot, key), "utf8"));
+      return JSON.parse(readFileSync(localArtifactPath(key), "utf8"));
     },
     async putJson(key: string, data: unknown) {
-      const p = path.join(uploadsRoot, key);
+      const p = localArtifactPath(key);
       mkdirSync(path.dirname(p), { recursive: true });
       writeFileSync(p, JSON.stringify(data));
     },
     async putBytes(key: string, bytes: Uint8Array) {
-      const p = path.join(uploadsRoot, key);
+      const p = localArtifactPath(key);
       mkdirSync(path.dirname(p), { recursive: true });
       writeFileSync(p, bytes);
     },
@@ -155,7 +155,7 @@ async function main() {
 
   // ── Step 6: the PDF exists and is a PDF ───────────────────────────────
   assert.ok(done.result.reportPdfPath, "report path recorded");
-  const pdfPath = path.join(uploadsRoot, done.result.reportPdfPath);
+  const pdfPath = localArtifactPath(done.result.reportPdfPath);
   assert.ok(existsSync(pdfPath), "PDF file exists");
   const pdf = readFileSync(pdfPath);
   assert.equal(pdf.subarray(0, 5).toString(), "%PDF-", "PDF magic bytes");
