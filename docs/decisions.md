@@ -108,6 +108,7 @@ requires GPU weights impractical for local verification).
 
 - `pdf-lib`: PDF generation with zero native binaries (D10).
 - `@napi-rs/canvas` — **rejected**; keyframe rendering moved server-side to Python/OpenCV (D9), overlay player uses the browser canvas. No new canvas dep.
+- `@anthropic-ai/sdk`: official SDK for the narrative layer (F7) — the only LLM stage; structured output via `messages.parse` + `zodOutputFormat`.
 - Python service deps (`modal`, `rtmlib`, `onnxruntime`, `opencv-python-headless`, `numpy`): isolated to `services/pose`, never installed in the Node build.
 
 ## D14 — `event` column added to analysis_jobs

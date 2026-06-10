@@ -48,7 +48,7 @@ export default defineConfig({
       // parallel login storms trigger 429s. Tests here are fast anyway.
       fullyParallel: false,
       testMatch:
-        /(auth|athlete-auth|landing|pricing|route-consolidation-redirects|coach-ia-redirects|athlete-onboarding-redirects|account-delete|data-export)\.spec\.ts/,
+        /(auth|athlete-auth|landing|pricing|route-consolidation-redirects|coach-ia-redirects|athlete-onboarding-redirects|account-delete|data-export|analysis-overlay|calibration-wizard)\.spec\.ts/,
     },
     {
       name: "coach",

@@ -39,10 +39,11 @@ export async function enqueuePoseJob(job: {
   }
 
   const rawPath = poseRawPath(job.id);
-  const [clipUrl, poseUploadUrl] = await Promise.all([
+  const [clipUrl, upload] = await Promise.all([
     getPresignedDownloadUrl(job.clipPath, 3600),
     getPresignedUploadUrl(rawPath, "application/json"),
   ]);
+  const poseUploadUrl = upload.uploadUrl;
 
   const res = await fetch(url, {
     method: "POST",

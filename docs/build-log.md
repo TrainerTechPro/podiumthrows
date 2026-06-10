@@ -110,6 +110,42 @@ One entry per stage VERIFY, with evidence. TODO(user) items accumulate at the bo
   - Benchmark compat: engine output fed to runBenchmark → releaseError 0, IoU 1.
   - `tsc --noEmit` exit 0; 68/68 across contracts + eval + temporal + metrics + webhook.
 
+## Stage 5 — Faults, narrative, report, overlays (2026-06-09) ✅
+
+- Faults (F6): `faults/rules/shotput.json` — 6 rules incl. the PRD's worked example
+  (`early_shoulder_opening`), all thresholds marked COACH_TUNABLE; engine never fires
+  on null/low-confidence metrics; severity by deviation band; evidence = metric
+  frameRefs. drillTagMap (D8) resolves tags → existing Drill rows.
+- Narrative (F7): `@anthropic-ai/sdk` `messages.parse` + `zodOutputFormat`
+  (claude-opus-4-8, adaptive thinking); numeral validator rejects any numeral absent
+  from the input JSON (+ 120-word cap + library-only drills); one retry with
+  violations quoted; deterministic template fallback that passes its own validator.
+  No key / API error ⇒ fallback, never confabulation.
+- Report (F9, D10): published rubric (`rubric-1.0.0`), ReportModel builder with the
+  traceability gate RUNNING INSIDE the builder, pdf-lib renderer (header, phase
+  scores w/ frame refs, fault cards, drills, summary, "How these numbers are
+  measured" page, FREE-plan watermark). `GET /api/analysis/results/[id]/report.pdf`.
+- Overlays (F8): `OverlayPlayer` canvas skeleton + angle readouts + frame-step +
+  `PhaseTimeline` scrubber; `services/pose/render.py` OpenCV keyframe renderer (D9).
+- Pipeline: `process.ts` continuation (temporal → quality gate → metrics → faults →
+  narrative → result row → PDF) wired into the pose webhook; LOW_CONFIDENCE parks
+  with a refilm message; failures recorded, never swallowed.
+- Real bug caught: `getPresignedUploadUrl` returns `{uploadUrl, publicUrl}` — the
+  pose-client was about to serialize the whole object into Modal's payload.
+- VERIFY evidence:
+  - End-to-end fixture run test: synthetic throw → metrics → faults → template
+    narrative → ReportModel → real PDF bytes (`/tmp/va2-fixture-report.pdf`, %PDF
+    header, 2 pages); gate re-asserted standalone AND shown to reject a tampered
+    "73.4" figure. Deterministic across runs.
+  - Numeral-validator: 12 tests incl. invented-numeral rejection, re-rounding
+    rejection, invented-drill rejection, >120-word rejection, retry-with-violation
+    and fallback paths.
+  - "% energy" ban: greps all VA2 surfaces; allowlist = files stating the
+    prohibition itself (documented in-test). Legacy ThrowFlow quarantined (D11).
+  - Playwright smoke `analysis-overlay.spec.ts`: canvas paints (pixel check),
+    frame-steps, phase scrub — 1 passed.
+  - `tsc --noEmit` exit 0; 99/99 tests across contracts + analysis + webhook.
+
 ## TODO(user)
 
 - [ ] **Deploy the pose service to Modal** — exact commands in

@@ -1,0 +1,110 @@
+{
+  "version": "shotput-rules-1.0.0",
+  "event": "SHOT_PUT",
+  "rules": [
+    {
+      "ruleId": "early_shoulder_opening",
+      "faultName": "Early shoulder opening",
+      "metricKey": "hip_shoulder_separation_at_power_position",
+      "comparator": "below",
+      "targetRange": [35, 45],
+      "unit": "deg",
+      "severityBands": [
+        { "deviationGte": 0, "severity": "LOW" },
+        { "deviationGte": 8, "severity": "MEDIUM" },
+        { "deviationGte": 15, "severity": "HIGH" }
+      ],
+      "minConfidence": 0.5,
+      "drillTags": ["separation"],
+      "coachTunable": true
+    },
+    {
+      "ruleId": "low_release_angle",
+      "faultName": "Release angle too low",
+      "metricKey": "release_angle",
+      "comparator": "below",
+      "targetRange": [32, 40],
+      "unit": "deg",
+      "severityBands": [
+        { "deviationGte": 0, "severity": "LOW" },
+        { "deviationGte": 5, "severity": "MEDIUM" },
+        { "deviationGte": 10, "severity": "HIGH" }
+      ],
+      "minConfidence": 0.5,
+      "drillTags": ["release_mechanics"],
+      "coachTunable": true
+    },
+    {
+      "ruleId": "high_release_angle",
+      "faultName": "Release angle too high",
+      "metricKey": "release_angle",
+      "comparator": "above",
+      "targetRange": [32, 40],
+      "unit": "deg",
+      "severityBands": [
+        { "deviationGte": 0, "severity": "LOW" },
+        { "deviationGte": 5, "severity": "MEDIUM" },
+        { "deviationGte": 10, "severity": "HIGH" }
+      ],
+      "minConfidence": 0.5,
+      "drillTags": ["release_mechanics"],
+      "coachTunable": true
+    },
+    {
+      "ruleId": "soft_block_knee",
+      "faultName": "Soft block leg at release",
+      "metricKey": "block_knee_angle_at_release",
+      "comparator": "below",
+      "targetRange": [160, 180],
+      "unit": "deg",
+      "severityBands": [
+        { "deviationGte": 0, "severity": "LOW" },
+        { "deviationGte": 10, "severity": "MEDIUM" },
+        { "deviationGte": 25, "severity": "HIGH" }
+      ],
+      "minConfidence": 0.5,
+      "drillTags": ["block"],
+      "coachTunable": true
+    },
+    {
+      "ruleId": "excessive_trunk_lean_power_position",
+      "faultName": "Excessive trunk lean at power position",
+      "metricKey": "trunk_inclination_at_power_position",
+      "comparator": "above",
+      "targetRange": [20, 50],
+      "unit": "deg",
+      "severityBands": [
+        { "deviationGte": 0, "severity": "LOW" },
+        { "deviationGte": 10, "severity": "MEDIUM" },
+        { "deviationGte": 20, "severity": "HIGH" }
+      ],
+      "minConfidence": 0.5,
+      "drillTags": ["posture"],
+      "coachTunable": true
+    },
+    {
+      "ruleId": "rushed_delivery",
+      "faultName": "Rushed delivery",
+      "metricKey": "delivery_duration",
+      "comparator": "below",
+      "targetRange": [0.18, 0.35],
+      "unit": "s",
+      "severityBands": [
+        { "deviationGte": 0, "severity": "LOW" },
+        { "deviationGte": 0.05, "severity": "MEDIUM" },
+        { "deviationGte": 0.1, "severity": "HIGH" }
+      ],
+      "minConfidence": 0.5,
+      "drillTags": ["rhythm"],
+      "coachTunable": true
+    }
+  ],
+  "drillTagMap": {
+    "separation": { "category": "SPECIAL_DEVELOPMENTAL", "keywords": ["separation", "x-factor", "wrap", "torque"] },
+    "release_mechanics": { "category": "SPECIAL_DEVELOPMENTAL", "keywords": ["release", "delivery", "strike", "punch"] },
+    "block": { "category": "SPECIAL_DEVELOPMENTAL", "keywords": ["block", "brace", "left side", "firm"] },
+    "posture": { "category": "SPECIAL_PREPARATORY", "keywords": ["posture", "chest", "tall", "trunk"] },
+    "rhythm": { "category": "COMPETITIVE_EXERCISE", "keywords": ["rhythm", "tempo", "slow", "patience"] }
+  },
+  "_comment": "COACH_TUNABLE: every targetRange and severityBand above is a placeholder pending Bondarchuk-informed review by Tony against golden-set clips (PRD F6: thresholds are coach-authored and editable without redeploy). The early_shoulder_opening rule is the PRD's worked example."
+}

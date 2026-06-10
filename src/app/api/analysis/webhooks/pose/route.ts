@@ -86,6 +86,17 @@ export async function POST(request: NextRequest) {
     logger.info("analysis/webhooks/pose: pose_complete recorded", {
       metadata: { jobId: job.id, modelId: payload.modelId },
     });
+    // Continue the pipeline (temporal → metrics → faults → narrative →
+    // report) without blocking the webhook ack. A crash mid-pipeline marks
+    // the job FAILED inside processPoseComplete; a killed function leaves
+    // POSE_COMPLETE for the requeue cron to notice.
+    const { processPoseComplete } = await import("@/lib/analysis/process");
+    processPoseComplete(job.id).catch((err) => {
+      logger.error("analysis/webhooks/pose: continuation threw", {
+        metadata: { jobId: job.id },
+        error: err instanceof Error ? err : new Error(String(err)),
+      });
+    });
     return NextResponse.json({ success: true, data: { received: true } });
   }
 

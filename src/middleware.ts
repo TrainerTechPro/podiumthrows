@@ -23,6 +23,7 @@ const PUBLIC_PATHS = [
   "/athletes/claim", // public athlete-invite preview /athletes/claim/[token]
   "/api/whoop/callback",
   "/api/oura/callback",
+  "/dev", // dev-only component harnesses (pages 404 in production)
 ];
 const AUTH_PATHS = ["/login", "/register"];
 
