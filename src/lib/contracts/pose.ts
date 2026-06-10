@@ -60,6 +60,20 @@ export const PoseOutputSchema = z.object({
 });
 export type PoseOutput = z.infer<typeof PoseOutputSchema>;
 
+/**
+ * Temporal-layer artifact (F4), persisted at pose_artifacts.smoothed_path.
+ * Same frame shape as PoseOutput so the overlay player consumes either, plus
+ * per-frame quality. Keypoints + phase boundaries in this shape are the F10
+ * ghost-overlay schema obligation: cross-clip alignment needs no migration.
+ */
+export const SmoothedPoseSchema = PoseOutputSchema.extend({
+  temporalVersion: z.string().min(1),
+  /** One entry per frame, 0–1: fraction of trusted keypoints (conf-weighted). */
+  perFrameQuality: z.array(z.number().min(0).max(1)),
+  meanQuality: z.number().min(0).max(1),
+});
+export type SmoothedPose = z.infer<typeof SmoothedPoseSchema>;
+
 /** Modal → /api/analysis/webhooks/pose callback body (HMAC-signed). */
 export const PoseWebhookPayloadSchema = z.object({
   jobId: z.string().min(1),

@@ -86,6 +86,30 @@ One entry per stage VERIFY, with evidence. TODO(user) items accumulate at the bo
     contract 400s, failure path. `tsc --noEmit` exit 0.
 - **NOT deployed to Modal** (external gate — needs your account): → TODO(user).
 
+## Stage 4 — Temporal layer + shot put metrics (2026-06-09) ✅
+
+- Temporal (F4, pure functions in `src/lib/analysis/temporal/`): confidence gate,
+  L/R identity enforcement (trajectory continuity; genuine crossings preserved),
+  gap interpolation (cubic Hermite, exact on linear motion — uniform Catmull-Rom was
+  wrong across multi-frame gaps, caught by test), OneEuro (state resets across gaps;
+  never bridges what interpolation refused to fill), quality scoring.
+  `SmoothedPoseSchema` added to contracts (F10 alignment obligation).
+- Metrics (F5, `src/lib/analysis/metrics/`): geometry helpers (null over guess),
+  deterministic release detection (wrist-speed peak + elbow extension),
+  phase segmentation (named-constant thresholds pending golden-set tuning),
+  `definitions/shotput.ts` with the full PRD F5 set — every metric
+  `{value, unit, confidence, frameRefs}`; calibrated metrics null without homography.
+  Engine validates its own output against the contract before returning.
+- VERIFY evidence:
+  - 28 new unit tests (14 temporal incl. injected swaps corrected / crossings kept /
+    long gaps refused; 14 metrics with hand-computed exact values: sep 50°,
+    10.00 m/s, 1.67 m, phases [0,20][21,44][45][45,60][61,119]).
+  - Bit-identical: real fixture-pose.json → temporal → metrics twice, `cmp` equal.
+    The static-photo fixture correctly parks LOW_CONFIDENCE (quality 0.294) with
+    null release — the honest-refusal path works end-to-end.
+  - Benchmark compat: engine output fed to runBenchmark → releaseError 0, IoU 1.
+  - `tsc --noEmit` exit 0; 68/68 across contracts + eval + temporal + metrics + webhook.
+
 ## TODO(user)
 
 - [ ] **Deploy the pose service to Modal** — exact commands in
