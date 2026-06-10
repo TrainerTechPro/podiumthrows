@@ -66,6 +66,42 @@ describe("checkAnalysisAllowance (PRD §8)", () => {
     });
   });
 
+  it("pools the quota per coach: two athletes share one pool", async () => {
+    // Free coach c1 with athletes a1 and a2. All 3 analyses this month were
+    // a1's. Per-coach semantics: a2 is blocked too. Per-athlete semantics
+    // (the bug this pins against) would hand a2 a fresh quota of 3.
+    const roster: Record<string, { coachId: string; coach: { plan: string } }> = {
+      a1: { coachId: "c1", coach: { plan: "FREE" } },
+      a2: { coachId: "c1", coach: { plan: "FREE" } },
+    };
+    (prisma.athleteProfile.findUnique as ReturnType<typeof vi.fn>).mockImplementation(
+      async ({ where }: { where: { id: string } }) => roster[where.id] ?? null
+    );
+
+    const jobs = [
+      { athleteId: "a1", coachId: "c1" },
+      { athleteId: "a1", coachId: "c1" },
+      { athleteId: "a1", coachId: "c1" },
+    ];
+    // Fake-DB count: honors whichever filter the implementation sends, so a
+    // per-athlete query (athleteId) would see 0 jobs for a2 and wrongly allow.
+    (prisma.analysisJob.count as ReturnType<typeof vi.fn>).mockImplementation(
+      async ({ where }: { where: { athlete?: { coachId: string }; athleteId?: string } }) =>
+        jobs.filter(
+          (j) =>
+            (where.athlete?.coachId == null || j.coachId === where.athlete.coachId) &&
+            (where.athleteId == null || j.athleteId === where.athleteId)
+        ).length
+    );
+
+    const forA1 = (await checkAnalysisAllowance("a1"))!;
+    const forA2 = (await checkAnalysisAllowance("a2"))!;
+    expect(forA1.allowed).toBe(false);
+    expect(forA2.allowed).toBe(false);
+    expect(forA2.used).toBe(3);
+    expect(forA2.remaining).toBe(0);
+  });
+
   it("returns null for unknown athlete", async () => {
     (prisma.athleteProfile.findUnique as ReturnType<typeof vi.fn>).mockResolvedValue(null);
     expect(await checkAnalysisAllowance("nope")).toBeNull();
