@@ -9,7 +9,7 @@ import { enqueuePoseJob } from "@/lib/analysis/pose-client";
 import { checkAnalysisAllowance } from "@/lib/analysis/gating";
 import { AnalysisEventSchema } from "@/lib/contracts";
 
-export const AnalysisJobCreateSchema = z.object({
+const AnalysisJobCreateSchema = z.object({
   athleteId: z.string().min(1),
   event: AnalysisEventSchema,
   /** R2 key of the uploaded clip (from the upload pipeline). */
