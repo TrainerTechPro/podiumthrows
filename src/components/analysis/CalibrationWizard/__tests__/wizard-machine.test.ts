@@ -100,6 +100,22 @@ describe("wizard happy path (gyro granted)", () => {
     expect(s.step).toBe("align");
   });
 
+  it("ignores all-null samples — a sensor dropout never destroys a held lock", () => {
+    const s = run([
+      { type: "SELECT_EVENT", event: "SHOT_PUT" },
+      { type: "CONFIRM_POSITION" },
+      { type: "GYRO_GRANTED" },
+      { type: "ORIENTATION_SAMPLE", sample: sampleFor(12, 0), nowMs: 1000 },
+      {
+        type: "ORIENTATION_SAMPLE",
+        sample: { alpha: null, beta: null, gamma: null },
+        nowMs: 1100,
+      },
+    ]);
+    expect(s.alignment).toBe("LOCKED");
+    expect(s.lockedSinceMs).toBe(1000);
+  });
+
   it("keeps the original lock start across sustained LOCKED samples", () => {
     const s = run([
       { type: "SELECT_EVENT", event: "SHOT_PUT" },

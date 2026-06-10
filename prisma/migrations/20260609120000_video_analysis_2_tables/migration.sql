@@ -27,6 +27,8 @@ CREATE TABLE "analysis_jobs" (
     "clipPath" TEXT NOT NULL,
     "fpsDeclared" DOUBLE PRECISION,
     "fpsTrue" DOUBLE PRECISION,
+    "trimStartS" DOUBLE PRECISION,
+    "trimEndS" DOUBLE PRECISION,
     "status" "AnalysisJobStatus" NOT NULL DEFAULT 'QUEUED',
     "error" JSONB,
     "timings" JSONB,

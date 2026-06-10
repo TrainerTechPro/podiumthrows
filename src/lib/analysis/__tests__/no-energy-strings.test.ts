@@ -59,7 +59,7 @@ describe("banned physics-theater strings (F6)", () => {
             { encoding: "utf8" }
           );
         } catch {
-          // grep exits 1 on no matches — that's the pass case
+          out = ""; // ok: grep exits 1 when nothing matches — that IS the pass case
         }
         const hits = out
           .split("\n")

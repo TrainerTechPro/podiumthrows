@@ -77,7 +77,10 @@ def process(payload: dict, request_headers: dict | None = None):
         timings["downloaded"] = time.time() - timings["startedAt"]
 
         backend = load_backend(device="cuda")
-        output = run_pipeline(clip_path, job_id, backend)
+        output = run_pipeline(
+            clip_path, job_id, backend,
+            trim_start=payload.get("trimStart"), trim_end=payload.get("trimEnd"),
+        )
         timings["pose"] = time.time() - timings["startedAt"]
 
         body = json.dumps(output).encode("utf-8")

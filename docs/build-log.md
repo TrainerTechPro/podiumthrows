@@ -176,6 +176,94 @@ One entry per stage VERIFY, with evidence. TODO(user) items accumulate at the bo
     manual confirm. 2/2 passed (+ overlay smoke re-run: 3/3 total).
   - `tsc --noEmit` exit 0; 121/121 unit tests.
 
+## Stage 7 — Wiring & gating (2026-06-10) ✅
+
+- Gating (PRD §8): `src/lib/analysis/gating.ts` — Free 3/mo + PDF watermark,
+  Pro 50/mo, Elite unlimited + calibrated velocity (below Elite, clips process
+  uncalibrated). Org-level monthly quota, FAILED jobs don't burn it. Enforced in
+  POST /api/analysis/jobs (402) and in the pipeline. **Real bug caught by tests:**
+  `PLAN_QUOTAS[plan] ?? 3` silently capped Elite (null = unlimited) at 3.
+- Upload (F2/D3): `/api/analysis/uploads` — S3-multipart resumable (init /
+  sign-part / complete / abort, per-part retry on the client), dev form-data
+  fallback; `UploadTrimmer` validates resolution ≥720p + trim window ≤15 s; trim
+  passes through job → pose service (`ffmpeg -ss/-t`). True fps read server-side.
+- UI: `/coach/video-analysis-2` (list + quota readout), `/new` (UploadTrimmer),
+  `/calibrate` (wizard), `/[jobId]` (AnalysisResultView: overlay player, phase
+  scores, fault cards with evidence frames, coach summary, PDF link), polling
+  JobStatusCard with the LOW_CONFIDENCE refilm state.
+- **Flake → product bug:** the wizard smoke was ~50% flaky; reducer logging
+  showed headless Chromium emitting a REAL all-null deviceorientation event that
+  destroyed a held lock. Fixed in the machine (all-null sample = "no reading",
+  never "misaligned") + regression test. Real devices do this when sensors
+  throttle — would have hit users at the ring.
+- VERIFY evidence:
+  - `tsc --noEmit` exit 0; `next lint` zero warnings/errors; design lints clean.
+  - Full unit suite: **1179/1179 across 122 files** (whole repo, no regressions).
+  - Playwright: overlay + wizard ×2 — 3/3, and wizard specs stable across 5
+    consecutive runs after the null-sample fix.
+  - Scripted e2e walkthrough (`scripts/analysis-walkthrough.ts`, local DB):
+    gating → upload → job QUEUED → pose artifact → POSE_COMPLETE → temporal →
+    metrics (release_frame=60, exact) → faults → narrative (template path) →
+    phase scores → COMPLETE → real PDF on disk. "WALKTHROUGH PASSED".
+
+---
+
+# FINAL BUILD REPORT (run of 2026-06-09/10)
+
+## What shipped (all 8 stages, VERIFY-gated, committed per stage)
+
+| Area | Where |
+|---|---|
+| Schema: 5 additive tables + state-machine enum | `prisma/migrations/20260609120000_video_analysis_2_tables` |
+| Zod contract spine (12 payload schemas) | `src/lib/contracts/*` |
+| Eval harness: PCK@0.05, swap rate, release error, phase IoU + labeling CLI + MediaPipe adapter | `src/lib/analysis/eval/*`, `scripts/eval/*` |
+| Pose service: Modal app (rtmpose-l / vitpose-l flag), CPU fallback **verified with real ONNX inference**, signed idempotent webhook, requeue cron | `services/pose/*`, `api/analysis/webhooks/pose`, `api/cron/requeue-stale-analysis` |
+| Temporal layer: gate → L/R → Hermite gap fill → OneEuro + quality gate | `src/lib/analysis/temporal/*` |
+| Shot put metrics engine ({value, unit, confidence, frameRefs} everywhere) | `src/lib/analysis/metrics/*` |
+| Fault rules engine (6 coach-tunable rules incl. PRD example) + drillTag resolver | `src/lib/analysis/faults/*`, `drills.ts` |
+| Claude narrative with numeral validator + template fallback | `src/lib/analysis/narrative/*` |
+| Report: published rubric, traceability-gated ReportModel, pdf-lib PDF, "% energy" ban test | `src/lib/analysis/report/*` |
+| Overlay player + phase timeline + keyframe renderer | `src/components/analysis/*`, `services/pose/render.py` |
+| Calibration wizard (F1 complete) + homography with measured 5 m envelope | `CalibrationWizard/*`, `calibration/homography.ts` |
+| Gating, resumable upload, job UI, athlete attachment | `gating.ts`, `api/analysis/uploads`, `/coach/video-analysis-2/*` |
+| F10 ghost-overlay schema obligations (no rendering) | SmoothedPose artifact + phase boundaries + golden-set tags |
+
+## Benchmark baseline table (PRD §11)
+
+| Model | PCK@0.05 upper | PCK@0.05 lower | Swap rate | Release ±2fr | Phase IoU |
+|---|---|---|---|---|---|
+| Gate | ≥ 0.90 | ≥ 0.85 | < 0.01 | ≥ 0.90 | ≥ 0.85 |
+| mediapipe-blazepose (baseline) | **blocked: no labeled clips** | — | — | — | — |
+| rtmpose-l | **blocked: no labeled clips** | — | — | — | — |
+| vitpose-l | **blocked: needs Modal GPU** | — | — | — | — |
+
+Harness is ready and unit-verified; rows need labeled real clips (below).
+
+## Exact commands once clips are labeled
+
+```bash
+# 1. Label each golden-set clip (50–60 per PRD §11):
+npx tsx scripts/eval/label-clips.ts <clip.mp4> --event SHOT_PUT \
+  --keypoints-from <gt.json> --db
+
+# 2. Produce pose outputs per model (local CPU for rtmpose-l):
+cd services/pose && python3 local_run.py --clip <clip.mp4> --out poses/<clipId>.json
+
+# 3. Score:
+npx tsx scripts/eval/run-benchmark.ts --pose poses/ --labels labels/ \
+  [--pred metrics/] --out benchmark-rtmpose-l.json
+```
+
+## Out of scope this run (honest gaps, not failures)
+
+- Client-side WebCodecs/ffmpeg.wasm compression (PRD F2): trim ships via
+  server-side window extraction; compression is a follow-up for poor-connectivity
+  venues.
+- Hammer metrics pack (PRD Phase 5) — engine is event-parameterized for it.
+- Keyframe thumbnails in PDF fault cards: renderer exists (`render.py`); the
+  orchestration call into Modal's render endpoint lands with the Modal deploy.
+- Legacy ThrowFlow removal (D11) — quarantined, lint-guarded, remove at GA.
+
 ## TODO(user)
 
 - [ ] **Deploy the pose service to Modal** — exact commands in
@@ -187,3 +275,18 @@ One entry per stage VERIFY, with evidence. TODO(user) items accumulate at the bo
       then score the MediaPipe baseline row:
       `npx tsx scripts/eval/run-benchmark.ts --pose <mediapipe-adapted-dir> --labels <labels-dir>`
       (adapter: `src/lib/analysis/eval/mediapipe-adapter.ts`).
+- [ ] **Set ANTHROPIC_API_KEY** in Vercel + `.env.local` — without it the
+      narrative uses the deterministic template (measured-values prose, never
+      wrong, just plain).
+- [ ] **Apply the migration to production** on the next deploy (the build runs
+      `prisma migrate deploy` automatically; it was verified from scratch on a
+      local DB). Additive only — no existing tables touched.
+- [ ] **Replace `services/pose/fixtures/fixture-clip.mp4`** with a real throws
+      clip and re-run `python3 local_run.py …` + `validate-pose-json.ts` to see
+      real keypoints (current fixture is a real-person photo clip: detector
+      verified, but it's static).
+- [ ] **Tune COACH_TUNABLE thresholds** in
+      `src/lib/analysis/faults/rules/shotput.json` and the rubric bands in
+      `src/lib/analysis/report/rubric.ts` against your eye on real clips.
+- [ ] **Decide POSE_MODEL** (rtmpose-l vs vitpose-l) from the golden-set
+      benchmark before beta — PRD Phase 1 gate.

@@ -1,12 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from "react";
+import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Camera, Check, CircleAlert, RotateCcw } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
 import type { AnalysisEvent, RingEllipse } from "@/lib/contracts";
 import {
   EVENT_CAPTURE_CONFIG,
-  LOCK_HOLD_MS,
   initialWizardState,
   wizardReducer,
 } from "./wizard-machine";
@@ -93,10 +92,13 @@ export function CalibrationWizard({
     };
   }, [state.step]);
 
-  // Lock-hold timer → capture.
+  // Lock-hold → capture. A repeating tick, not a one-shot: the reducer's
+  // elapsed guard makes early ticks no-ops, and a tick that loses any race
+  // (re-render timing, dev-mode remount) is simply retried 250ms later.
+  // Cleanup stops the ticking the moment the step or zone changes.
   useEffect(() => {
     if (state.step !== "align" || state.alignment !== "LOCKED") return;
-    const timer = window.setTimeout(() => {
+    const tick = () => {
       const video = videoRef.current;
       const vw = video?.videoWidth || 1920;
       const vh = video?.videoHeight || 1080;
@@ -108,10 +110,17 @@ export function CalibrationWizard({
         rotation: 0,
       };
       dispatch({ type: "LOCK_HOLD_ELAPSED", nowMs: Date.now(), ringEllipse });
-      cuesRef.current.speak("Captured.", { force: true });
-    }, LOCK_HOLD_MS);
-    return () => window.clearTimeout(timer);
+    };
+    const interval = window.setInterval(tick, 250);
+    return () => window.clearInterval(interval);
   }, [state.step, state.alignment, state.lockedSinceMs]);
+
+  // One spoken confirmation when capture lands.
+  useEffect(() => {
+    if (state.step === "captured") {
+      cuesRef.current.speak("Captured.", { force: true });
+    }
+  }, [state.step]);
 
   // Speech cues on alignment changes (gyro path only — manual path is silent).
   useEffect(() => {

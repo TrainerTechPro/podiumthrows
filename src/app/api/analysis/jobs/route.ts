@@ -6,6 +6,7 @@ import { canAccessAthlete } from "@/lib/authorize";
 import { parseBody } from "@/lib/api-schemas";
 import { logger } from "@/lib/logger";
 import { enqueuePoseJob } from "@/lib/analysis/pose-client";
+import { checkAnalysisAllowance } from "@/lib/analysis/gating";
 import { AnalysisEventSchema } from "@/lib/contracts";
 
 export const AnalysisJobCreateSchema = z.object({
@@ -15,6 +16,8 @@ export const AnalysisJobCreateSchema = z.object({
   clipPath: z.string().min(1),
   calibrationSessionId: z.string().nullable().optional(),
   fpsDeclared: z.number().positive().nullable().optional(),
+  trimStartS: z.number().nonnegative().nullable().optional(),
+  trimEndS: z.number().positive().nullable().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -25,10 +28,38 @@ export async function POST(request: NextRequest) {
 
   const parsed = await parseBody(request, AnalysisJobCreateSchema);
   if (parsed instanceof NextResponse) return parsed;
-  const { athleteId, event, clipPath, calibrationSessionId, fpsDeclared } = parsed;
+  const { athleteId, event, clipPath, calibrationSessionId, fpsDeclared, trimStartS, trimEndS } =
+    parsed;
+
+  // F2: cap 15 s per clip — enforced on the trim window the pose service
+  // will actually extract.
+  if (trimStartS != null && trimEndS != null && trimEndS - trimStartS > 15) {
+    return NextResponse.json(
+      { success: false, error: "Trim the clip to a single throw (max 15 seconds)" },
+      { status: 400 }
+    );
+  }
 
   if (!(await canAccessAthlete(session.userId, session.role, athleteId))) {
     return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
+  }
+
+  // Tier gating (PRD §8): Free 3/mo, Pro 50/mo, Elite unlimited.
+  const allowance = await checkAnalysisAllowance(athleteId);
+  if (!allowance) {
+    return NextResponse.json({ success: false, error: "Athlete not found" }, { status: 404 });
+  }
+  if (!allowance.allowed) {
+    return NextResponse.json(
+      {
+        success: false,
+        error:
+          allowance.plan === "FREE"
+            ? "Free plan includes 3 analyses per month — upgrade to Pro for 50."
+            : "Monthly analysis quota reached — upgrade to Elite for unlimited analyses.",
+      },
+      { status: 402 }
+    );
   }
 
   if (calibrationSessionId) {
@@ -52,6 +83,8 @@ export async function POST(request: NextRequest) {
       clipPath,
       calibrationSessionId: calibrationSessionId ?? null,
       fpsDeclared: fpsDeclared ?? null,
+      trimStartS: trimStartS ?? null,
+      trimEndS: trimEndS ?? null,
       timings: { uploadedAt: new Date().toISOString() },
     },
   });

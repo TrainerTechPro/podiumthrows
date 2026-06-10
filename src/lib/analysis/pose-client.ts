@@ -20,6 +20,8 @@ export function poseRawPath(jobId: string): string {
 export async function enqueuePoseJob(job: {
   id: string;
   clipPath: string;
+  trimStartS?: number | null;
+  trimEndS?: number | null;
 }): Promise<boolean> {
   const url = process.env.MODAL_POSE_URL;
   const token = process.env.MODAL_POSE_TOKEN;
@@ -56,6 +58,8 @@ export async function enqueuePoseJob(job: {
       clipUrl,
       poseUploadUrl,
       rawPath,
+      trimStart: job.trimStartS ?? null,
+      trimEnd: job.trimEndS ?? null,
       webhookUrl: `${appUrl.replace(/\/$/, "")}/api/analysis/webhooks/pose`,
     }),
   });

@@ -3575,6 +3575,10 @@ model AnalysisJob {
   clipPath    String
   fpsDeclared Float?
   fpsTrue     Float?
+  // Client-selected throw window (F2 trim, ≤15 s); pose service extracts
+  // only this range. Null = whole clip.
+  trimStartS  Float?
+  trimEndS    Float?
   status      AnalysisJobStatus @default(QUEUED)
   error       Json?
   timings     Json? // { uploadedAt, poseStartedAt, poseFinishedAt, metricsAt, ... }

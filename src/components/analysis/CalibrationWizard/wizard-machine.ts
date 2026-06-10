@@ -134,6 +134,10 @@ export function wizardReducer(state: WizardState, event: WizardEvent): WizardSta
 
     case "ORIENTATION_SAMPLE": {
       if (state.step !== "align" || state.gyro !== "granted" || !state.event) return state;
+      // All-null sample = "no reading" (browsers emit these on listener
+      // attach and when sensors throttle), NOT "misaligned" — it must never
+      // destroy a held lock. Verified live: headless Chromium fires one.
+      if (event.sample.beta === null && event.sample.gamma === null) return state;
       const config = EVENT_CAPTURE_CONFIG[state.event];
       if (!config) return state;
       const alignment = classifyAlignment(event.sample, config);

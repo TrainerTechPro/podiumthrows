@@ -57,8 +57,23 @@ export async function processPoseComplete(
       data: { smoothedPath, meanQuality: smoothed.meanQuality },
     });
 
+    const coachProfileEarly = await prisma.coachProfile.findUnique({
+      where: { userId: job.userId },
+      select: { id: true, plan: true },
+    });
+    const athleteCoach = coachProfileEarly
+      ? coachProfileEarly
+      : await prisma.athleteProfile
+          .findUnique({
+            where: { id: job.athleteId },
+            select: { coach: { select: { id: true, plan: true } } },
+          })
+          .then((a) => a?.coach ?? null);
+
+    // Calibrated velocity/distance metrics are Elite-only (PRD §8). Below
+    // Elite the clip is processed uncalibrated: angles + timing only.
     let homography: Homography | null = null;
-    if (job.calibrationSession?.homography) {
+    if (job.calibrationSession?.homography && athleteCoach?.plan === "ELITE") {
       const parsed = HomographySchema.safeParse(job.calibrationSession.homography);
       homography = parsed.success ? parsed.data : null;
     }
@@ -83,13 +98,9 @@ export async function processPoseComplete(
     const rules = loadShotPutRules();
     const faults = evaluateFaults(metrics, rules);
 
-    const coachProfile = await prisma.coachProfile.findUnique({
-      where: { userId: job.userId },
-      select: { id: true, plan: true },
-    });
     const drillOptions = await resolveDrillOptions({
       event: metrics.event,
-      coachId: coachProfile?.id ?? null,
+      coachId: athleteCoach?.id ?? null,
       drillTags: [...new Set(faults.flatMap((f) => f.drillTags))],
     });
 
@@ -129,7 +140,7 @@ export async function processPoseComplete(
           ? [{ id: d.id, name: d.name, description: d.description, rationale: sel.rationale }]
           : [];
       }),
-      watermark: (coachProfile?.plan ?? "FREE") === "FREE",
+      watermark: (athleteCoach?.plan ?? "FREE") === "FREE",
       rulesVersion: rules.version,
     });
     await prisma.analysisResult.update({

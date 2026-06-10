@@ -202,7 +202,7 @@ export function OverlayPlayer({ pose, phaseBoundaries = [], videoUrl }: OverlayP
           <button
             type="button"
             onClick={() => step(-1)}
-            className="btn-ghost rounded p-2"
+            className="rounded p-2 hover:bg-surface-50 dark:hover:bg-surface-800/50 active:scale-[0.97] transition-colors"
             aria-label="Previous frame"
           >
             <ChevronLeft className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />
@@ -210,7 +210,7 @@ export function OverlayPlayer({ pose, phaseBoundaries = [], videoUrl }: OverlayP
           <button
             type="button"
             onClick={togglePlay}
-            className="btn-ghost rounded p-2"
+            className="rounded p-2 hover:bg-surface-50 dark:hover:bg-surface-800/50 active:scale-[0.97] transition-colors"
             aria-label={playing ? "Pause" : "Play"}
           >
             {playing ? (
@@ -222,7 +222,7 @@ export function OverlayPlayer({ pose, phaseBoundaries = [], videoUrl }: OverlayP
           <button
             type="button"
             onClick={() => step(1)}
-            className="btn-ghost rounded p-2"
+            className="rounded p-2 hover:bg-surface-50 dark:hover:bg-surface-800/50 active:scale-[0.97] transition-colors"
             aria-label="Next frame"
           >
             <ChevronRight className="h-4 w-4" strokeWidth={1.75} aria-hidden="true" />

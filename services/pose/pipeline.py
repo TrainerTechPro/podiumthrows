@@ -13,12 +13,12 @@ from models import AmbiguousDetection
 POSE_SCHEMA_VERSION = "1.0"
 
 
-def run_pipeline(clip_path: str, job_id: str, backend) -> dict:
+def run_pipeline(clip_path: str, job_id: str, backend, trim_start=None, trim_end=None) -> dict:
     import cv2  # noqa: PLC0415
 
     meta = probe(clip_path)
     with tempfile.TemporaryDirectory() as tmp:
-        frame_paths = extract_frames(clip_path, tmp)
+        frame_paths = extract_frames(clip_path, tmp, trim_start=trim_start, trim_end=trim_end)
         frames = []
         ambiguous_frames = 0
         for idx, path in enumerate(frame_paths):

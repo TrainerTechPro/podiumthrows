@@ -27,16 +27,18 @@ def probe(clip_path: str) -> dict:
     }
 
 
-def extract_frames(clip_path: str, out_dir: str) -> list:
-    """Extract every frame at native fps as JPEG. Returns ordered paths."""
+def extract_frames(clip_path: str, out_dir: str, trim_start=None, trim_end=None) -> list:
+    """Extract every frame at native fps as JPEG (optionally only the
+    client-trimmed throw window, F2). Returns ordered paths."""
     out = Path(out_dir)
     out.mkdir(parents=True, exist_ok=True)
-    subprocess.run(
-        [
-            "ffmpeg", "-y", "-v", "error", "-i", clip_path,
-            "-qscale:v", "2", "-start_number", "0",
-            str(out / "frame_%06d.jpg"),
-        ],
-        check=True,
-    )
+    cmd = ["ffmpeg", "-y", "-v", "error"]
+    if trim_start is not None:
+        cmd += ["-ss", str(trim_start)]
+    cmd += ["-i", clip_path]
+    if trim_end is not None:
+        duration = trim_end - (trim_start or 0)
+        cmd += ["-t", str(duration)]
+    cmd += ["-qscale:v", "2", "-start_number", "0", str(out / "frame_%06d.jpg")]
+    subprocess.run(cmd, check=True)
     return sorted(str(p) for p in out.glob("frame_*.jpg"))
