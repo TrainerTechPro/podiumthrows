@@ -34,6 +34,21 @@ vercel env add POSE_WEBHOOK_SECRET   # same value as in the Modal secret
 
 For local dev, add the same three keys to `.env.local`.
 
+## Measured performance (T4, fixture clip: 60 frames / 2s @ 720×720)
+
+Benchmark: `modal run bench.py` — reports active ORT providers + wall-clock.
+
+| Image                                  | Active provider | Pipeline | Total (load + pipeline) |
+| -------------------------------------- | --------------- | -------- | ----------------------- |
+| onnxruntime-gpu 1.18.1 (CUDA 11 build) | CPU (silent fallback) | 22.5s | 29.9s |
+| onnxruntime-gpu 1.19.2 (CUDA 12 build) | **CUDA**        | 14.5s    | 22.1s                   |
+
+Measured 2026-06-10. GPU cost at Modal's T4 rate ($0.59/h ≈ $0.000164/s):
+~$0.0036/run vs ~$0.0049 on the silent-CPU image — and the CPU fallback is
+now impossible: the backend asserts CUDAExecutionProvider is active when
+`device="cuda"` and fails the job loudly otherwise (`GpuUnavailable`), with
+active providers logged every run.
+
 ## Model flag
 
 `POSE_MODEL` env var on the Modal app: `rtmpose-l` (default) or `vitpose-l`.

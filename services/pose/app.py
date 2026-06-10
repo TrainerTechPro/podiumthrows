@@ -25,12 +25,23 @@ from fastapi import Header, HTTPException
 
 app = modal.App("podium-pose")
 
+# ORT dlopens libcublasLt/libcudnn at session creation; the pip nvidia-* wheels
+# live outside the default loader path, so without this the CUDA EP fails to
+# load and ORT silently falls back to CPU on a billed T4 (shipped 2026-06-10).
+_NVIDIA_WHEEL_LIBS = ":".join(
+    f"/usr/local/lib/python3.11/site-packages/nvidia/{pkg}/lib"
+    for pkg in ("cublas", "cudnn", "cuda_runtime", "cufft", "curand", "cuda_nvrtc")
+)
+
 image = (
     modal.Image.debian_slim(python_version="3.11")
     .apt_install("ffmpeg", "libgl1", "libglib2.0-0")
     .pip_install(
         "rtmlib==0.0.13",
-        "onnxruntime-gpu==1.18.1",
+        # CUDA 12 build (PyPI default from 1.19) — matches the nvidia-*-cu12
+        # wheels torch 2.4.0 pulls in. 1.18.x on PyPI is a CUDA 11 build and
+        # needs libcublasLt.so.11, which nothing in this image provides.
+        "onnxruntime-gpu==1.19.2",
         "opencv-python-headless==4.10.0.84",
         "numpy<2",
         # vitpose-l backend (flag-switched; both stay benchmarkable)
@@ -39,6 +50,7 @@ image = (
         "pillow",
         "fastapi[standard]",
     )
+    .env({"LD_LIBRARY_PATH": _NVIDIA_WHEEL_LIBS})
     .add_local_dir(".", remote_path="/root/pose_src")
 )
 
@@ -72,6 +84,10 @@ def process(payload: dict, authorization: str = Header(default="")):
         timings["downloaded"] = time.time() - timings["startedAt"]
 
         backend = load_backend(device="cuda")
+        print(
+            f"[pose] job={job_id} model={backend.model_id} "
+            f"activeProviders={backend.active_providers}"
+        )
         output = run_pipeline(
             clip_path, job_id, backend,
             trim_start=payload.get("trimStart"), trim_end=payload.get("trimEnd"),

@@ -34,6 +34,19 @@ class AmbiguousDetection(Exception):
     """Two comparably-sized people in frame — clip must be rejected."""
 
 
+class GpuUnavailable(RuntimeError):
+    """CUDA requested but inference would run on CPU — fail loudly, never bill a GPU for CPU work."""
+
+
+def _require_cuda(device: str, active_providers: list, detail: str):
+    if device.startswith("cuda") and "CUDAExecutionProvider" not in active_providers:
+        raise GpuUnavailable(
+            f"device={device!r} but CUDAExecutionProvider is not active "
+            f"(active: {active_providers or 'none'}). {detail} "
+            "Refusing silent CPU fallback on a GPU-configured function."
+        )
+
+
 class RtmposeBackend:
     """rtmlib (ONNX Runtime) — runs on GPU in Modal, CPU locally."""
 
@@ -63,6 +76,23 @@ class RtmposeBackend:
         except Exception:  # noqa: BLE001
             rtmlib_version = "unknown"
         self.model_version = f"body7-256x192-20230504/rtmlib-{rtmlib_version}"
+
+        # ORT appends a CPU fallback even when only CUDA is requested; the
+        # session's OWN provider list is the only truthful signal.
+        self.active_providers = sorted({
+            provider
+            for tool_name in ("det_model", "pose_model")
+            for provider in self._tool_providers(tool_name)
+        })
+        _require_cuda(
+            device,
+            self.active_providers,
+            "The CUDA EP failed to load (check onnxruntime-gpu build vs CUDA libs on LD_LIBRARY_PATH).",
+        )
+
+    def _tool_providers(self, tool_name: str) -> list:
+        session = getattr(getattr(self.body, tool_name, None), "session", None)
+        return session.get_providers() if session is not None else []
 
     def infer_frame(self, bgr_image):
         """Returns (bbox_xywh | None, keypoints17 | None).
@@ -131,6 +161,11 @@ class VitposeBackend:
             "usyd-community/vitpose-plus-large"
         ).to(device)
         self.model_version = "usyd-community/vitpose-plus-large"
+
+        self.active_providers = (
+            ["CUDAExecutionProvider"] if torch.cuda.is_available() else ["CPUExecutionProvider"]
+        )
+        _require_cuda(device, self.active_providers, "torch.cuda.is_available() is False.")
 
     def infer_frame(self, bgr_image):
         import numpy as np  # noqa: PLC0415
