@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { waitUntil } from "@vercel/functions";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import prisma from "@/lib/prisma";
 import { logger } from "@/lib/logger";
@@ -87,16 +88,21 @@ export async function POST(request: NextRequest) {
       metadata: { jobId: job.id, modelId: payload.modelId },
     });
     // Continue the pipeline (temporal → metrics → faults → narrative →
-    // report) without blocking the webhook ack. A crash mid-pipeline marks
-    // the job FAILED inside processPoseComplete; a killed function leaves
-    // POSE_COMPLETE for the requeue cron to notice.
+    // report) without blocking the webhook ack. waitUntil keeps the function
+    // alive past the response — a bare detached promise is killed when Vercel
+    // freezes the instance (job cmq7szydk0001 stranded at POSE_COMPLETE,
+    // 2026-06-10). A crash mid-pipeline marks the job FAILED inside
+    // processPoseComplete; a killed function leaves POSE_COMPLETE for the
+    // requeue cron, which re-runs the continuation.
     const { processPoseComplete } = await import("@/lib/analysis/process");
-    processPoseComplete(job.id).catch((err) => {
-      logger.error("analysis/webhooks/pose: continuation threw", {
-        metadata: { jobId: job.id },
-        error: err instanceof Error ? err : new Error(String(err)),
-      });
-    });
+    waitUntil(
+      processPoseComplete(job.id).catch((err) => {
+        logger.error("analysis/webhooks/pose: continuation threw", {
+          metadata: { jobId: job.id },
+          error: err instanceof Error ? err : new Error(String(err)),
+        });
+      })
+    );
     return NextResponse.json({ success: true, data: { received: true } });
   }
 
