@@ -146,6 +146,36 @@ One entry per stage VERIFY, with evidence. TODO(user) items accumulate at the bo
     frame-steps, phase scrub — 1 passed.
   - `tsc --noEmit` exit 0; 99/99 tests across contracts + analysis + webhook.
 
+## Stage 6 — Calibration wizard (2026-06-09) ✅
+
+- `wizard-machine.ts`: pure reducer (event_select → position → align
+  MISALIGNED/CLOSE/LOCKED → captured → saving → done/error); gyro denial
+  degrades to manual confirm, never blocks (F1); 1s lock-hold debounce;
+  illegal transitions are no-ops. `classifyAlignment` enforces roll ±1.5° +
+  per-event pitch bands.
+- Component layer: `CalibrationWizard` (getUserMedia preview, ghost ellipse
+  SVG, zone-colored border, Web Speech cues throttled, save → POST
+  /api/analysis/calibration), `useDeviceOrientation` (iOS permission-gesture
+  + denial fallback), `SpeechCues`, `GhostEllipse`.
+- Server: homography from ring ellipse + known diameter (affine ground-plane
+  model), reprojection gate; invalid fit stores the session WITHOUT a
+  homography (angles/timing work, velocity says "requires calibration").
+- **Measured product constraint:** the affine model's scale error ≈ D/(2Z)
+  crosses the 2% F1 gate at ~5 m → `minTripodDistanceM = 5` in the wizard
+  position config, derived from the perspective-camera test (4 m = 2.87%,
+  5 m = 1.99%, 6 m = 1.45%). A 4 m setup is asserted OUTSIDE the envelope.
+- VERIFY evidence:
+  - State machine: 15/15 tests covering all transitions incl. denial path,
+    wobble-resets-hold, retry/reset, illegal no-ops.
+  - Homography: 7/7 — scale recovered within 2% vs a real perspective
+    projection at 6 m/12° and 5 m/16° (non-circular: ground truth is f/Z
+    from the synthetic camera, not the model's own output); degenerate
+    ellipses fail the validity gate.
+  - Playwright (camera + gyro mocked via addInitScript): gyro path drives
+    MISALIGNED → CLOSE → LOCKED → captured; denied path reaches capture via
+    manual confirm. 2/2 passed (+ overlay smoke re-run: 3/3 total).
+  - `tsc --noEmit` exit 0; 121/121 unit tests.
+
 ## TODO(user)
 
 - [ ] **Deploy the pose service to Modal** — exact commands in
