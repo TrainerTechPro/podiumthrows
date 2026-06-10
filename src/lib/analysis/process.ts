@@ -9,7 +9,7 @@ import {
 import { transitionJob } from "./jobs";
 import { runTemporalPipeline } from "./temporal/pipeline";
 import { runMetricsEngine } from "./metrics/engine";
-import { evaluateFaults, loadShotPutRules } from "./faults/engine";
+import { collectNotAssessed, evaluateFaults, loadShotPutRules } from "./faults/engine";
 import { resolveDrillOptions } from "./drills";
 import { generateNarrative } from "./narrative/claude";
 import { buildReportModel } from "./report/report-model";
@@ -97,6 +97,7 @@ export async function processPoseComplete(
 
     const rules = loadShotPutRules();
     const faults = evaluateFaults(metrics, rules);
+    const notAssessed = collectNotAssessed(metrics, rules);
 
     const drillOptions = await resolveDrillOptions({
       event: metrics.event,
@@ -110,6 +111,7 @@ export async function processPoseComplete(
       metrics: metrics.metrics,
       faults,
       drillOptions,
+      clipConfidence: metrics.clipConfidence?.grade ?? null,
     };
     const narrative = await generateNarrative(narrativeInput);
 
@@ -119,7 +121,7 @@ export async function processPoseComplete(
         jobId: job.id,
         metrics: metrics as unknown as object,
         phaseBoundaries: metrics.phaseBoundaries as unknown as object,
-        faults: faults as unknown as object,
+        faults: { fired: faults, notAssessed } as unknown as object,
         narrative: narrative as unknown as object,
         rubricVersion: "rubric-1.0.0",
         rulesVersion: rules.version,

@@ -28,10 +28,20 @@ export function templateNarrative(input: NarrativeInput): NarrativeOutput {
       `${fmt(f.targetRange[0], f.unit)}–${fmt(f.targetRange[1], f.unit)}.`
   );
 
+  // Deterministic hedge mirroring prompt rule 5: on limited footage the
+  // template must not state findings flatly either.
+  const hedge =
+    input.clipConfidence === "LOW"
+      ? " Footage quality limits confidence on these readings — treat them as worth checking on better footage."
+      : input.clipConfidence === "MEDIUM"
+        ? " Filming conditions cap confidence on this clip — verify key readings when refilming."
+        : "";
+
   const coachSummary =
-    faultLines.length > 0
+    (faultLines.length > 0
       ? `Measured review: ${faultLines.join(" ")} Work the prescribed drills and refilm.`
-      : `No rule thresholds were crossed on this throw's measured values. Keep building on this pattern and refilm to confirm consistency.`;
+      : `No rule thresholds were crossed on this throw's measured values. Keep building on this pattern and refilm to confirm consistency.`) +
+    hedge;
 
   const phaseCommentary = input.faults.slice(0, 5).map((f) => ({
     phase: f.metricKey,

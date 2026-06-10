@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MetricValueSchema, AnalysisEventSchema } from "./metrics";
+import { MetricValueSchema, AnalysisEventSchema, ConfidenceGradeSchema } from "./metrics";
 import { FaultResultSchema } from "./faults";
 
 /**
@@ -40,6 +40,8 @@ export const ReportModelSchema = z.object({
     athleteName: z.string().min(1),
     date: z.string().min(1), // ISO date
     calibrated: z.boolean(),
+    /** Clip-level confidence badge; null/absent for pre-grading results. */
+    clipConfidence: ConfidenceGradeSchema.nullable().optional(),
   }),
   phaseScores: z.array(PhaseScoreSchema),
   faultCards: z.array(FaultCardSchema),

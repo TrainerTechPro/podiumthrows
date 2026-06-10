@@ -4,6 +4,7 @@ import {
   type FaultRule,
   type FaultRulesFile,
   type MetricsOutput,
+  type NotAssessedFault,
 } from "@/lib/contracts";
 import shotputRulesJson from "./rules/shotput.json";
 
@@ -82,4 +83,37 @@ export function evaluateFaults(
     });
   }
   return faults;
+}
+
+/**
+ * The rules evaluateFaults refused to judge: driving metric measured, but
+ * below the rule's minConfidence. Rendered "not assessed (low confidence)" —
+ * on quick-analysis footage a coach must be able to tell "clean" from
+ * "couldn't check". Null-valued metrics are NOT listed: not-measurable is
+ * already a visible product state on the metric itself.
+ */
+export function collectNotAssessed(
+  metrics: MetricsOutput,
+  rulesFile: FaultRulesFile = loadShotPutRules()
+): NotAssessedFault[] {
+  if (rulesFile.event !== metrics.event) {
+    throw new Error(
+      `Rules file is for ${rulesFile.event}, metrics are for ${metrics.event}`
+    );
+  }
+  const notAssessed: NotAssessedFault[] = [];
+  for (const rule of rulesFile.rules) {
+    const metric = metrics.metrics[rule.metricKey];
+    if (!metric || metric.value === null) continue;
+    if (metric.confidence >= rule.minConfidence) continue;
+    notAssessed.push({
+      ruleId: rule.ruleId,
+      faultName: rule.faultName,
+      metricKey: rule.metricKey,
+      reason: "low_confidence",
+      confidence: metric.confidence,
+      minConfidence: rule.minConfidence,
+    });
+  }
+  return notAssessed;
 }

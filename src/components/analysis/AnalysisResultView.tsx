@@ -5,7 +5,8 @@ import { FileDown } from "lucide-react";
 import {
   MetricsOutputSchema,
   SmoothedPoseSchema,
-  type FaultResult,
+  normalizeStoredFaults,
+  type ConfidenceGrade,
   type MetricsOutput,
   type SmoothedPose,
   type StoredNarrative,
@@ -35,6 +36,29 @@ interface JobPayload {
 
 const POLL_MS = 4000;
 const IN_FLIGHT = new Set(["QUEUED", "PROCESSING", "POSE_COMPLETE", "METRICS_COMPLETE"]);
+
+const GRADE_CLASSES: Record<ConfidenceGrade, string> = {
+  HIGH: "bg-status-success-bg text-status-success-fg",
+  MEDIUM: "bg-status-warning-bg text-status-warning-fg",
+  LOW: "bg-status-danger-bg text-status-danger-fg",
+};
+
+function ConfidenceChip({ grade }: { grade: ConfidenceGrade }) {
+  return (
+    <span
+      className={`inline-block rounded px-1.5 py-0.5 font-mono text-nano uppercase tracking-wider ${GRADE_CLASSES[grade]}`}
+      data-testid="confidence-chip"
+    >
+      {grade}
+    </span>
+  );
+}
+
+const CALIBRATED_ONLY_METRICS: Array<{ key: string; label: string }> = [
+  { key: "release_velocity", label: "Release velocity" },
+  { key: "release_height", label: "Release height" },
+  { key: "com_displacement", label: "COM displacement" },
+];
 
 export function AnalysisResultView({ jobId }: { jobId: string }) {
   const [job, setJob] = useState<JobPayload | null>(null);
@@ -99,13 +123,17 @@ export function AnalysisResultView({ jobId }: { jobId: string }) {
 
   const metricsParse = MetricsOutputSchema.safeParse(job.result?.metrics);
   const metrics: MetricsOutput | null = metricsParse.success ? metricsParse.data : null;
-  const faults = (job.result?.faults ?? []) as FaultResult[];
+  const { fired: faults, notAssessed } = normalizeStoredFaults(job.result?.faults);
   const narrative = job.result?.narrative as StoredNarrative | undefined;
   const phaseScores = (job.result?.phaseScores ?? []) as Array<{
     phase: string;
     score: number | null;
-    items: Array<{ label: string; value: { value: number | null; unit: string; frameRefs: number[] } }>;
+    items: Array<{
+      label: string;
+      value: { value: number | null; unit: string; frameRefs: number[]; confidenceGrade?: ConfidenceGrade };
+    }>;
   }>;
+  const clipGrade = metrics?.clipConfidence?.grade;
 
   return (
     <div className="space-y-4" data-testid="analysis-result">
@@ -113,11 +141,24 @@ export function AnalysisResultView({ jobId }: { jobId: string }) {
         <OverlayPlayer pose={pose} phaseBoundaries={metrics.phaseBoundaries} videoUrl={urls.clipUrl} />
       )}
 
-      {metrics && !metrics.calibrated && (
-        <p className="text-caption text-muted">
-          Uncalibrated clip — angles and timing are measured; velocity and
-          distances require a calibration session (Elite).
-        </p>
+      {metrics && (clipGrade || !metrics.calibrated) && (
+        <div className="flex flex-wrap items-center gap-2" data-testid="clip-confidence">
+          {clipGrade && (
+            <>
+              <span className="text-sm font-semibold uppercase tracking-wider text-muted">
+                Clip confidence
+              </span>
+              <ConfidenceChip grade={clipGrade} />
+            </>
+          )}
+          {!metrics.calibrated && (
+            <p className="text-caption text-muted">
+              Quick analysis — angles and timing are measured; view-sensitive
+              angles cap at MEDIUM confidence. Velocity and distances require a
+              calibrated session (Elite).
+            </p>
+          )}
+        </div>
       )}
 
       <section className="card p-4">
@@ -129,10 +170,61 @@ export function AnalysisResultView({ jobId }: { jobId: string }) {
                 {p.score === null ? "—" : `${p.score}/10`}
               </p>
               <p className="text-caption text-muted">{p.phase.replace(/_/g, " ")}</p>
+              <ul className="mt-1 space-y-0.5">
+                {p.items.map((item) => (
+                  <li key={item.label} className="text-caption text-muted">
+                    {item.label}:{" "}
+                    {item.value.value === null ? (
+                      <span>
+                        {metrics?.calibrated ? "not measurable" : "requires calibrated session"}
+                      </span>
+                    ) : (
+                      <>
+                        <span className="font-mono tabular-nums">
+                          {item.value.value}
+                          {item.value.unit === "deg" ? "°" : ` ${item.value.unit}`}
+                        </span>{" "}
+                        {item.value.confidenceGrade && (
+                          <ConfidenceChip grade={item.value.confidenceGrade} />
+                        )}
+                      </>
+                    )}
+                  </li>
+                ))}
+              </ul>
             </div>
           ))}
         </div>
       </section>
+
+      {metrics && (
+        <section className="card p-4" data-testid="calibrated-metrics">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-muted">
+            Release &amp; distance
+          </h3>
+          <div className="mt-2 grid gap-3 sm:grid-cols-3">
+            {CALIBRATED_ONLY_METRICS.map(({ key, label }) => {
+              const m = metrics.metrics[key];
+              return (
+                <div key={key}>
+                  {m?.value != null ? (
+                    <p className="font-heading text-section tabular-nums">
+                      {m.value}
+                      {m.unit === "deg" ? "°" : ` ${m.unit}`}{" "}
+                      {m.confidenceGrade && <ConfidenceChip grade={m.confidenceGrade} />}
+                    </p>
+                  ) : (
+                    <p className="text-body text-muted">
+                      {metrics.calibrated ? "Not measurable" : "Requires calibrated session"}
+                    </p>
+                  )}
+                  <p className="text-caption text-muted">{label}</p>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       <section className="space-y-2">
         <h3 className="text-sm font-semibold uppercase tracking-wider text-muted">
@@ -140,7 +232,8 @@ export function AnalysisResultView({ jobId }: { jobId: string }) {
         </h3>
         {faults.length === 0 && (
           <p className="text-body text-muted">
-            No rule thresholds were crossed on this throw&apos;s measured values.
+            No rule thresholds were crossed on this throw&apos;s
+            {notAssessed.length > 0 ? " assessable" : ""} measured values.
           </p>
         )}
         {faults.map((f) => (
@@ -156,6 +249,18 @@ export function AnalysisResultView({ jobId }: { jobId: string }) {
             </p>
             <p className="text-caption text-muted">
               Evidence frame{f.evidenceFrames.length === 1 ? "" : "s"}: {f.evidenceFrames.join(", ")}
+            </p>
+          </div>
+        ))}
+        {notAssessed.map((f) => (
+          <div key={f.ruleId} className="card p-4 opacity-80" data-testid="not-assessed-card">
+            <div className="flex items-baseline justify-between">
+              <p className="font-semibold text-muted">{f.faultName}</p>
+              <span className="font-mono text-micro uppercase text-muted">not assessed</span>
+            </div>
+            <p className="text-caption text-muted">
+              Keypoint confidence on this metric was too low to judge honestly —
+              worth checking on better footage.
             </p>
           </div>
         ))}

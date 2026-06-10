@@ -6,11 +6,45 @@
  *
  *   POSTGRES_PRISMA_URL=postgresql://localhost:5432/podium_throws \
  *   POSTGRES_URL_NON_POOLING=$POSTGRES_PRISMA_URL \
- *     npx tsx scripts/analysis-walkthrough.ts
+ *     npx tsx scripts/analysis-walkthrough.ts [--calibrated]
+ *
+ * Default is quick mode (no calibration session, PRO coach): asserts graded
+ * confidence — clip badge, view-sensitivity caps, suppressed velocity.
+ * --calibrated creates a CalibrationSession + ELITE coach: asserts calibrated
+ * velocity and uncapped grades.
  */
 import { mkdirSync, readFileSync, writeFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import assert from "node:assert/strict";
+import { inflateSync } from "node:zlib";
+
+/**
+ * Pull the painted text back out of the PDF: inflate every content stream,
+ * then decode pdf-lib's hex-encoded show-text operators (<48656C6C6F> Tj).
+ */
+function extractPdfText(pdf: Buffer): string {
+  let streams = "";
+  let idx = 0;
+  for (;;) {
+    const s = pdf.indexOf("stream", idx);
+    if (s === -1) break;
+    const start = pdf[s + 6] === 0x0d ? s + 8 : s + 7;
+    const e = pdf.indexOf("endstream", start);
+    if (e === -1) break;
+    const raw = pdf.subarray(start, e);
+    try {
+      streams += inflateSync(raw).toString("latin1");
+    } catch {
+      streams += raw.toString("latin1");
+    }
+    idx = e + "endstream".length;
+  }
+  let text = "";
+  for (const match of streams.matchAll(/<([0-9A-Fa-f]+)>\s*Tj/g)) {
+    text += Buffer.from(match[1], "hex").toString("latin1") + "\n";
+  }
+  return text;
+}
 
 const dbUrl = process.env.POSTGRES_PRISMA_URL ?? "";
 if (!dbUrl.includes("localhost") && !dbUrl.includes("127.0.0.1")) {
@@ -18,9 +52,13 @@ if (!dbUrl.includes("localhost") && !dbUrl.includes("127.0.0.1")) {
   process.exit(1);
 }
 
+const mode: "quick" | "calibrated" = process.argv.includes("--calibrated")
+  ? "calibrated"
+  : "quick";
+
 async function main() {
   const { default: prisma } = await import("@/lib/prisma");
-  const { PoseOutputSchema } = await import("@/lib/contracts");
+  const { PoseOutputSchema, normalizeStoredFaults } = await import("@/lib/contracts");
   const { syntheticThrow } = await import("@/lib/analysis/__fixtures__/synthetic-throw");
   const { transitionJob } = await import("@/lib/analysis/jobs");
   const { processPoseComplete } = await import("@/lib/analysis/process");
@@ -37,10 +75,12 @@ async function main() {
     },
     update: {},
   });
+  // Calibrated metrics are Elite-gated in the pipeline; quick mode runs PRO.
+  const plan = mode === "calibrated" ? "ELITE" : "PRO";
   const coach = await prisma.coachProfile.upsert({
     where: { userId: coachUser.id },
-    create: { userId: coachUser.id, firstName: "Walk", lastName: "Through", plan: "PRO" },
-    update: { plan: "PRO" },
+    create: { userId: coachUser.id, firstName: "Walk", lastName: "Through", plan },
+    update: { plan },
   });
   const athleteUser = await prisma.user.upsert({
     where: { email: "va2-walkthrough-athlete@example.com" },
@@ -63,14 +103,34 @@ async function main() {
     update: { coachId: coach.id },
   });
 
-  // ── Step 1: gating allows the run (PRO) ───────────────────────────────
+  // ── Step 1: gating allows the run ─────────────────────────────────────
   const allowance = await checkAnalysisAllowance(athlete.id);
   assert.ok(allowance, "allowance lookup");
-  assert.equal(allowance.plan, "PRO");
-  assert.ok(allowance.allowed, "PRO plan should allow analysis");
-  console.log(`1. gating: PRO allows (used ${allowance.used}/${allowance.quota})`);
+  assert.equal(allowance.plan, plan);
+  assert.ok(allowance.allowed, `${plan} plan should allow analysis`);
+  console.log(`1. gating: ${plan} allows (used ${allowance.used}/${allowance.quota})`);
 
   // ── Step 2: "upload" the fixture clip + register the job ─────────────
+  // Calibrated mode: a CalibrationSession with a synthetic (but valid)
+  // homography, exactly what the wizard persists.
+  const calibration =
+    mode === "calibrated"
+      ? await prisma.calibrationSession.create({
+          data: {
+            userId: coachUser.id,
+            athleteId: athlete.id,
+            event: "SHOT_PUT",
+            ringEllipse: { cx: 960, cy: 540, rx: 200, ry: 80, rotation: 0 },
+            homography: {
+              matrix: [1, 0, 0, 0, 1, 0, 0, 0, 1],
+              pixelsPerMeter: 100,
+              reprojectionError: 0.01,
+              ringDiameterM: 2.135,
+            },
+          },
+        })
+      : null;
+
   const clipKey = `analysis/clips/${coachUser.id}/walkthrough.mp4`;
   mkdirSync(path.dirname(localArtifactPath(clipKey)), { recursive: true });
   writeFileSync(
@@ -83,11 +143,12 @@ async function main() {
       athleteId: athlete.id,
       event: "SHOT_PUT",
       clipPath: clipKey,
+      calibrationSessionId: calibration?.id ?? null,
       timings: { uploadedAt: new Date().toISOString() },
     },
   });
   assert.equal(job.status, "QUEUED");
-  console.log(`2. job registered: ${job.id} (QUEUED)`);
+  console.log(`2. job registered: ${job.id} (QUEUED, ${mode})`);
 
   // ── Step 3: simulate the pose service completing (webhook semantics) ──
   const rawPose = PoseOutputSchema.parse({
@@ -142,30 +203,78 @@ async function main() {
   assert.equal(done.status, "COMPLETE", `expected COMPLETE, got ${done.status} (${JSON.stringify(done.error)})`);
   assert.ok(done.poseArtifact?.smoothedPath, "smoothed artifact stored");
   assert.ok(done.result, "analysis_results row");
-  const metrics = done.result.metrics as { metrics: Record<string, { value: number | null }> };
+  const metrics = done.result.metrics as {
+    calibrated: boolean;
+    clipConfidence?: { grade: string };
+    metrics: Record<string, { value: number | null; confidenceGrade?: string }>;
+  };
   assert.ok(metrics.metrics.release_frame.value !== null, "release frame measured");
-  assert.ok(Array.isArray(done.result.faults), "faults array");
+  const storedFaults = normalizeStoredFaults(done.result.faults);
+  assert.ok(Array.isArray(storedFaults.fired), "fired faults array");
+  assert.ok(Array.isArray(storedFaults.notAssessed), "notAssessed array");
   assert.ok(done.result.narrative, "narrative stored");
   assert.ok(done.result.phaseScores, "phase scores stored");
   console.log(
     `4. pipeline COMPLETE: release_frame=${metrics.metrics.release_frame.value}, ` +
-      `faults=${(done.result.faults as unknown[]).length}, ` +
+      `faults=${storedFaults.fired.length} (+${storedFaults.notAssessed.length} not assessed), ` +
       `narrative=${(done.result.narrative as { source: string }).source}`
   );
 
-  // ── Step 6: the PDF exists and is a PDF ───────────────────────────────
+  // ── Step 5: graded confidence (quick-analysis feature) ────────────────
+  const clipGrade = metrics.clipConfidence?.grade;
+  assert.ok(clipGrade, "clip confidence grade present");
+  const viewSensitive = metrics.metrics.trunk_inclination_at_release;
+  const timing = metrics.metrics.entry_duration;
+  if (mode === "quick") {
+    assert.equal(metrics.calibrated, false, "quick mode is uncalibrated");
+    assert.equal(metrics.metrics.release_velocity.value, null, "velocity suppressed");
+    assert.equal(metrics.metrics.com_displacement.value, null, "displacement suppressed");
+    if (viewSensitive.value !== null) {
+      assert.notEqual(
+        viewSensitive.confidenceGrade,
+        "HIGH",
+        "view-sensitive angle must be capped below HIGH uncalibrated"
+      );
+    }
+    if (timing.value !== null) {
+      assert.ok(timing.confidenceGrade, "timing metric carries a grade");
+    }
+    console.log(
+      `5. quick-mode confidence: clip=${clipGrade}, trunk@release=${viewSensitive.confidenceGrade}, entry_duration=${timing.confidenceGrade}`
+    );
+  } else {
+    assert.equal(metrics.calibrated, true, "calibrated mode");
+    assert.ok(metrics.metrics.release_velocity.value !== null, "velocity measured");
+    console.log(
+      `5. calibrated confidence: clip=${clipGrade}, release_velocity=${metrics.metrics.release_velocity.value} m/s (${metrics.metrics.release_velocity.confidenceGrade})`
+    );
+  }
+
+  // ── Step 6: the PDF exists, is a PDF, and paints the confidence layer ─
   assert.ok(done.result.reportPdfPath, "report path recorded");
   const pdfPath = localArtifactPath(done.result.reportPdfPath);
   assert.ok(existsSync(pdfPath), "PDF file exists");
   const pdf = readFileSync(pdfPath);
   assert.equal(pdf.subarray(0, 5).toString(), "%PDF-", "PDF magic bytes");
   assert.ok(pdf.length > 2000, "PDF non-trivial");
-  console.log(`5. PDF written: ${pdfPath} (${pdf.length} bytes)`);
+  // Content streams are Flate-compressed; inflate them, then grep single
+  // tokens (phrases can wrap across drawText lines — tokens can't).
+  const pdfText = extractPdfText(pdf);
+  assert.ok(pdfText.includes("confidence"), "PDF mentions confidence");
+  assert.ok(pdfText.includes(String(clipGrade)), `PDF carries the ${clipGrade} clip badge`);
+  if (mode === "quick") {
+    assert.ok(pdfText.includes("calibrated"), "PDF shows the requires-calibrated-session state");
+    assert.ok(pdfText.includes("MEDIUM"), "PDF shows capped per-metric grades");
+  }
+  console.log(`6. PDF written: ${pdfPath} (${pdf.length} bytes, confidence layer present)`);
 
-  // ── Cleanup the job row so reruns don't accumulate quota usage ───────
+  // ── Cleanup so reruns don't accumulate quota usage or sessions ───────
   await prisma.analysisJob.delete({ where: { id: job.id } });
+  if (calibration) {
+    await prisma.calibrationSession.delete({ where: { id: calibration.id } });
+  }
   await prisma.$disconnect();
-  console.log("\nWALKTHROUGH PASSED: upload → job → pose → metrics → faults → narrative → report.pdf");
+  console.log(`\nWALKTHROUGH PASSED (${mode}): upload → job → pose → metrics → faults → narrative → report.pdf`);
 }
 
 main().catch((err) => {

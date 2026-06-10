@@ -25,6 +25,29 @@ import { segmentShotPutPhases, findPhase } from "../phases";
 
 export const SHOTPUT_DEFINITIONS_VERSION = "shotput-1.0.0";
 
+/**
+ * How much each metric's value shifts with camera angle (quick-analysis
+ * confidence capping). HIGH: sagittal-plane angles and image-space geometry —
+ * an off-angle camera changes the apparent value, so uncalibrated readings
+ * cap at MEDIUM confidence. LOW: timing and phase metrics — frame indices
+ * and durations are view-robust and keep their measured confidence.
+ */
+export const SHOTPUT_VIEW_SENSITIVITY: Record<string, "HIGH" | "LOW"> = {
+  hip_shoulder_separation_at_power_position: "HIGH",
+  trunk_inclination_at_power_position: "HIGH",
+  trunk_inclination_at_release: "HIGH",
+  release_angle: "HIGH",
+  release_height: "HIGH",
+  release_velocity: "HIGH",
+  block_knee_angle_at_release: "HIGH",
+  rear_leg_sweep_height_ratio: "HIGH",
+  com_displacement: "HIGH",
+  release_frame: "LOW",
+  entry_duration: "LOW",
+  drive_duration: "LOW",
+  delivery_duration: "LOW",
+};
+
 export interface ShotPutMetricsResult {
   metrics: Record<string, MetricValue>;
   phaseBoundaries: PhaseBoundary[];

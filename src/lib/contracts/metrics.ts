@@ -28,12 +28,22 @@ export const MetricUnitSchema = z.enum([
 ]);
 export type MetricUnit = z.infer<typeof MetricUnitSchema>;
 
+/**
+ * Graded confidence (quick-analysis mode): HIGH/MEDIUM/LOW derived from the
+ * numeric confidence plus clip conditions, with view-sensitive metrics capped
+ * at MEDIUM when uncalibrated. Computed in lib/analysis/confidence.ts.
+ */
+export const ConfidenceGradeSchema = z.enum(["HIGH", "MEDIUM", "LOW"]);
+export type ConfidenceGrade = z.infer<typeof ConfidenceGradeSchema>;
+
 /** value === null ⇒ not measurable on this clip (e.g. velocity uncalibrated). */
 export const MetricValueSchema = z.object({
   value: z.number().finite().nullable(),
   unit: MetricUnitSchema,
   confidence: z.number().min(0).max(1),
   frameRefs: z.array(z.number().int().nonnegative()),
+  /** Optional for results stored before graded confidence shipped. */
+  confidenceGrade: ConfidenceGradeSchema.optional(),
 });
 export type MetricValue = z.infer<typeof MetricValueSchema>;
 
@@ -61,6 +71,16 @@ export const QualitySummarySchema = z.object({
   lowConfidence: z.boolean(),
 });
 
+/** Per-clip confidence grade with the raw signals it was derived from. */
+export const ClipConfidenceSchema = z.object({
+  grade: ConfidenceGradeSchema,
+  meanQuality: z.number().min(0).max(1),
+  fps: z.number().positive(),
+  /** Fraction of frames whose pose quality fell below the degraded threshold. */
+  degradedFrameFraction: z.number().min(0).max(1),
+});
+export type ClipConfidence = z.infer<typeof ClipConfidenceSchema>;
+
 export const MetricsOutputSchema = z.object({
   schemaVersion: z.literal(METRICS_SCHEMA_VERSION),
   event: AnalysisEventSchema,
@@ -69,5 +89,7 @@ export const MetricsOutputSchema = z.object({
   metrics: z.record(z.string(), MetricValueSchema),
   phaseBoundaries: PhaseBoundariesSchema,
   quality: QualitySummarySchema,
+  /** Optional for results stored before graded confidence shipped. */
+  clipConfidence: ClipConfidenceSchema.optional(),
 });
 export type MetricsOutput = z.infer<typeof MetricsOutputSchema>;

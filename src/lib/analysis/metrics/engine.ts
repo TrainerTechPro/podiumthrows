@@ -7,9 +7,11 @@ import {
   type SmoothedPose,
 } from "@/lib/contracts";
 import { LOW_CONFIDENCE_THRESHOLD } from "../temporal/quality";
+import { applyConfidenceGrades, gradeClipConfidence } from "../confidence";
 import {
   computeShotPutMetrics,
   SHOTPUT_DEFINITIONS_VERSION,
+  SHOTPUT_VIEW_SENSITIVITY,
 } from "./definitions/shotput";
 import type { Hand } from "./release";
 
@@ -39,17 +41,29 @@ export function runMetricsEngine(args: {
     hand,
   });
 
+  const calibrated = homography !== null;
+  const clipConfidence = gradeClipConfidence({
+    meanQuality: pose.meanQuality,
+    fps: pose.fps,
+    perFrameQuality: pose.perFrameQuality,
+  });
+
   const output: MetricsOutput = {
     schemaVersion: METRICS_SCHEMA_VERSION,
     event,
     definitionsVersion: SHOTPUT_DEFINITIONS_VERSION,
-    calibrated: homography !== null,
-    metrics,
+    calibrated,
+    metrics: applyConfidenceGrades(metrics, {
+      clipGrade: clipConfidence.grade,
+      calibrated,
+      viewSensitivity: SHOTPUT_VIEW_SENSITIVITY,
+    }),
     phaseBoundaries,
     quality: {
       meanQuality: pose.meanQuality,
       lowConfidence: pose.meanQuality < LOW_CONFIDENCE_THRESHOLD,
     },
+    clipConfidence,
   };
 
   return MetricsOutputSchema.parse(output);

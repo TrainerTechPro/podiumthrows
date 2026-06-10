@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { MetricValueSchema, AnalysisEventSchema } from "./metrics";
+import { MetricValueSchema, AnalysisEventSchema, ConfidenceGradeSchema } from "./metrics";
 import { FaultResultSchema } from "./faults";
 
 /**
@@ -27,6 +27,13 @@ export const NarrativeInputSchema = z.object({
   faults: z.array(FaultResultSchema),
   /** The ONLY drills the model may select from (D8). */
   drillOptions: z.array(NarrativeDrillOptionSchema),
+  /**
+   * Whole-clip confidence grade (quick-analysis mode). Per-metric grades ride
+   * on each MetricValue.confidenceGrade. The prompt hedges proportionally:
+   * LOW-confidence findings are "worth checking on better footage", never
+   * stated flatly. Null/absent ⇒ pre-grading result.
+   */
+  clipConfidence: ConfidenceGradeSchema.nullable().optional(),
 });
 export type NarrativeInput = z.infer<typeof NarrativeInputSchema>;
 

@@ -1,8 +1,8 @@
 import { describe, it, expect, vi } from "vitest";
-import type { NarrativeInput, NarrativeOutput } from "@/lib/contracts";
+import { NarrativeInputSchema, type NarrativeInput, type NarrativeOutput } from "@/lib/contracts";
 import { validateNarrative, collectAllowedNumbers } from "../numeral-validator";
 import { templateNarrative } from "../templates";
-import { generateNarrative } from "../claude";
+import { generateNarrative, SYSTEM_PROMPT } from "../claude";
 
 const input: NarrativeInput = {
   event: "SHOT_PUT",
@@ -102,6 +102,47 @@ describe("templateNarrative (deterministic fallback)", () => {
     expect(JSON.stringify(templateNarrative(input))).toBe(
       JSON.stringify(templateNarrative(input))
     );
+  });
+});
+
+describe("confidence-aware narrative (quick-analysis mode)", () => {
+  it("NarrativeInput accepts clipConfidence and per-metric confidenceGrade", () => {
+    const graded: NarrativeInput = {
+      ...input,
+      clipConfidence: "MEDIUM",
+      metrics: {
+        ...input.metrics,
+        hip_shoulder_separation_at_power_position: {
+          ...input.metrics.hip_shoulder_separation_at_power_position,
+          confidenceGrade: "MEDIUM",
+        },
+      },
+    };
+    expect(NarrativeInputSchema.safeParse(graded).success).toBe(true);
+    // Absent stays valid: pre-grading inputs unchanged.
+    expect(NarrativeInputSchema.safeParse(input).success).toBe(true);
+  });
+
+  it("the prompt instructs proportional hedging, pinned verbatim where it matters", () => {
+    expect(SYSTEM_PROMPT).toContain("clipConfidence");
+    expect(SYSTEM_PROMPT).toContain("confidenceGrade");
+    expect(SYSTEM_PROMPT).toContain("worth checking on better footage");
+    expect(SYSTEM_PROMPT).toContain("never state a LOW-confidence finding flatly");
+  });
+
+  it("template fallback hedges on a LOW-confidence clip and still validates", () => {
+    const lowInput: NarrativeInput = { ...input, clipConfidence: "LOW" };
+    const out = templateNarrative(lowInput);
+    expect(out.coachSummary).toContain("worth checking on better footage");
+    expect(validateNarrative(out, lowInput).ok).toBe(true);
+  });
+
+  it("template fallback hedges (softer) on MEDIUM and not at all on HIGH", () => {
+    const med = templateNarrative({ ...input, clipConfidence: "MEDIUM" });
+    expect(med.coachSummary).toContain("verify key readings");
+    const high = templateNarrative({ ...input, clipConfidence: "HIGH" });
+    expect(high.coachSummary).not.toContain("verify key readings");
+    expect(high.coachSummary).not.toContain("worth checking on better footage");
   });
 });
 

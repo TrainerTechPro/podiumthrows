@@ -35,6 +35,7 @@ export const METHODOLOGY: string[] = [
   "Release is detected from the wrist-velocity peak combined with elbow extension. Phase boundaries come from deterministic kinematic rules; phase scores apply the published rubric to measured sub-metrics only.",
   "Velocity, height, and displacement appear only when the clip was filmed with a completed calibration: the ring's known diameter fixes the pixel-to-meter scale. Without calibration those rows read 'requires calibration' — they are never estimated.",
   "Faults compare measured values against coach-authored target ranges. We do not display energy percentages or efficiency scores: they cannot be measured from video and are excluded by design.",
+  "Confidence grades: every clip and metric carries HIGH, MEDIUM, or LOW, derived from pose-estimation quality, frame rate, and the share of frames that needed interpolation. Quick analyses (no calibrated session) cap view-sensitive angles at MEDIUM — camera angle shifts apparent angles, so those readings are starting points to verify on better footage. Timing and phase metrics are view-robust and keep their measured confidence. A rule whose driving metric falls below its confidence floor is reported 'not assessed', never guessed.",
 ];
 
 const NUMERAL_RE = /\d+(?:\.\d+)?/g;
@@ -115,6 +116,7 @@ export function buildReportModel(args: {
       athleteName,
       date: dateIso,
       calibrated: metrics.calibrated,
+      clipConfidence: metrics.clipConfidence?.grade ?? null,
     },
     phaseScores: computePhaseScores(metrics),
     faultCards: faults.map((fault) => ({

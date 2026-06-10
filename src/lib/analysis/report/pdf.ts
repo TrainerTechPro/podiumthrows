@@ -81,7 +81,7 @@ export async function renderReportPdf(
     gap: 2,
   });
   text(
-    `${report.header.date}   ·   ${report.header.calibrated ? "Calibrated session (metric values enabled)" : "Uncalibrated — velocity and distances require calibration"}`,
+    `${report.header.date}   ·   ${report.header.calibrated ? "Calibrated session (metric values enabled)" : "Quick analysis — velocity and distances require a calibrated session"}${report.header.clipConfidence ? `   ·   Clip confidence: ${report.header.clipConfidence}` : ""}`,
     { size: 10, color: MUTED, gap: 14 }
   );
 
@@ -102,10 +102,11 @@ export async function renderReportPdf(
         item.value.value === null
           ? report.header.calibrated
             ? "not measurable"
-            : "requires calibration"
+            : "requires calibrated session"
           : `${item.value.value} ${item.value.unit}`;
+      const conf = item.value.confidenceGrade ? ` · confidence ${item.value.confidenceGrade}` : "";
       text(
-        `   ${item.label}: ${v}   (weight ${item.weight}, frames ${item.value.frameRefs.join(", ") || "—"})`,
+        `   ${item.label}: ${v}   (weight ${item.weight}, frames ${item.value.frameRefs.join(", ") || "—"}${conf})`,
         { size: 9.5, color: MUTED, gap: 0 }
       );
     }
