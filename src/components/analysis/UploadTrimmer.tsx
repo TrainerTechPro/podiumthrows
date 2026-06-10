@@ -4,6 +4,7 @@ import { useCallback, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Film, UploadCloud } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import { postForm, postJson } from "@/lib/api-client";
 import type { AnalysisEvent } from "@/lib/contracts";
 
 /**
@@ -23,16 +24,6 @@ interface AthleteOption {
 }
 
 type Phase = "idle" | "uploading" | "registering";
-
-async function postJson(url: string, body: unknown) {
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const payload = await res.json();
-  return { res, payload };
-}
 
 export function UploadTrimmer({
   athletes,
@@ -93,8 +84,7 @@ export function UploadTrimmer({
     if (init.res.status === 503) {
       const form = new FormData();
       form.append("file", file);
-      const res = await fetch("/api/analysis/uploads", { method: "POST", body: form });
-      const payload = await res.json();
+      const { res, payload } = await postForm("/api/analysis/uploads", form);
       if (!res.ok || !payload.success) throw new Error(payload.error || "Upload failed");
       return payload.data.key;
     }

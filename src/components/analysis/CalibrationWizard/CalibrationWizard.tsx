@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
 import { Camera, Check, CircleAlert, RotateCcw } from "lucide-react";
 import { useToast } from "@/components/ui/Toast";
+import { postJson } from "@/lib/api-client";
 import type { AnalysisEvent, RingEllipse } from "@/lib/contracts";
 import {
   EVENT_CAPTURE_CONFIG,
@@ -142,17 +143,12 @@ export function CalibrationWizard({
     if (!state.event || !state.ringEllipse) return;
     dispatch({ type: "SAVE" });
     try {
-      const res = await fetch("/api/analysis/calibration", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event: state.event,
-          ringEllipse: state.ringEllipse,
-          deviceOrientation: state.lastSample,
-          athleteId: athleteId ?? null,
-        }),
+      const { res, payload } = await postJson("/api/analysis/calibration", {
+        event: state.event,
+        ringEllipse: state.ringEllipse,
+        deviceOrientation: state.lastSample,
+        athleteId: athleteId ?? null,
       });
-      const payload = await res.json();
       if (!res.ok || !payload.success) {
         dispatch({
           type: "SAVE_FAILED",
