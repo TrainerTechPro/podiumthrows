@@ -136,8 +136,10 @@ export function getCoachNavSections(
   if (videoAnalysisEnabled) {
     primary.push({
       label: "Video",
-      href: "/coach/video-analysis",
+      href: "/coach/video-analysis-2",
       icon: <Video {...iconSize} />,
+      // "/coach/video-analysis" prefix-matches video-analysis-2 AND the
+      // legacy v1 pages — both highlight this entry until v1 is retired.
       matchPaths: ["/coach/video-analysis", "/coach/videos", "/coach/throws/analyze"],
     });
   }

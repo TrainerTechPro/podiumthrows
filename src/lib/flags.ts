@@ -37,7 +37,10 @@ export type FlagMap = Record<FlagKey, FeatureFlag>;
 const DEFAULT_FLAGS: FlagMap = {
   selfProgram: { enabled: false, tiers: ["pro", "elite"] },
   videoAnnotator: { enabled: false, tiers: ["elite"] },
-  videoAnalysis: { enabled: false, tiers: ["elite"] },
+  // VA2 (2026-06-10): enabled for all tiers — quota gating (Free 3/mo,
+  // Pro 50/mo, Elite unlimited; PRD §8) lives in lib/analysis/gating.ts,
+  // not the flag.
+  videoAnalysis: { enabled: true, tiers: [] },
   aiArchitect: { enabled: false, tiers: ["elite"] },
   coachSideline: { enabled: false, tiers: [] },
   throwsAnalysis: { enabled: true, tiers: ["pro", "elite"] },
