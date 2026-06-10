@@ -39,10 +39,18 @@ export async function GET(
     return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 });
   }
 
+  // Defense in depth vs IDOR: only presign keys this job legitimately owns.
+  // clipPath must be under the owner's upload prefix (also enforced at job
+  // creation); artifact paths are server-generated under analysis/<jobId>/.
+  const ownsKey = (key: string | null, prefix: string): string | null =>
+    key && key.startsWith(prefix) && !key.includes("..") ? key : null;
+  const clipKey = ownsKey(job.clipPath, `analysis/clips/${job.userId}/`);
+  const artifactPrefix = `analysis/${job.id}/`;
+
   const [smoothedPoseUrl, clipUrl, reportPdfUrl] = await Promise.all([
-    toUrl(job.poseArtifact?.smoothedPath ?? null),
-    toUrl(job.clipPath),
-    toUrl(job.result?.reportPdfPath ?? null),
+    toUrl(ownsKey(job.poseArtifact?.smoothedPath ?? null, artifactPrefix)),
+    toUrl(clipKey),
+    toUrl(ownsKey(job.result?.reportPdfPath ?? null, artifactPrefix)),
   ]);
   return NextResponse.json({
     success: true,

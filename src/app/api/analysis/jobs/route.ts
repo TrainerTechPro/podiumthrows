@@ -31,6 +31,17 @@ export async function POST(request: NextRequest) {
   const { athleteId, event, clipPath, calibrationSessionId, fpsDeclared, trimStartS, trimEndS } =
     parsed;
 
+  // clipPath is client-supplied: accept ONLY a key the uploads endpoint
+  // minted for THIS user, with no traversal. Anything else would let a user
+  // register a job over an arbitrary bucket object and receive presigned
+  // GETs for it from the artifacts route (IDOR).
+  if (!clipPath.startsWith(`analysis/clips/${session.userId}/`) || clipPath.includes("..")) {
+    return NextResponse.json(
+      { success: false, error: "Invalid clip path" },
+      { status: 400 }
+    );
+  }
+
   // F2: cap 15 s per clip — enforced on the trim window the pose service
   // will actually extract.
   if (trimStartS != null && trimEndS != null && trimEndS - trimStartS > 15) {
