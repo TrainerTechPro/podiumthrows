@@ -23,9 +23,11 @@ export async function enqueuePoseJob(job: {
   trimStartS?: number | null;
   trimEndS?: number | null;
 }): Promise<boolean> {
-  const url = process.env.MODAL_POSE_URL;
-  const token = process.env.MODAL_POSE_TOKEN;
-  const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL;
+  // .trim(): env values set via `echo | vercel env add` can carry a trailing
+  // newline — urllib on the Modal side hard-rejects control chars in URLs.
+  const url = process.env.MODAL_POSE_URL?.trim();
+  const token = process.env.MODAL_POSE_TOKEN?.trim();
+  const appUrl = (process.env.NEXT_PUBLIC_APP_URL ?? process.env.APP_URL)?.trim();
   if (!url || !token || !appUrl) {
     logger.warn("analysis/pose-client: pose service env missing; job stays QUEUED", {
       metadata: {

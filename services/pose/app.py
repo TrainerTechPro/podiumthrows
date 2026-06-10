@@ -14,12 +14,14 @@ Secrets (modal secret create pose-service ...):
   MODAL_POSE_TOKEN    — bearer token the Next.js trigger sends
 """
 
+import hmac
 import json
 import os
 import time
 import urllib.request
 
 import modal
+from fastapi import Header, HTTPException
 
 app = modal.App("podium-pose")
 
@@ -46,19 +48,12 @@ with image.imports():
     sys.path.insert(0, "/root/pose_src")
 
 
-@app.function(
-    image=image,
-    gpu="T4",
-    timeout=600,
-    secrets=[modal.Secret.from_name("pose-service")],
-)
-@modal.fastapi_endpoint(method="POST")
-def process(payload: dict, request_headers: dict | None = None):
-    from fastapi import HTTPException  # noqa: PLC0415
-
+def process(payload: dict, authorization: str = Header(default="")):
+    # `payload` must stay the ONLY body param: a second one would make
+    # FastAPI embed both ({"payload": ...}) and break the flat contract
+    # in the module docstring. Auth comes from the real HTTP header.
     expected = os.environ.get("MODAL_POSE_TOKEN", "")
-    auth = (request_headers or {}).get("authorization", "")
-    if not expected or auth != f"Bearer {expected}":
+    if not expected or not hmac.compare_digest(authorization, f"Bearer {expected}"):
         raise HTTPException(status_code=401, detail="bad token")
 
     job_id = payload["jobId"]
@@ -119,3 +114,13 @@ def process(payload: dict, request_headers: dict | None = None):
             "error": {"code": "POSE_PIPELINE_ERROR", "message": str(err)[:500]},
         })
         raise
+
+
+# Registered as a plain call (not stacked decorators) so the handler above
+# stays importable by test_contract.py — the signature IS the wire contract.
+web_process = app.function(
+    image=image,
+    gpu="T4",
+    timeout=600,
+    secrets=[modal.Secret.from_name("pose-service")],
+)(modal.fastapi_endpoint(method="POST")(process))
