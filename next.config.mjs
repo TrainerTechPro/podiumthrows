@@ -507,7 +507,12 @@ const nextConfig = {
               // it would balloon the build artifact, and Google publishes the
               // canonical model from this single host.
               "connect-src 'self' https://api.stripe.com https://*.r2.cloudflarestorage.com https://*.r2.dev https://*.ingest.sentry.io https://*.ingest.us.sentry.io https://storage.googleapis.com",
-              "media-src 'self' blob: https://*.r2.dev",
+              // Presigned R2 GETs for analysis clips are served from the S3-compat
+              // endpoint (*.r2.cloudflarestorage.com), not the public *.r2.dev
+              // host — without it the results-page <video> is blocked and
+              // renders black (connect-src already allowed it, which is why
+              // the pose JSON fetch on the same page worked).
+              "media-src 'self' blob: https://*.r2.dev https://*.r2.cloudflarestorage.com",
               // Sentry Replay uses blob: workers for session replay recording
               "worker-src 'self' blob:",
               "frame-src 'self' https://js.stripe.com",

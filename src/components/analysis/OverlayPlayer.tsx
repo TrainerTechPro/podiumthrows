@@ -49,9 +49,12 @@ export interface OverlayPlayerProps {
 export function OverlayPlayer({ pose, phaseBoundaries = [], videoUrl }: OverlayPlayerProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
   const rafRef = useRef<number>(0);
+  const frameRef = useRef(0);
   const [frame, setFrame] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const frameCount = pose.frames.length;
 
   const currentPhase = useMemo(
@@ -61,46 +64,85 @@ export function OverlayPlayer({ pose, phaseBoundaries = [], videoUrl }: OverlayP
     [phaseBoundaries, frame]
   );
 
+  // Keypoints live in extracted-frame pixel space, which equals the video's
+  // DISPLAY dimensions — ffmpeg applies rotation metadata when extracting
+  // frames, and the browser applies it when decoding. videoWidth/videoHeight
+  // is therefore the truthful source size even for pose JSON produced before
+  // probe() became rotation-aware; pose.resolution covers canvas-only mode.
+  const sourceSize = useCallback(() => {
+    const video = videoRef.current;
+    if (video && video.videoWidth > 0 && video.videoHeight > 0) {
+      return { w: video.videoWidth, h: video.videoHeight };
+    }
+    return { w: pose.resolution.width, h: pose.resolution.height };
+  }, [pose]);
+
   const draw = useCallback(
     (f: number) => {
       const canvas = canvasRef.current;
-      if (!canvas) return;
+      const box = containerRef.current?.getBoundingClientRect();
+      if (!canvas || !box || box.width < 1 || box.height < 1) return;
       const ctx = canvas.getContext("2d");
       if (!ctx) return;
-      const { width: rw, height: rh } = pose.resolution;
-      const scale = canvas.width / rw;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      if (!videoUrl) {
+
+      const dpr = window.devicePixelRatio || 1;
+      const bitmapW = Math.round(box.width * dpr);
+      const bitmapH = Math.round(box.height * dpr);
+      if (canvas.width !== bitmapW) canvas.width = bitmapW;
+      if (canvas.height !== bitmapH) canvas.height = bitmapH;
+
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.clearRect(0, 0, box.width, box.height);
+      if (!videoUrl || videoError) {
         ctx.fillStyle = "rgb(23 23 26)";
-        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillRect(0, 0, box.width, box.height);
       }
       const kps = pose.frames[f]?.keypoints;
       if (!kps) return;
 
+      // The <video> is CSS object-contain inside the same box; mirror that
+      // letterboxing so the skeleton lands on the displayed athlete.
+      const { w: sw, h: sh } = sourceSize();
+      const scale = Math.min(box.width / sw, box.height / sh);
+      const offX = (box.width - sw * scale) / 2;
+      const offY = (box.height - sh * scale) / 2;
+
       const brand = getComputedStyle(canvas).getPropertyValue("--color-overlay-skeleton") || "";
       ctx.strokeStyle = brand.trim() || "rgb(255 200 0)";
-      ctx.lineWidth = Math.max(2, 3 * scale);
+      ctx.lineWidth = 2.5;
       for (const [a, b] of SKELETON_EDGES) {
         if (kps[a].conf < MIN_DRAW_CONF || kps[b].conf < MIN_DRAW_CONF) continue;
         ctx.beginPath();
-        ctx.moveTo(kps[a].x * scale, kps[a].y * (canvas.height / rh));
-        ctx.lineTo(kps[b].x * scale, kps[b].y * (canvas.height / rh));
+        ctx.moveTo(offX + kps[a].x * scale, offY + kps[a].y * scale);
+        ctx.lineTo(offX + kps[b].x * scale, offY + kps[b].y * scale);
         ctx.stroke();
       }
       ctx.fillStyle = "rgb(255 255 255)";
       for (const kp of kps) {
         if (kp.conf < MIN_DRAW_CONF) continue;
         ctx.beginPath();
-        ctx.arc(kp.x * scale, kp.y * (canvas.height / rh), Math.max(2.5, 3.5 * scale), 0, Math.PI * 2);
+        ctx.arc(offX + kp.x * scale, offY + kp.y * scale, 3.5, 0, Math.PI * 2);
         ctx.fill();
       }
     },
-    [pose, videoUrl]
+    [pose, videoUrl, videoError, sourceSize]
   );
 
   useEffect(() => {
+    frameRef.current = frame;
     draw(frame);
   }, [draw, frame]);
+
+  // Geometry can change without `frame` changing: container resize (covers
+  // orientation change) and the video's metadata arriving both invalidate
+  // the box→source mapping.
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => draw(frameRef.current));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [draw]);
 
   // Video sync: derive the displayed frame from video time while playing.
   useEffect(() => {
@@ -155,24 +197,40 @@ export function OverlayPlayer({ pose, phaseBoundaries = [], videoUrl }: OverlayP
 
   return (
     <div className="card p-4 space-y-3" data-testid="overlay-player">
-      <div className="relative aspect-video w-full overflow-hidden rounded-lg bg-surface-950">
-        {videoUrl ? (
+      <div
+        ref={containerRef}
+        className="relative aspect-video w-full overflow-hidden rounded-lg bg-surface-950"
+      >
+        {videoUrl && !videoError ? (
           <video
             ref={videoRef}
             src={videoUrl}
             className="absolute inset-0 h-full w-full object-contain"
             playsInline
             muted
+            preload="metadata"
+            onLoadedMetadata={() => {
+              // iOS Safari won't paint a first frame at t=0 without a poster;
+              // a sub-frame seek forces decode. Skeleton frame 0 still maps
+              // to t≈0. Then remap now that videoWidth/videoHeight are known.
+              const video = videoRef.current;
+              if (video && video.currentTime === 0) video.currentTime = 0.001;
+              draw(frameRef.current);
+            }}
+            onError={() => setVideoError(true)}
             onEnded={() => setPlaying(false)}
           />
         ) : null}
         <canvas
           ref={canvasRef}
-          width={960}
-          height={Math.round((960 * pose.resolution.height) / pose.resolution.width)}
-          className="absolute inset-0 h-full w-full object-contain"
+          className="absolute inset-0 h-full w-full"
           data-testid="overlay-canvas"
         />
+        {videoError && (
+          <p className="absolute bottom-2 left-3 rounded bg-[var(--surface-overlay)] px-2 py-0.5 text-micro text-muted">
+            Clip playback unavailable — skeleton view only
+          </p>
+        )}
         <div className="absolute left-3 top-3 flex gap-2">
           {readouts.map((r) => (
             <span
