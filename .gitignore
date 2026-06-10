@@ -99,3 +99,4 @@ public/uploads/drill-videos/
 public/uploads/cmm*/
 even-terminal-*.log
 .env*
+public/uploads/analysis/
